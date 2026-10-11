@@ -28,8 +28,14 @@ jobs:
 
       - name: Decode keystore
         run: |
-          echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 -d > android/app/release.jks
+          mkdir -p android/app
+          printf '%s' "${{ secrets.KEYSTORE_BASE64 }}" | tr -d '\n\r\t ' > /tmp/ks.b64
+          echo "Base64 size: $(wc -c < /tmp/ks.b64) bytes"
+          echo "First 40 chars: $(head -c 40 /tmp/ks.b64)"
+          echo "Last 40 chars: $(tail -c 40 /tmp/ks.b64)"
+          base64 -d /tmp/ks.b64 > android/app/release.jks
           ls -la android/app/release.jks
+          file android/app/release.jks
 
       - name: Create key.properties
         run: |
