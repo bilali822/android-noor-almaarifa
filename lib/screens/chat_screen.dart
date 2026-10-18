@@ -106,7 +106,7 @@ class _ChatScreenState extends State<ChatScreen> {
       final sid = p['surahId'] as int;
       final verses = await DatabaseHelper.instance.getVerses(sid);
       if (verses.isEmpty) {
-        setState(() => _messages.add(const ChatMessage(text: 'السورة غير موجودة', isUser: false)));
+        setState(() => _messages.add(ChatMessage(text: 'السورة غير موجودة', isUser: false)));
         return;
       }
       final surahName = verses.first['surah_name'] as String? ?? '';
@@ -130,7 +130,7 @@ class _ChatScreenState extends State<ChatScreen> {
     if (type == 'search') {
       final term = p['term'] as String?;
       if (term == null || term.isEmpty) {
-        setState(() => _messages.add(const ChatMessage(text: 'يرجى كتابة اسم سورة أو كلمة للبحث', isUser: false)));
+        setState(() => _messages.add(ChatMessage(text: 'يرجى كتابة اسم سورة أو كلمة للبحث', isUser: false)));
         return;
       }
       final results = await DatabaseHelper.instance.searchVerses(term, limit: 5);
