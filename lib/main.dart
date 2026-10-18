@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
-import 'screens/home_screen.dart';
+import 'theme/app_colors.dart';
+import 'screens/chat_screen.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -18,16 +19,21 @@ class NoorApp extends StatelessWidget {
       theme: ThemeData(
         brightness: Brightness.dark,
         useMaterial3: true,
-        primaryColor: const Color(0xFF6C63FF),
-        scaffoldBackgroundColor: const Color(0xFF0A0A1A),
+        scaffoldBackgroundColor: AppColors.bgDeep,
         colorScheme: const ColorScheme.dark(
-          primary: Color(0xFF6C63FF),
-          secondary: Color(0xFFFF6B9D),
-          surface: Color(0xFF12122E),
+          primary: AppColors.primary,
+          secondary: AppColors.accent,
+          surface: AppColors.surface,
+          onPrimary: AppColors.bgDeep,
+          onSurface: AppColors.text,
         ),
+        fontFamily: 'Cairo',
         appBarTheme: const AppBarTheme(
-          backgroundColor: Color(0xFF12122E),
+          backgroundColor: AppColors.bgDeep,
           elevation: 0,
+          centerTitle: true,
+          iconTheme: IconThemeData(color: AppColors.primary),
+          titleTextStyle: TextStyle(color: AppColors.text, fontSize: 20, fontWeight: FontWeight.bold),
         ),
       ),
       locale: const Locale('ar'),
@@ -38,13 +44,12 @@ class NoorApp extends StatelessWidget {
         GlobalCupertinoLocalizations.delegate,
       ],
       builder: (context, child) {
-        // إجبار RTL
         return Directionality(
           textDirection: TextDirection.rtl,
           child: child ?? const SizedBox(),
         );
       },
-      home: const HomeScreen(),
+      home: const ChatScreen(),
     );
   }
 }
