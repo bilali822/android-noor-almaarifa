@@ -151,10 +151,10 @@ class _ChatScreenState extends State<ChatScreen> {
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       builder: (_) => TafsirSheet(
-        surahName: data['surahName'],
-        surahId: data['surahId'],
-        verseNumber: data['verseNumber'],
-        verseText: data['verseText'],
+        surahName: data['surahName'] as String,
+        surahId: data['surahId'] as int,
+        verseNumber: data['verseNumber'] as int,
+        verseText: data['verseText'] as String,
         books: books,
       ),
     );
@@ -175,7 +175,7 @@ class _ChatScreenState extends State<ChatScreen> {
         children: [
           Expanded(
             child: _messages.isEmpty
-                ? WelcomeView(onExample: _handleSubmit)
+                ? WelcomeView(onExample: (text) => _handleSubmit(text))
                 : ListView.builder(
                     controller: _scrollCtrl,
                     itemCount: _messages.length + (_typing ? 1 : 0),
@@ -186,17 +186,15 @@ class _ChatScreenState extends State<ChatScreen> {
                       }
                       final m = _messages[i];
                       
-                      // لو الرسالة فيها بيانات آية، نعرض كارت الآية
                       if (m.verseData != null) {
                         return VerseCard(
-                          surahName: m.verseData!['surahName'],
-                          verseNumber: m.verseData!['verseNumber'],
-                          text: m.verseData!['verseText'],
+                          surahName: m.verseData!['surahName'] as String,
+                          verseNumber: m.verseData!['verseNumber'] as int,
+                          text: m.verseData!['verseText'] as String,
                           onTafsir: () => _openTafsir(m.verseData!),
                         );
                       }
                       
-                      // غير كده نعرض فقاعة عادية
                       return MessageBubble(
                         text: m.text,
                         isUser: m.isUser,
@@ -205,7 +203,6 @@ class _ChatScreenState extends State<ChatScreen> {
                     },
                   ),
           ),
-          // صندوق الإدخال الفخم العائم
           SafeArea(
             top: false,
             child: Padding(
