@@ -5,14 +5,24 @@ import '../utils/query_parser.dart';
 import '../widgets/message_bubble.dart';
 import '../widgets/typing_indicator.dart';
 import '../widgets/verse_card.dart';
-import '../widgets/surah_card.dart'; // استدعاء كارت السورة
+import '../widgets/surah_card.dart';
+import '../widgets/tafsir_card.dart'; // 🌟 استدعاء كارت التفسير
 import '../widgets/quranic_background.dart';
 import '../widgets/tafsir_sheet.dart';
 
 class ChatMessage {
-  final String text; final bool isUser; final String time; final Map<String, dynamic>? verseData; final String? tafsirText;
-  final String? surahName; final String? fullSurahText;
-  ChatMessage({required this.text, required this.isUser, required this.time, this.verseData, this.tafsirText, this.surahName, this.fullSurahText});
+  final String text; 
+  final bool isUser; 
+  final String time; 
+  final Map<String, dynamic>? verseData; 
+  final String? surahName; 
+  final String? fullSurahText;
+  final List<Map<String, String>>? tafsirData; // 🌟 حقل جديد لبيانات التفسير
+  
+  ChatMessage({
+    required this.text, required this.isUser, required this.time, 
+    this.verseData, this.surahName, this.fullSurahText, this.tafsirData
+  });
 }
 
 class ChatScreen extends StatefulWidget {
@@ -45,13 +55,55 @@ class _ChatScreenState extends State<ChatScreen> {
     });
   }
 
+  // 🌟 دالة اختيار التفسير: تفتح النافذة، ولما تختار، تضيف الكارت في الشات
   void _openTafsir(Map<String, dynamic> data) async {
     final books = await DatabaseHelper.instance.getTafsirBooks();
     if (!mounted) return;
-    showModalBottomSheet(
-      context: context, isScrollControlled: true, backgroundColor: Colors.transparent, 
-      builder: (_) => TafsirSheet(surahName: data['surahName'], surahId: data['surahId'], verseNumber: data['verseNumber'], verseText: data['verseText'], books: books),
+
+    // نافذة اختيار التفاسير
+    final selectedBooks = await showModalBottomSheet<List<String>>(
+      context: context, 
+      isScrollControlled: true, 
+      backgroundColor: Colors.transparent, 
+      builder: (_) => TafsirSheet(
+        surahName: data['surahName'], 
+        surahId: data['surahId'], 
+        verseNumber: data['verseNumber'], 
+        verseText: data['verseText'], 
+        books: books,
+      ),
     );
+
+    // لو المستخدم اختار تفاسير وضغط عرض
+    if (selectedBooks != null && selectedBooks.isNotEmpty && mounted) {
+      setState(() => _typing = true);
+      _scrollToMessage();
+
+      try {
+        final tafsirs = await DatabaseHelper.instance.getTafsirs(data['surahId'] as int, data['verseNumber'] as int);
+        final List<Map<String, String>> tafsirList = [];
+
+        for (var key in selectedBooks) {
+          final book = books.firstWhere((b) => b['key'] == key, orElse: () => {'name_ar': key});
+          final text = tafsirs.firstWhere((t) => t['book_key'] == key, orElse: () => {'text_ar': 'التفسير غير متوفر.'})['text_ar'] as String;
+          
+          tafsirList.add({
+            'book_name': book['name_ar'] as String,
+            'text': text,
+          });
+        }
+
+        setState(() => _messages.add(ChatMessage(
+          text: '', isUser: false, time: _formatTime(),
+          tafsirData: tafsirList,
+        )));
+      } catch (e) {
+        setState(() => _messages.add(ChatMessage(text: 'حدث خطأ في جلب التفسير.', isUser: false, time: _formatTime())));
+      } finally {
+        if (mounted) setState(() => _typing = false);
+        _scrollToMessage();
+      }
+    }
   }
 
   Future<void> _handleSubmit() async {
@@ -76,13 +128,10 @@ class _ChatScreenState extends State<ChatScreen> {
         if (verse.isNotEmpty) {
           final v = verse.first;
           final surahName = v['surah_name'] as String? ?? 'غير معروف';
-          final tafsirs = await DatabaseHelper.instance.getTafsirs(sid, vn);
-          final defaultTafsir = tafsirs.isNotEmpty ? tafsirs.first['text_ar'] as String : 'التفسير غير متوفر.';
           
           setState(() => _messages.add(ChatMessage(
             text: '', isUser: false, time: currentTime,
             verseData: {'surahId': sid, 'surahName': surahName, 'verseNumber': vn, 'verseText': v['text_ar']},
-            tafsirText: defaultTafsir,
           )));
         } else {
           setState(() => _messages.add(ChatMessage(text: 'لم يتم العثور على الآية.', isUser: false, time: currentTime)));
@@ -137,11 +186,16 @@ class _ChatScreenState extends State<ChatScreen> {
                   final isLast = i == _messages.length - 1;
                   
                   Widget messageWidget;
-                  if (m.fullSurahText != null) {
+                  if (m.tafsirData != null) {
+                    // عرض كارت التفسير
+                    messageWidget = Column(
+                      children: m.tafsirData!.map((t) => TafsirCard(bookName: t['book_name']!, tafsirText: t['text']!)).toList(),
+                    );
+                  } else if (m.fullSurahText != null) {
                     messageWidget = SurahCard(surahName: m.surahName!, fullText: m.fullSurahText!);
                   } else if (m.verseData != null) {
                     messageWidget = VerseCard(
-                      surahId: m.verseData!['surahId'] as int, surahName: m.verseData!['surahName'] as String, verseNumber: m.verseData!['verseNumber'] as int, text: m.verseData!['verseText'] as String, tafsirText: m.tafsirText ?? '',
+                      surahId: m.verseData!['surahId'] as int, surahName: m.verseData!['surahName'] as String, verseNumber: m.verseData!['verseNumber'] as int, text: m.verseData!['verseText'] as String, tafsirText: '',
                       onTafsir: () => _openTafsir(m.verseData!), 
                     );
                   } else {

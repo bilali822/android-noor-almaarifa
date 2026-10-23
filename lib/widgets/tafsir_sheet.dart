@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import '../db/database_helper.dart';
 import '../theme/app_colors.dart';
 
 class TafsirSheet extends StatefulWidget {
@@ -9,34 +8,12 @@ class TafsirSheet extends StatefulWidget {
 }
 
 class _TafsirSheetState extends State<TafsirSheet> {
-  int _selectedIndex = 0;
-  String _text = '';
-  bool _loading = true;
-
-  @override void initState() { super.initState(); _load(); }
-
-  Future<void> _load() async {
-    if (widget.books.isEmpty) return;
-    setState(() => _loading = true);
-    final tafsirs = await DatabaseHelper.instance.getTafsirs(widget.surahId, widget.verseNumber);
-    final bookKey = widget.books[_selectedIndex]['key'];
-    final match = tafsirs.firstWhere((t) => t['book_key'] == bookKey, orElse: () => <String, Object?>{});
-    setState(() { _text = match['text_ar'] as String? ?? 'غير متوفر'; _loading = false; });
-  }
+  final Set<String> _selected = {};
 
   @override
   Widget build(BuildContext context) {
-    final screenHeight = MediaQuery.of(context).size.height;
-    final screenWidth = MediaQuery.of(context).size.width;
-    
-    // 🌟 جعل حجم الخط متجاوب
-    final verseFontSize = (screenWidth * 0.07).clamp(20.0, 30.0);
-    final tafsirFontSize = (screenWidth * 0.045).clamp(14.0, 18.0);
-
-    if (widget.books.isEmpty) return const Center(child: Text('لا توجد كتب تفسير متاحة.'));
-    
     return Container(
-      height: screenHeight * 0.9, 
+      height: MediaQuery.of(context).size.height * 0.7,
       decoration: const BoxDecoration(color: Colors.white, borderRadius: BorderRadius.vertical(top: Radius.circular(32))),
       child: Column(
         children: [
@@ -46,84 +23,52 @@ class _TafsirSheetState extends State<TafsirSheet> {
               mainAxisAlignment: MainAxisAlignment.spaceBetween, 
               children: [
                 IconButton(icon: const Icon(Icons.arrow_back_ios_new, color: AppColors.primary, size: 20), onPressed: () => Navigator.pop(context)),
-                Text('سورة ${widget.surahName} - الآية ${widget.verseNumber}', style: const TextStyle(color: AppColors.text, fontSize: 16, fontWeight: FontWeight.bold)),
-                const Icon(Icons.bookmark_border, color: AppColors.primary),
+                const Text('اختر التفاسير', style: TextStyle(color: AppColors.text, fontSize: 18, fontWeight: FontWeight.bold)),
+                const SizedBox(width: 40),
               ]
             ),
           ),
-          Container(height: 15, decoration: BoxDecoration(color: AppColors.primary.withOpacity(0.1), border: const Border.symmetric(horizontal: BorderSide(color: AppColors.primary, width: 0.5)))),
+          const Divider(color: AppColors.border),
           
-          // الآية
-          Padding(
-            padding: const EdgeInsets.all(24),
-            child: Text(
-              '﴿ ${widget.verseText} ﴾',
-              textDirection: TextDirection.rtl,
-              textAlign: TextAlign.center,
-              style: TextStyle(fontSize: verseFontSize, height: 2.0, color: AppColors.text, fontFamily: 'UthmanicHafs'),
-            ),
-          ),
-          
-          // أزرار التفاسير
-          SizedBox(
-            height: 45,
+          Expanded(
             child: ListView.builder(
-              scrollDirection: Axis.horizontal, 
-              padding: const EdgeInsets.symmetric(horizontal: 20), 
+              padding: const EdgeInsets.all(20),
               itemCount: widget.books.length,
               itemBuilder: (context, i) {
-                final isSelected = _selectedIndex == i;
-                return Padding(
-                  padding: const EdgeInsets.only(left: 8),
-                  child: ChoiceChip(
-                    label: Text(widget.books[i]['name_ar'] as String), 
-                    selected: isSelected, 
-                    onSelected: (val) { setState(() => _selectedIndex = i); _load(); },
-                    selectedColor: AppColors.primary, 
-                    backgroundColor: Colors.transparent,
-                    labelStyle: TextStyle(color: isSelected ? Colors.white : AppColors.textMuted, fontWeight: FontWeight.bold),
-                    side: BorderSide(color: isSelected ? AppColors.primary : AppColors.border), 
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-                  ),
+                final book = widget.books[i];
+                final key = book['key'] as String;
+                final name = book['name_ar'] as String;
+                final isSelected = _selected.contains(key);
+
+                return CheckboxListTile(
+                  title: Text(name, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                  value: isSelected,
+                  activeColor: AppColors.primary,
+                  onChanged: (val) {
+                    setState(() {
+                      if (val == true) _selected.add(key);
+                      else _selected.remove(key);
+                    });
+                  },
                 );
               },
             ),
           ),
-          const SizedBox(height: 16),
           
-          // نص التفسير بالخط العثماني
-          Expanded(
-            child: Container(
-              margin: const EdgeInsets.symmetric(horizontal: 20), 
-              padding: const EdgeInsets.all(20),
-              decoration: BoxDecoration(color: AppColors.bgDeep, borderRadius: BorderRadius.circular(16)), 
-              child: _loading 
-                ? const Center(child: CircularProgressIndicator(color: AppColors.primary)) 
-                : SingleChildScrollView(
-                    child: Text(
-                      _text,
-                      textDirection: TextDirection.rtl,
-                      textAlign: TextAlign.justify,
-                      style: TextStyle(
-                        fontSize: tafsirFontSize, 
-                        height: 2.0, 
-                        color: AppColors.text,
-                        fontFamily: 'UthmanicHafs', // 🌟 الخط العثماني للتفسير
-                      ),
-                    ),
-                  ),
-            ),
-          ),
-          
-          // أزرار التحكم
           Padding(
             padding: const EdgeInsets.all(20),
-            child: Row(
-              children: [
-                Expanded(child: OutlinedButton.icon(onPressed: () {}, icon: const Icon(Icons.copy, size: 18), label: const Text('نسخ'), style: OutlinedButton.styleFrom(foregroundColor: AppColors.primary, side: const BorderSide(color: AppColors.primary), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)), padding: const EdgeInsets.symmetric(vertical: 16)))),
-                const SizedBox(width: 12),
-                Expanded(child: ElevatedButton.icon(onPressed: () => Navigator.pop(context), icon: const Icon(Icons.menu_book, size: 18), label: const Text('تفسير'), style: ElevatedButton.styleFrom(backgroundColor: AppColors.primary, foregroundColor: Colors.white, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)), padding: const EdgeInsets.symmetric(vertical: 16), elevation: 0))),
-              ],
+            child: SizedBox(
+              width: double.infinity,
+              child: ElevatedButton(
+                onPressed: _selected.isEmpty ? null : () => Navigator.pop(context, _selected.toList()),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.primary, 
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))
+                ),
+                child: const Text('عرض التفسير', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+              ),
             ),
           )
         ],
