@@ -1,27 +1,21 @@
-import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
-import 'db/database_helper.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'theme/app_colors.dart';
-import 'screens/chat_screen.dart';
+import 'screens/welcome_screen.dart';
+import 'screens/home_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  
-  // ⚡ تهيئة قاعدة البيانات للموبايل فقط
-  if (!kIsWeb) {
-    try {
-      await DatabaseHelper.instance.init();
-    } catch (e) {
-      debugPrint('Database error: $e');
-    }
-  }
-  
-  runApp(const NoorApp());
+  final prefs = await SharedPreferences.getInstance();
+  final hasName = prefs.containsKey('user_name');
+
+  runApp(NoorApp(hasName: hasName));
 }
 
 class NoorApp extends StatelessWidget {
-  const NoorApp({super.key});
+  final bool hasName;
+  const NoorApp({super.key, required this.hasName});
 
   @override
   Widget build(BuildContext context) {
@@ -61,7 +55,7 @@ class NoorApp extends StatelessWidget {
           child: child ?? const SizedBox(),
         );
       },
-      home: const ChatScreen(),
+      home: hasName ? const HomeScreen() : const WelcomeScreen(),
     );
   }
 }
