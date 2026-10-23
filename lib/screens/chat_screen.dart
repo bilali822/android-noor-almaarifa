@@ -29,7 +29,7 @@ class _ChatScreenState extends State<ChatScreen> {
     return '${now.hour.toString().padLeft(2, '0')}:${now.minute.toString().padLeft(2, '0')}';
   }
 
-  // 🌟 شيلنا دالة _scrollBottom عشان الشاشة مينزلش لتحت لوحدها
+  // 🚫 شيلنا دالة _scrollBottom بالكامل
 
   void _openTafsir(Map<String, dynamic> data) async {
     final books = await DatabaseHelper.instance.getTafsirBooks();
@@ -84,7 +84,7 @@ class _ChatScreenState extends State<ChatScreen> {
       setState(() => _messages.add(ChatMessage(text: 'حدث خطأ: $e', isUser: false, time: currentTime)));
     } finally { 
       if (mounted) setState(() => _typing = false); 
-      // 🚫 شيلنا أمر النزول لتحت خالص
+      // 🚫 شيلنا أمر النزول لتحت (scrollBottom) من هنا
     }
   }
 
@@ -124,7 +124,7 @@ class _ChatScreenState extends State<ChatScreen> {
                           verseNumber: m.verseData!['verseNumber'] as int, 
                           text: m.verseData!['verseText'] as String, 
                           tafsirText: m.tafsirText ?? '',
-                          onTafsir: () => _openTafsir(m.verseData!), // 🌟 ربط الزر
+                          onTafsir: () => _openTafsir(m.verseData!), 
                         ),
                         Padding(
                           padding: const EdgeInsets.only(right: 32, bottom: 16),
