@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'theme/app_colors.dart';
@@ -7,6 +8,22 @@ import 'screens/home_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // 🌟 إخفاء أشرطة النظام (الحالة والتنقل) وجعل التطبيق ملء الشاشة
+  SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
+
+  // 🌟 جعل أشرطة النظام شفافة تماماً
+  SystemChrome.setSystemUIOverlayStyle(
+    const SystemUiOverlayStyle(
+      statusBarColor: Colors.transparent,
+      systemNavigationBarColor: Colors.transparent,
+      systemNavigationBarDividerColor: Colors.transparent,
+      systemNavigationBarContrastEnforced: false,
+      statusBarIconBrightness: Brightness.dark,
+      systemNavigationBarIconBrightness: Brightness.dark,
+    ),
+  );
+
   final prefs = await SharedPreferences.getInstance();
   final hasName = prefs.containsKey('user_name');
   runApp(NoorApp(hasName: hasName));
@@ -30,14 +47,14 @@ class NoorApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       scrollBehavior: NoGlowScrollBehavior(),
       theme: ThemeData(
-        brightness: Brightness.light, // 🌟 تغيير للنظام الفاتح
+        brightness: Brightness.light,
         useMaterial3: true,
         scaffoldBackgroundColor: AppColors.bgDeep,
-        colorScheme: const ColorScheme.light( // 🌟 تغيير الـ Scheme
+        colorScheme: const ColorScheme.light(
           primary: AppColors.primary,
           secondary: AppColors.accent,
           surface: AppColors.bgSurface,
-          onPrimary: Colors.white, // النص فوق اللون الأساسي
+          onPrimary: Colors.white,
           onSurface: AppColors.text,
         ),
         fontFamily: 'Cairo',
@@ -48,7 +65,7 @@ class NoorApp extends StatelessWidget {
           },
         ),
         appBarTheme: const AppBarTheme(
-          backgroundColor: AppColors.bgDeep,
+          backgroundColor: Colors.transparent, // شريط التطبيق شفاف
           elevation: 0,
           centerTitle: true,
           iconTheme: IconThemeData(color: AppColors.primary),

@@ -7,14 +7,15 @@ import '../widgets/welcome_view.dart';
 import '../widgets/typing_indicator.dart';
 import '../widgets/tafsir_sheet.dart';
 import '../widgets/verse_card.dart';
-import '../widgets/tafsir_card.dart'; // استدعاء الكارت الجديد
+import '../widgets/tafsir_card.dart';
+import '../widgets/quranic_background.dart';
 
 class ChatMessage {
   final String text; 
   final bool isUser; 
   final DateTime time; 
   final Map<String, dynamic>? verseData;
-  final List<Map<String, dynamic>>? tafsirData; // إضافة حقل للتفسير
+  final List<Map<String, dynamic>>? tafsirData; 
 
   ChatMessage({required this.text, required this.isUser, this.verseData, this.tafsirData}) : time = DateTime.now();
 }
@@ -44,7 +45,7 @@ class _ChatScreenState extends State<ChatScreen> {
     final text = (forced ?? _inputCtrl.text).trim(); if (text.isEmpty) return;
     _inputCtrl.clear(); 
     setState(() { _messages.add(ChatMessage(text: text, isUser: true)); _typing = true; }); 
-    _scrollBottom(); // ننزل لتحت عشان نشوف رسالة المستخدم
+    _scrollBottom(); 
     
     try { await _processQuery(text); } catch (e) { setState(() => _messages.add(ChatMessage(text: 'حدث خطأ في النظام المحلي.', isUser: false))); } 
     finally { if (mounted) setState(() => _typing = false); _scrollBottom(); }
@@ -94,7 +95,6 @@ class _ChatScreenState extends State<ChatScreen> {
 
     if (selected != null && selected.isNotEmpty && mounted) {
       setState(() => _typing = true); 
-      // 🚫 شيلنا أمر _scrollBottom() من هنا عشان مينزلش لتحت
 
       try {
         final tafsirs = await DatabaseHelper.instance.getTafsirs(data['surahId'] as int, data['verseNumber'] as int);
@@ -117,7 +117,6 @@ class _ChatScreenState extends State<ChatScreen> {
           }
           _typing = false;
         });
-        // 🚫 ومش بنعمل scroll هنا كمان، عشان المستخدم يفضل واقف مكانه ويقرأ
       } catch (e) {
         setState(() {
           _messages.add(ChatMessage(text: 'حدث خطأ أثناء جلب التفسير.', isUser: false));
@@ -130,40 +129,50 @@ class _ChatScreenState extends State<ChatScreen> {
   @override Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.bgDeep,
+      extendBody: true,
+      extendBodyBehindAppBar: true,
       appBar: AppBar(title: const Text('المحادثة الذكية'), leading: IconButton(icon: const Icon(Icons.arrow_back_ios_new, size: 20), onPressed: () => Navigator.pop(context))),
-      body: Column(children: [
-        Expanded(child: _messages.isEmpty ? WelcomeView(onExample: (text) => _handleSubmit(text)) : ListView.builder(
-          controller: _scrollCtrl, itemCount: _messages.length + (_typing ? 1 : 0), 
-          padding: const EdgeInsets.only(top: 16, bottom: 20),
-          addAutomaticKeepAlives: false, addRepaintBoundaries: true,
-          itemBuilder: (context, i) {
-            if (i == _messages.length && _typing) return const TypingIndicator();
-            final m = _messages[i];
-            
-            // عرض كارت الآية
-            if (m.verseData != null) {
-              return VerseCard(surahName: m.verseData!['surahName'] as String, verseNumber: m.verseData!['verseNumber'] as int, text: m.verseData!['verseText'] as String, onTafsir: () => _openTafsir(m.verseData!));
-            }
-            
-            // عرض كروت التفاسير
-            if (m.tafsirData != null) {
-              return Column(
-                children: m.tafsirData!.map((t) => TafsirCard(bookName: t['book_name'], text: t['text'])).toList(),
-              );
-            }
-            
-            // عرض الرسائل العادية
-            return MessageBubble(text: m.text, isUser: m.isUser, time: _formatTime(m.time));
-          }
-        )),
-        SafeArea(top: false, child: Padding(padding: const EdgeInsets.fromLTRB(16, 8, 16, 16), child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6), decoration: BoxDecoration(color: AppColors.bgSurface, borderRadius: BorderRadius.circular(30), border: Border.all(color: AppColors.border), boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10, offset: const Offset(0, 5))]),
-          child: Row(children: [
-            Expanded(child: TextField(controller: _inputCtrl, textInputAction: TextInputAction.send, onSubmitted: (_) => _handleSubmit(), style: const TextStyle(color: AppColors.text), decoration: const InputDecoration(hintText: 'اسأل عن آية أو سورة...', hintTextDirection: TextDirection.rtl, hintStyle: TextStyle(color: AppColors.textMuted), border: InputBorder.none, contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 14)))),
-            Container(decoration: const BoxDecoration(gradient: LinearGradient(colors: [AppColors.primary, AppColors.primaryDark]), shape: BoxShape.circle), child: IconButton(icon: const Icon(Icons.arrow_upward, color: Colors.white, size: 22), onPressed: _handleSubmit)),
-          ]),
-        ))),
-      ]),
+      body: Stack(
+        children: [
+          const QuranicBackground(child: SizedBox.expand()),
+          SafeArea(
+            bottom: false,
+            child: Column(children: [
+              Expanded(child: _messages.isEmpty ? WelcomeView(onExample: (text) => _handleSubmit(text)) : ListView.builder(
+                controller: _scrollCtrl, itemCount: _messages.length + (_typing ? 1 : 0), 
+                padding: const EdgeInsets.only(top: 16, bottom: 20),
+                addAutomaticKeepAlives: false, addRepaintBoundaries: true,
+                itemBuilder: (context, i) {
+                  if (i == _messages.length && _typing) return const TypingIndicator();
+                  final m = _messages[i];
+                  
+                  if (m.verseData != null) {
+                    return VerseCard(surahName: m.verseData!['surahName'] as String, verseNumber: m.verseData!['verseNumber'] as int, text: m.verseData!['verseText'] as String, onTafsir: () => _openTafsir(m.verseData!));
+                  }
+                  
+                  if (m.tafsirData != null) {
+                    return Column(
+                      children: m.tafsirData!.map((t) => TafsirCard(bookName: t['book_name'], text: t['text'])).toList(),
+                    );
+                  }
+                  
+                  return MessageBubble(text: m.text, isUser: m.isUser, time: _formatTime(m.time));
+                }
+              )),
+              SafeArea(
+                top: false,
+                child: Padding(padding: const EdgeInsets.fromLTRB(16, 8, 16, 16), child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6), decoration: BoxDecoration(color: AppColors.bgSurface, borderRadius: BorderRadius.circular(30), border: Border.all(color: AppColors.border), boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10, offset: const Offset(0, 5))]),
+                  child: Row(children: [
+                    Expanded(child: TextField(controller: _inputCtrl, textInputAction: TextInputAction.send, onSubmitted: (_) => _handleSubmit(), style: const TextStyle(color: AppColors.text), decoration: const InputDecoration(hintText: 'اسأل عن آية أو سورة...', hintTextDirection: TextDirection.rtl, hintStyle: TextStyle(color: AppColors.textMuted), border: InputBorder.none, contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 14)))),
+                    Container(decoration: const BoxDecoration(gradient: LinearGradient(colors: [AppColors.primary, AppColors.primaryDark]), shape: BoxShape.circle), child: IconButton(icon: const Icon(Icons.arrow_upward, color: Colors.white, size: 22), onPressed: _handleSubmit)),
+                  ]),
+                )),
+              ),
+            ]),
+          ),
+        ],
+      ),
     );
   }
 }

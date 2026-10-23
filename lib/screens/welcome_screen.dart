@@ -66,7 +66,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
             ),
             child: Column(
               children: [
-                Text(_currentQuote['text']!, textAlign: TextAlign.center, style: const TextStyle(fontSize: 18, height: 1.8, color: AppColors.text, fontFamily: 'serif')),
+                Text(_currentQuote['text']!, textAlign: TextAlign.center, style: const TextStyle(fontSize: 18, height: 1.8, color: AppColors.text, fontFamily: 'UthmanicHafs')),
                 const SizedBox(height: 8),
                 Text(_currentQuote['source']!, style: const TextStyle(fontSize: 12, color: Color(0xFF0F4C3A), fontWeight: FontWeight.bold))
               ],
@@ -95,20 +95,27 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
 
     return Scaffold(
       backgroundColor: AppColors.bgDeep,
-      body: QuranicBackground(
-        child: Center(
-          child: kIsWeb 
-              ? content 
-              : TweenAnimationBuilder<double>(
-                  tween: Tween(begin: 0, end: 1),
-                  duration: const Duration(milliseconds: 800),
-                  curve: Curves.easeOutCubic,
-                  builder: (context, value, child) {
-                    return Transform.translate(offset: Offset(0, 30 * (1 - value)), child: Opacity(opacity: value, child: child));
-                  },
-                  child: content,
-                ),
-        ),
+      extendBody: true,
+      extendBodyBehindAppBar: true,
+      body: Stack(
+        children: [
+          const QuranicBackground(child: SizedBox.expand()),
+          SafeArea(
+            child: Center(
+              child: kIsWeb 
+                  ? content 
+                  : TweenAnimationBuilder<double>(
+                      tween: Tween(begin: 0, end: 1),
+                      duration: const Duration(milliseconds: 800),
+                      curve: Curves.easeOutCubic,
+                      builder: (context, value, child) {
+                        return Transform.translate(offset: Offset(0, 30 * (1 - value)), child: Opacity(opacity: value, child: child));
+                      },
+                      child: content,
+                    ),
+            ),
+          ),
+        ],
       ),
     );
   }
