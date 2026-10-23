@@ -1,5 +1,5 @@
 name: noor_app
-description: "نور المعرفة - القرآن الكريم مع التفاسير"
+description: "نور المعرفة - القرآن الكريم"
 publish_to: 'none'
 version: 1.0.0+1
 
@@ -33,11 +33,3 @@ flutter:
     - family: AmiriQuran
       fonts:
         - asset: assets/fonts/AmiriQuran.ttf
-
-flutter_launcher_icons:
-  android: "launcher_icon"
-  ios: false
-  image_path: "assets/icon/app_icon.png"
-  min_sdk_android: 21
-  adaptive_icon_background: "#0A0A1A"
-  adaptive_icon_foreground: "assets/icon/app_icon.png"
