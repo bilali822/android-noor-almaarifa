@@ -114,7 +114,7 @@ class _ChatScreenState extends State<ChatScreen> {
         final verses = await DatabaseHelper.instance.getVerses(sid);
         
         if (verses.isNotEmpty) {
-          final surahName = verses.first['surah_name'] ?? 'غير معروف';
+          final surahName = verses.first['surah_name'] as String? ?? 'غير معروف';
           
           // تجميع السورة كلها في نص واحد
           String fullText = 'بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ\n\n';
