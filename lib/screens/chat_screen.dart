@@ -40,19 +40,25 @@ class _ChatScreenState extends State<ChatScreen> {
     try {
       final p = QueryParser.parse(text);
       if (p['type'] == 'verse' || p['type'] == 'search') {
-        final sid = p['surahId'] ?? 18; final vn = p['verseNumber'] ?? 9;
+        final sid = p['surahId'] ?? 2; // لو مفيش سورة، افترض البقرة
+        final vn = p['verseNumber'] ?? 255; // لو مفيش آية، افترض آية الكرسي
+        
         final verse = await DatabaseHelper.instance.getVerse(sid, vn);
         
         if (verse.isNotEmpty) {
           final v = verse.first;
-          // جلب التفسير الميسر كتفسير افتراضي للعرض في الكارت
+          final surahName = v['surah_name'] ?? 'غير معروف';
+          
+          // جلب التفاسير
           final tafsirs = await DatabaseHelper.instance.getTafsirs(sid, vn);
-          final defaultTafsir = tafsirs.firstWhere((t) => t['book_key'] == 'muyassar', orElse: () => {'text_ar': 'التفسير غير متوفر.'});
+          final defaultTafsir = tafsirs.isNotEmpty 
+              ? tafsirs.first['text_ar'] as String 
+              : 'التفسير غير متوفر.';
           
           setState(() => _messages.add(ChatMessage(
             text: '', isUser: false, time: currentTime,
-            verseData: {'surahId': sid, 'surahName': v['surah_name'], 'verseNumber': vn, 'verseText': v['text_ar']},
-            tafsirText: defaultTafsir['text_ar'] as String,
+            verseData: {'surahId': sid, 'surahName': surahName, 'verseNumber': vn, 'verseText': v['text_ar']},
+            tafsirText: defaultTafsir,
           )));
         } else {
           setState(() => _messages.add(ChatMessage(text: 'لم يتم العثور على الآية.', isUser: false, time: currentTime)));
@@ -60,7 +66,12 @@ class _ChatScreenState extends State<ChatScreen> {
       } else {
         setState(() => _messages.add(ChatMessage(text: 'جرب تسأل عن آية أو سورة.', isUser: false, time: currentTime)));
       }
-    } finally { if (mounted) setState(() => _typing = false); _scrollBottom(); }
+    } catch (e) {
+      setState(() => _messages.add(ChatMessage(text: 'حدث خطأ: $e', isUser: false, time: currentTime)));
+    } finally { 
+      if (mounted) setState(() => _typing = false); 
+      _scrollBottom(); 
+    }
   }
 
   @override Widget build(BuildContext context) {
@@ -69,7 +80,7 @@ class _ChatScreenState extends State<ChatScreen> {
       body: QuranicBackground(
         child: SafeArea(
           child: Column(children: [
-            // 🌟 الهيدر العائم (زي الصورة)
+            // الهيدر
             Container(
               margin: const EdgeInsets.fromLTRB(16, 16, 16, 8),
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
@@ -88,7 +99,7 @@ class _ChatScreenState extends State<ChatScreen> {
                       Text('مساعدك لتفسير القرآن الكريم', style: TextStyle(color: AppColors.textMuted, fontSize: 12)),
                     ],
                   ),
-                  const SizedBox(width: 40), // للتوازن
+                  const SizedBox(width: 40),
                 ],
               ),
             ),
@@ -133,7 +144,7 @@ class _ChatScreenState extends State<ChatScreen> {
               ),
             ),
             
-            // 🌟 صندوق الإدخال (مطابق للصورة)
+            // مربع الإدخال
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
               child: Container(
