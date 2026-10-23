@@ -37,10 +37,10 @@ class _ChatScreenState extends State<ChatScreen> {
           final v = verse.first;
           setState(() => _messages.add(ChatMessage(text: '', isUser: false, verseData: {'surahId': sid, 'surahName': v['surah_name'], 'verseNumber': vn, 'verseText': v['text_ar']})));
         } else {
-          setState(() => _messages.add(const ChatMessage(text: 'لم يتم العثور على الآية.', isUser: false)));
+          setState(() => _messages.add(ChatMessage(text: 'لم يتم العثور على الآية.', isUser: false)));
         }
       } else {
-        setState(() => _messages.add(const ChatMessage(text: 'جرب تسأل عن آية أو سورة.', isUser: false)));
+        setState(() => _messages.add(ChatMessage(text: 'جرب تسأل عن آية أو سورة.', isUser: false)));
       }
     } finally { if (mounted) setState(() => _typing = false); _scrollBottom(); }
   }
