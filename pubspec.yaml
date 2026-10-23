@@ -16,11 +16,10 @@ dependencies:
   path: ^1.9.0
   path_provider: ^2.1.5
   shared_preferences: ^2.3.3
+  http: ^1.2.2
   audioplayers: ^6.0.0
   share_plus: ^9.0.0
   screenshot: ^3.0.0
-  path_provider: ^2.1.5
-
 
 dev_dependencies:
   flutter_test:
@@ -38,3 +37,11 @@ flutter:
     - family: UthmanicHafs
       fonts:
         - asset: assets/fonts/UthmanicHafs.ttf
+
+flutter_launcher_icons:
+  android: "launcher_icon"
+  ios: false
+  image_path: "assets/icon/app_icon.png"
+  min_sdk_android: 21
+  adaptive_icon_background: "#0B101E"
+  adaptive_icon_foreground: "assets/icon/app_icon.png"
