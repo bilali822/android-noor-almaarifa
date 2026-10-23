@@ -6,26 +6,123 @@ class QuranicBackground extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      // الخلفية الأساسية (البيج الفاتح من الصورة)
-      color: const Color(0xFFF9F6F0), 
-      child: Container(
-        decoration: BoxDecoration(
-          image: DecorationImage(
-            // تكرار الصورة
-            image: const AssetImage('assets/images/islamic_pattern.png'),
-            repeat: ImageRepeat.repeat,
-            // حجم النقشة (كل ما الرقم يقل، النقشة تكبر)
-            scale: 1.5, 
-            // تلوين النقشة بالبيج الغامق/الذهبي اللي في الصورة
-            colorFilter: const ColorFilter.mode(
-              Color(0xFFEADBC8), 
-              BlendMode.srcIn,
-            ),
+    final size = MediaQuery.of(context).size;
+
+    return Stack(
+      children: [
+        // 1. الخلفية البيج الفاتحة
+        Container(color: const Color(0xFFF9F6F0)),
+
+        // 2. الآيات والأحاديث في الخلفية (محمية من النقر)
+        IgnorePointer(
+          child: Stack(
+            children: [
+              // آية أعلى اليمين
+              Positioned(
+                top: size.height * 0.05,
+                right: -30,
+                child: Transform.rotate(
+                  angle: -0.1,
+                  child: const Text(
+                    '﴿ وَنُنَزِّلُ مِنَ الْقُرْآنِ\nمَا هُوَ شِفَاءٌ وَرَحْمَةٌ ﴾',
+                    textDirection: TextDirection.rtl,
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontFamily: 'UthmanicHafs',
+                      fontSize: 45,
+                      color: Color(0xFFE8DDCC), // لون بيج غامق شفاف
+                      height: 1.8,
+                    ),
+                  ),
+                ),
+              ),
+              
+              // حديث أعلى اليسار
+              Positioned(
+                top: size.height * 0.25,
+                left: -20,
+                child: Transform.rotate(
+                  angle: 0.15,
+                  child: const Text(
+                    'خَيْرُكُمْ مَنْ\nتَعَلَّمَ الْقُرْآنَ وَعَلَّمَهُ',
+                    textDirection: TextDirection.rtl,
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontFamily: 'UthmanicHafs',
+                      fontSize: 35,
+                      color: Color(0xFFE8DDCC),
+                      height: 1.8,
+                    ),
+                  ),
+                ),
+              ),
+
+              // آية في المنتصف
+              Positioned(
+                top: size.height * 0.45,
+                right: -40,
+                child: Transform.rotate(
+                  angle: 0.05,
+                  child: const Text(
+                    '﴿ إِنَّ هَذَا الْقُرْآنَ\nيَهْدِي لِلَّتِي هِيَ أَقْوَمُ ﴾',
+                    textDirection: TextDirection.rtl,
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontFamily: 'UthmanicHafs',
+                      fontSize: 45,
+                      color: Color(0xFFE8DDCC),
+                      height: 1.8,
+                    ),
+                  ),
+                ),
+              ),
+
+              // حديث أسفل اليسار
+              Positioned(
+                bottom: size.height * 0.20,
+                left: -20,
+                child: Transform.rotate(
+                  angle: -0.12,
+                  child: const Text(
+                    'مَنْ سَلَكَ طَرِيقًا\nيَلْتَمِسُ فِيهِ عِلْمًا\nسَهَّلَ اللَّهُ لَهُ\nبِهِ طَرِيقًا إِلَى الْجَنَّةِ',
+                    textDirection: TextDirection.rtl,
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontFamily: 'UthmanicHafs',
+                      fontSize: 30,
+                      color: Color(0xFFE8DDCC),
+                      height: 1.8,
+                    ),
+                  ),
+                ),
+              ),
+
+              // آية أسفل اليمين
+              Positioned(
+                bottom: size.height * 0.05,
+                right: -10,
+                child: Transform.rotate(
+                  angle: 0.1,
+                  child: const Text(
+                    '﴿ أَلَا بِذِكْرِ اللَّهِ\nتَطْمَئِنُّ الْقُلُوبُ ﴾',
+                    textDirection: TextDirection.rtl,
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontFamily: 'UthmanicHafs',
+                      fontSize: 40,
+                      color: Color(0xFFE8DDCC),
+                      height: 1.8,
+                    ),
+                  ),
+                ),
+              ),
+            ],
           ),
         ),
-        child: child,
-      ),
+
+        // 3. المحتوى الأساسي (فوق الخلفية)
+        child,
+      ],
     );
   }
 }
