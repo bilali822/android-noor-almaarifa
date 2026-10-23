@@ -35,7 +35,9 @@ class DatabaseHelper {
 
   Future<List<Map<String, Object?>>> getTafsirs(int surahId, int verseNumber) async {
     return [
-      {'book_key': 'muyassar', 'text_ar': 'الله الذي لا يستحق الألوهية والعبودية إلا هو، الحيُّ الذي له جميع معاني الحياة الكاملة، القائم على كل شيء... (تفسير تجريبي للويب)'}
+      {'book_key': 'muyassar', 'text_ar': 'الله الذي لا يستحق الألوهية والعبودية إلا هو، الحيُّ الذي له جميع معاني الحياة الكاملة، القائم على كل شيء... (تفسير الميسر - ويب)'},
+      {'book_key': 'ibn_kathir', 'text_ar': 'هذه الآية الكريمة أعظم آيات القرآن... (تفسير ابن كثير - ويب)'},
+      {'book_key': 'saadi', 'text_ar': 'هذه الآية الكريمة أعظم آيات القرآن وأفضلها... (تفسير السعدي - ويب)'},
     ];
   }
 
@@ -43,6 +45,7 @@ class DatabaseHelper {
     return [
       {'key': 'muyassar', 'name_ar': 'التفسير الميسر'},
       {'key': 'ibn_kathir', 'name_ar': 'تفسير ابن كثير'},
+      {'key': 'saadi', 'name_ar': 'تفسير السعدي'},
     ];
   }
 

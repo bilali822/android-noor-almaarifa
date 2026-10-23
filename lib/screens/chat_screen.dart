@@ -7,6 +7,7 @@ import '../widgets/welcome_view.dart';
 import '../widgets/typing_indicator.dart';
 import '../widgets/tafsir_sheet.dart';
 import '../widgets/verse_card.dart';
+
 class ChatMessage {
   final String text; final bool isUser; final DateTime time; final Map<String, dynamic>? verseData;
   ChatMessage({required this.text, required this.isUser, this.verseData}) : time = DateTime.now();
@@ -20,11 +21,13 @@ class _ChatScreenState extends State<ChatScreen> {
   @override void dispose() { _inputCtrl.dispose(); _scrollCtrl.dispose(); super.dispose(); }
   void _scrollBottom() { WidgetsBinding.instance.addPostFrameCallback((_) { if (_scrollCtrl.hasClients) _scrollCtrl.animateTo(_scrollCtrl.position.maxScrollExtent, duration: const Duration(milliseconds: 300), curve: Curves.easeOut); }); }
   String _formatTime(DateTime t) { final h = t.hour % 12 == 0 ? 12 : t.hour % 12; final m = t.minute.toString().padLeft(2, '0'); final p = t.hour >= 12 ? 'م' : 'ص'; return '$h:$m $p'; }
+  
   Future<void> _handleSubmit([String? forced]) async {
     final text = (forced ?? _inputCtrl.text).trim(); if (text.isEmpty) return;
     _inputCtrl.clear(); setState(() { _messages.add(ChatMessage(text: text, isUser: true)); _typing = true; }); _scrollBottom();
     try { await _processQuery(text); } catch (e) { setState(() => _messages.add(ChatMessage(text: 'حدث خطأ في النظام المحلي.', isUser: false))); } finally { if (mounted) setState(() => _typing = false); _scrollBottom(); }
   }
+
   Future<void> _processQuery(String text) async {
     final p = QueryParser.parse(text); final type = p['type'] as String;
     if (type == 'verse' && p['surahId'] != null && p['verseNumber'] != null) {
@@ -49,28 +52,86 @@ class _ChatScreenState extends State<ChatScreen> {
       setState(() => _messages.add(ChatMessage(text: 'نتائج البحث:\n\n$body', isUser: false))); _scrollBottom(); return;
     }
   }
+
+  // 🌟 الدالة اللي اتصلحت عشان تجيب التفسير وتعرضه
   void _openTafsir(Map<String, dynamic> data) async {
-    final books = await DatabaseHelper.instance.getTafsirBooks(); if (!mounted) return;
-    showModalBottomSheet(context: context, isScrollControlled: true, backgroundColor: Colors.transparent, builder: (_) => TafsirSheet(surahName: data['surahName'] as String, surahId: data['surahId'] as int, verseNumber: data['verseNumber'] as int, verseText: data['verseText'] as String, books: books));
+    final books = await DatabaseHelper.instance.getTafsirBooks();
+    if (!mounted) return;
+
+    final selected = await showModalBottomSheet<List<String>>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) => TafsirSheet(
+        surahName: data['surahName'] as String,
+        surahId: data['surahId'] as int,
+        verseNumber: data['verseNumber'] as int,
+        verseText: data['verseText'] as String,
+        books: books,
+      ),
+    );
+
+    // لو المستخدم اختار تفاسير وضغط عرض
+    if (selected != null && selected.isNotEmpty && mounted) {
+      setState(() => _typing = true); // إظهار مؤشر التحميل
+      _scrollBottom();
+
+      try {
+        // جلب التفسير من قاعدة البيانات
+        final tafsirs = await DatabaseHelper.instance.getTafsirs(
+          data['surahId'] as int,
+          data['verseNumber'] as int,
+        );
+
+        // فلترة التفاسير اللي المستخدم اختارها
+        final selectedTafsirs = tafsirs.where((t) => selected.contains(t['book_key'])).toList();
+
+        String resultText = '📖 تفسير ${data['surahName']} - الآية ${data['verseNumber']}\n\n';
+        
+        if (selectedTafsirs.isEmpty) {
+          resultText += '⚠️ لم يتم العثور على التفسير المطلوب.';
+        } else {
+          for (var t in selectedTafsirs) {
+            final book = books.firstWhere((b) => b['key'] == t['book_key'], orElse: () => {'name_ar': t['book_key']});
+            resultText += '📚 ${book['name_ar']}:\n${t['text_ar']}\n\n';
+          }
+        }
+
+        setState(() {
+          _messages.add(ChatMessage(text: resultText, isUser: false));
+          _typing = false;
+        });
+        _scrollBottom();
+      } catch (e) {
+        setState(() {
+          _messages.add(ChatMessage(text: 'حدث خطأ أثناء جلب التفسير.', isUser: false));
+          _typing = false;
+        });
+      }
+    }
   }
+
   @override Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.bgDeep,
       appBar: AppBar(title: const Text('المحادثة الذكية'), leading: IconButton(icon: const Icon(Icons.arrow_back_ios_new, size: 20), onPressed: () => Navigator.pop(context))),
       body: Column(children: [
-        Expanded(child: _messages.isEmpty ? WelcomeView(onExample: (text) => _handleSubmit(text)) : ListView.builder(controller: _scrollCtrl, itemCount: _messages.length + (_typing ? 1 : 0),
-                    addAutomaticKeepAlives: false,
-                    addRepaintBoundaries: true, padding: const EdgeInsets.only(top: 16, bottom: 20), itemBuilder: (context, i) {
-          if (i == _messages.length && _typing) return const TypingIndicator();
-          final m = _messages[i];
-          if (m.verseData != null) return VerseCard(surahName: m.verseData!['surahName'] as String, verseNumber: m.verseData!['verseNumber'] as int, text: m.verseData!['verseText'] as String, onTafsir: () => _openTafsir(m.verseData!));
-          return MessageBubble(text: m.text, isUser: m.isUser, time: _formatTime(m.time));
-        })),
+        Expanded(child: _messages.isEmpty ? WelcomeView(onExample: (text) => _handleSubmit(text)) : ListView.builder(
+          controller: _scrollCtrl, itemCount: _messages.length + (_typing ? 1 : 0), 
+          padding: const EdgeInsets.only(top: 16, bottom: 20),
+          addAutomaticKeepAlives: false, addRepaintBoundaries: true,
+          itemBuilder: (context, i) {
+            if (i == _messages.length && _typing) return const TypingIndicator();
+            final m = _messages[i];
+            if (m.verseData != null) return VerseCard(surahName: m.verseData!['surahName'] as String, verseNumber: m.verseData!['verseNumber'] as int, text: m.verseData!['verseText'] as String, onTafsir: () => _openTafsir(m.verseData!));
+            return MessageBubble(text: m.text, isUser: m.isUser, time: _formatTime(m.time));
+          }
+        )),
         SafeArea(top: false, child: Padding(padding: const EdgeInsets.fromLTRB(16, 8, 16, 16), child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6), decoration: BoxDecoration(color: AppColors.bgSurface, borderRadius: BorderRadius.circular(30), border: Border.all(color: AppColors.border), boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.2), blurRadius: 20, offset: const Offset(0, 10))]),
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6), decoration: BoxDecoration(color: AppColors.bgSurface, borderRadius: BorderRadius.circular(30), border: Border.all(color: AppColors.border), boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10, offset: const Offset(0, 5))]),
           child: Row(children: [
             Expanded(child: TextField(controller: _inputCtrl, textInputAction: TextInputAction.send, onSubmitted: (_) => _handleSubmit(), style: const TextStyle(color: AppColors.text), decoration: const InputDecoration(hintText: 'اسأل عن آية أو سورة...', hintStyle: TextStyle(color: AppColors.textMuted), border: InputBorder.none, contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 14)))),
-            Container(decoration: const BoxDecoration(gradient: LinearGradient(colors: [AppColors.primary, AppColors.primaryDark]), shape: BoxShape.circle), child: IconButton(icon: const Icon(Icons.arrow_upward, color: AppColors.bgDeep, size: 22), onPressed: _handleSubmit)),
+            Container(decoration: const BoxDecoration(gradient: LinearGradient(colors: [AppColors.primary, AppColors.primaryDark]), shape: BoxShape.circle), child: IconButton(icon: const Icon(Icons.arrow_upward, color: Colors.white, size: 22), onPressed: _handleSubmit)),
           ]),
         ))),
       ]),
