@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../theme/app_colors.dart';
 import '../widgets/bouncy_tap.dart';
+import '../widgets/quranic_background.dart';
 import 'chat_screen.dart';
 import 'welcome_screen.dart';
 
@@ -31,7 +32,7 @@ class _HomeScreenState extends State<HomeScreen> {
     return Scaffold(
       backgroundColor: AppColors.bgDeep, // الخلفية العاجية
       extendBody: true,
-      body: SafeArea(
+      body: QuranicBackground(child: SafeArea(
         bottom: false,
         child: Center(
           child: ConstrainedBox(

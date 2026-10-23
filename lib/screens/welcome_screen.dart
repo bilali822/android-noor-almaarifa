@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../theme/app_colors.dart';
 import '../widgets/bouncy_tap.dart';
+import '../widgets/quranic_background.dart';
 import 'home_screen.dart';
 
 class WelcomeScreen extends StatefulWidget {
@@ -94,7 +95,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
 
     return Scaffold(
       backgroundColor: AppColors.bgDeep,
-      body: Center(
+      body: QuranicBackground(child: Center(
         child: kIsWeb 
             ? content 
             : TweenAnimationBuilder<double>(
