@@ -21,6 +21,43 @@ class _HomeScreenState extends State<HomeScreen> {
     SharedPreferences.getInstance().then((p) => setState(() => _name = p.getString('user_name') ?? 'زائر'));
   }
 
+  // 🌟 دالة عرض الإشعارات
+  void _showNotifications() {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
+      builder: (context) => Container(
+        height: 400,
+        decoration: const BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(30)),
+        ),
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text('الإشعارات الأخيرة', style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: AppColors.primary)),
+            const SizedBox(height: 20),
+            ListTile(
+              leading: const Icon(Icons.auto_awesome, color: AppColors.primary),
+              title: const Text('مرحباً بك في نور المعرفة'),
+              subtitle: const Text('نتمنى لك رحلة إيمانية مفيدة.'),
+              trailing: const Text('الآن', style: TextStyle(color: Colors.grey, fontSize: 12)),
+            ),
+            const Divider(),
+            ListTile(
+              leading: const Icon(Icons.menu_book, color: AppColors.primary),
+              title: const Text('تم تحديث التطبيق'),
+              subtitle: const Text('تمت إضافة التفاسير الستة كاملة.'),
+              trailing: const Text('منذ يومين', style: TextStyle(color: Colors.grey, fontSize: 12)),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -33,6 +70,7 @@ class _HomeScreenState extends State<HomeScreen> {
               bottom: false,
               child: Column(
                 children: [
+                  // 🌟 الهيدر (السلام عليكم + الجرس + الصورة)
                   Padding(
                     padding: const EdgeInsets.fromLTRB(24, 20, 24, 24),
                     child: Row(
@@ -48,25 +86,35 @@ class _HomeScreenState extends State<HomeScreen> {
                         ),
                         Row(
                           children: [
-                            Stack(
-                              children: [
-                                Container(padding: const EdgeInsets.all(10), decoration: BoxDecoration(color: Colors.white, shape: BoxShape.circle, boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.03), blurRadius: 10)]), child: const Icon(Icons.notifications_none, color: AppColors.primary, size: 24)),
-                                Positioned(top: 8, right: 8, child: Container(width: 8, height: 8, decoration: const BoxDecoration(color: AppColors.redDot, shape: BoxShape.circle)))
-                              ],
+                            // 🌟 الجرس (عند الضغط يظهر الإشعارات)
+                            GestureDetector(
+                              onTap: _showNotifications,
+                              child: Stack(
+                                children: [
+                                  Container(padding: const EdgeInsets.all(10), decoration: BoxDecoration(color: Colors.white, shape: BoxShape.circle, boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.03), blurRadius: 10)]), child: const Icon(Icons.notifications_none, color: AppColors.primary, size: 24)),
+                                  Positioned(top: 8, right: 8, child: Container(width: 8, height: 8, decoration: const BoxDecoration(color: AppColors.redDot, shape: BoxShape.circle)))
+                                ],
+                              ),
                             ),
                             const SizedBox(width: 12),
-                            Container(width: 44, height: 44, decoration: BoxDecoration(color: const Color(0xFFD3E2D3), shape: BoxShape.circle, border: Border.all(color: Colors.white, width: 2)), child: const Icon(Icons.person, color: AppColors.primary, size: 28))
+                            // 🌟 الصورة الشخصية (عند الضغط تدخل الإعدادات)
+                            GestureDetector(
+                              onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const SettingsScreen())),
+                              child: Container(width: 44, height: 44, decoration: BoxDecoration(color: const Color(0xFFD3E2D3), shape: BoxShape.circle, border: Border.all(color: Colors.white, width: 2)), child: const Icon(Icons.person, color: AppColors.primary, size: 28)),
+                            )
                           ],
                         )
                       ],
                     ),
                   ),
+                  // المحتوى
                   Expanded(
                     child: SingleChildScrollView(
                       physics: const BouncingScrollPhysics(),
                       padding: const EdgeInsets.symmetric(horizontal: 24),
                       child: Column(
                         children: [
+                          // كارت الآية
                           BouncyTap(
                             onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const ChatScreen())),
                             child: Container(
@@ -92,6 +140,7 @@ class _HomeScreenState extends State<HomeScreen> {
                           GridView.count(
                             crossAxisCount: 2, shrinkWrap: true, physics: const NeverScrollableScrollPhysics(), crossAxisSpacing: 16, mainAxisSpacing: 16, childAspectRatio: 1.0,
                             children: [
+                              // 🌟 الذكاء الاصطناعي (عند الضغط يفتح الشات)
                               _buildFeatureCard('الذكاء الاصطناعي', Icons.psychology_outlined, () => Navigator.push(context, MaterialPageRoute(builder: (_) => const ChatScreen()))),
                               _buildFeatureCard('الحديث', Icons.menu_book_outlined, () {}),
                               _buildFeatureCard('الإعدادات', Icons.settings_outlined, () => Navigator.push(context, MaterialPageRoute(builder: (_) => const SettingsScreen()))),
@@ -109,6 +158,7 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
         ),
       ),
+      // شريط التنقل
       bottomNavigationBar: Center(
         heightFactor: 1,
         child: ConstrainedBox(
