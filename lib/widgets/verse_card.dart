@@ -8,8 +8,17 @@ class VerseCard extends StatelessWidget {
   final int verseNumber;
   final String text;
   final String tafsirText;
+  final VoidCallback onTafsir; // 🌟 ضفنا المتغير ده عشان نربط الزر
 
-  const VerseCard({super.key, required this.surahId, required this.surahName, required this.verseNumber, required this.text, required this.tafsirText});
+  const VerseCard({
+    super.key, 
+    required this.surahId, 
+    required this.surahName, 
+    required this.verseNumber, 
+    required this.text, 
+    required this.tafsirText,
+    required this.onTafsir, // 🌟
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -37,7 +46,7 @@ class VerseCard extends StatelessWidget {
             ]),
           ),
           
-          // نص الآية (خط عثماني - حجم مناسب)
+          // نص الآية
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
             child: Text('﴿ $text ﴾', textDirection: TextDirection.rtl, textAlign: TextAlign.center, style: const TextStyle(color: AppColors.text, fontSize: 24, height: 2.2, fontFamily: 'UthmanicHafs')),
@@ -51,11 +60,11 @@ class VerseCard extends StatelessWidget {
           
           const Divider(color: AppColors.border, height: 1),
           
-          // التفسير (محدود بمساحة عشان ميكبرش)
+          // التفسير الافتراضي
           Padding(
             padding: const EdgeInsets.all(16),
             child: ConstrainedBox(
-              constraints: const BoxConstraints(maxHeight: 120), // أقصى ارتفاع للتفسير
+              constraints: const BoxConstraints(maxHeight: 120),
               child: SingleChildScrollView(
                 child: Text(tafsirText, textDirection: TextDirection.rtl, textAlign: TextAlign.justify, style: const TextStyle(color: AppColors.textSoft, fontSize: 14, height: 1.8)),
               ),
@@ -77,7 +86,7 @@ class VerseCard extends StatelessWidget {
               const SizedBox(width: 8),
               Expanded(
                 child: OutlinedButton.icon(
-                  onPressed: () {}, 
+                  onPressed: onTafsir, // 🌟 ربطنا الزر بالدالة اللي هتفتح التفاسير
                   icon: const Icon(Icons.menu_book, size: 16),
                   label: const Text('تفسير', style: TextStyle(fontSize: 13)),
                   style: OutlinedButton.styleFrom(foregroundColor: AppColors.primary, side: const BorderSide(color: AppColors.primary), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)), padding: const EdgeInsets.symmetric(vertical: 10)),

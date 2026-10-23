@@ -6,6 +6,7 @@ import '../widgets/message_bubble.dart';
 import '../widgets/typing_indicator.dart';
 import '../widgets/verse_card.dart';
 import '../widgets/quranic_background.dart';
+import '../widgets/tafsir_sheet.dart'; // 🌟 استدعاء شاشة التفاسير
 
 class ChatMessage {
   final String text; final bool isUser; final String time; final Map<String, dynamic>? verseData; final String? tafsirText;
@@ -30,6 +31,25 @@ class _ChatScreenState extends State<ChatScreen> {
 
   void _scrollBottom() => WidgetsBinding.instance.addPostFrameCallback((_) { if (_scrollCtrl.hasClients) _scrollCtrl.animateTo(_scrollCtrl.position.maxScrollExtent, duration: const Duration(milliseconds: 300), curve: Curves.easeOut); });
 
+  // 🌟 دالة فتح قائمة التفاسير
+  void _openTafsir(Map<String, dynamic> data) async {
+    final books = await DatabaseHelper.instance.getTafsirBooks();
+    if (!mounted) return;
+    
+    showModalBottomSheet(
+      context: context, 
+      isScrollControlled: true, 
+      backgroundColor: Colors.transparent, 
+      builder: (_) => TafsirSheet(
+        surahName: data['surahName'], 
+        surahId: data['surahId'], 
+        verseNumber: data['verseNumber'], 
+        verseText: data['verseText'], 
+        books: books,
+      ),
+    );
+  }
+
   Future<void> _handleSubmit() async {
     final text = _inputCtrl.text.trim(); if (text.isEmpty) return;
     final currentTime = _formatTime();
@@ -40,8 +60,8 @@ class _ChatScreenState extends State<ChatScreen> {
     try {
       final p = QueryParser.parse(text);
       if (p['type'] == 'verse' || p['type'] == 'search') {
-        final sid = p['surahId'] ?? 2; // لو مفيش سورة، افترض البقرة
-        final vn = p['verseNumber'] ?? 255; // لو مفيش آية، افترض آية الكرسي
+        final sid = p['surahId'] ?? 2; 
+        final vn = p['verseNumber'] ?? 255;
         
         final verse = await DatabaseHelper.instance.getVerse(sid, vn);
         
@@ -49,11 +69,8 @@ class _ChatScreenState extends State<ChatScreen> {
           final v = verse.first;
           final surahName = v['surah_name'] ?? 'غير معروف';
           
-          // جلب التفاسير
           final tafsirs = await DatabaseHelper.instance.getTafsirs(sid, vn);
-          final defaultTafsir = tafsirs.isNotEmpty 
-              ? tafsirs.first['text_ar'] as String 
-              : 'التفسير غير متوفر.';
+          final defaultTafsir = tafsirs.isNotEmpty ? tafsirs.first['text_ar'] as String : 'التفسير غير متوفر.';
           
           setState(() => _messages.add(ChatMessage(
             text: '', isUser: false, time: currentTime,
@@ -80,31 +97,19 @@ class _ChatScreenState extends State<ChatScreen> {
       body: QuranicBackground(
         child: SafeArea(
           child: Column(children: [
-            // الهيدر
             Container(
               margin: const EdgeInsets.fromLTRB(16, 16, 16, 8),
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(20),
-                boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10, offset: const Offset(0, 4))],
-              ),
+              decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(20), boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10, offset: const Offset(0, 4))]),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   IconButton(icon: const Icon(Icons.arrow_back_ios_new, color: AppColors.primary, size: 20), onPressed: () => Navigator.pop(context)),
-                  const Column(
-                    children: [
-                      Text('مساعد القرآن', style: TextStyle(color: AppColors.primary, fontSize: 20, fontWeight: FontWeight.bold)),
-                      Text('مساعدك لتفسير القرآن الكريم', style: TextStyle(color: AppColors.textMuted, fontSize: 12)),
-                    ],
-                  ),
+                  const Column(children: [Text('مساعد القرآن', style: TextStyle(color: AppColors.primary, fontSize: 20, fontWeight: FontWeight.bold)), Text('مساعدك لتفسير القرآن الكريم', style: TextStyle(color: AppColors.textMuted, fontSize: 12))]),
                   const SizedBox(width: 40),
                 ],
               ),
             ),
-            
-            // الرسائل
             Expanded(child: _messages.isEmpty 
               ? const Center(child: Text('اسأل عن أي آية أو سورة للبدء...', style: TextStyle(color: AppColors.textMuted)))
               : ListView.builder(
@@ -122,6 +127,7 @@ class _ChatScreenState extends State<ChatScreen> {
                           verseNumber: m.verseData!['verseNumber'] as int, 
                           text: m.verseData!['verseText'] as String, 
                           tafsirText: m.tafsirText ?? '',
+                          onTafsir: () => _openTafsir(m.verseData!), // 🌟 ربطنا الزر
                         ),
                         Padding(
                           padding: const EdgeInsets.only(right: 32, bottom: 16),
@@ -143,36 +149,14 @@ class _ChatScreenState extends State<ChatScreen> {
                 }
               ),
             ),
-            
-            // مربع الإدخال
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
               child: Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(30),
-                  boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10, offset: const Offset(0, 4))],
-                ),
+                decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(30), boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10, offset: const Offset(0, 4))]),
                 child: Row(children: [
-                  Expanded(
-                    child: TextField(
-                      controller: _inputCtrl, 
-                      textInputAction: TextInputAction.send, 
-                      onSubmitted: (_) => _handleSubmit(), 
-                      decoration: const InputDecoration(
-                        hintText: 'اسأل عن آية أو سورة...', 
-                        hintTextDirection: TextDirection.rtl, 
-                        border: InputBorder.none, 
-                        contentPadding: EdgeInsets.symmetric(horizontal: 16),
-                      ),
-                    ),
-                  ),
-                  Container(
-                    width: 48, height: 48,
-                    decoration: const BoxDecoration(color: AppColors.primary, shape: BoxShape.circle),
-                    child: IconButton(icon: const Icon(Icons.send, color: Colors.white, size: 22), onPressed: _handleSubmit),
-                  ),
+                  Expanded(child: TextField(controller: _inputCtrl, textInputAction: TextInputAction.send, onSubmitted: (_) => _handleSubmit(), decoration: const InputDecoration(hintText: 'اسأل عن آية أو سورة...', hintTextDirection: TextDirection.rtl, border: InputBorder.none, contentPadding: EdgeInsets.symmetric(horizontal: 16)))),
+                  Container(width: 48, height: 48, decoration: const BoxDecoration(color: AppColors.primary, shape: BoxShape.circle), child: IconButton(icon: const Icon(Icons.send, color: Colors.white, size: 22), onPressed: _handleSubmit)),
                 ]),
               ),
             ),
