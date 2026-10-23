@@ -9,32 +9,19 @@ class VerseCard extends StatefulWidget {
   final String text;
   final VoidCallback onTafsir;
 
-  const VerseCard({
-    super.key,
-    required this.surahName,
-    required this.verseNumber,
-    required this.text,
-    required this.onTafsir,
-  });
+  const VerseCard({super.key, required this.surahName, required this.verseNumber, required this.text, required this.onTafsir});
 
-  @override
-  State<VerseCard> createState() => _VerseCardState();
+  @override State<VerseCard> createState() => _VerseCardState();
 }
 
 class _VerseCardState extends State<VerseCard> {
   bool _isSaved = false;
 
-  @override
-  void initState() {
-    super.initState();
-    _checkIfSaved();
-  }
+  @override void initState() { super.initState(); _checkIfSaved(); }
 
   Future<void> _checkIfSaved() async {
     final prefs = await SharedPreferences.getInstance();
     final saved = prefs.getStringList('bookmarks') ?? [];
-    // بنفترض إن اسم السورة مش موجود في المفتاح، فبنعتمد على رقم السورة اللي بنجيبه من الداتابيز (مش موجود هنا للأسف، فهنستخدم اسم السورة ورقم الآية كبديل مؤقت)
-    // الأفضل نمرر surahId، بس عشان منبوظش الكود، هنخلي الحفظ بالاسم والرقم
     setState(() => _isSaved = saved.contains('${widget.surahName}:${widget.verseNumber}'));
   }
 
@@ -42,16 +29,7 @@ class _VerseCardState extends State<VerseCard> {
     final prefs = await SharedPreferences.getInstance();
     final saved = prefs.getStringList('bookmarks') ?? [];
     final key = '${widget.surahName}:${widget.verseNumber}';
-
-    setState(() {
-      if (_isSaved) {
-        saved.remove(key);
-        _isSaved = false;
-      } else {
-        saved.add(key);
-        _isSaved = true;
-      }
-    });
+    setState(() { if (_isSaved) { saved.remove(key); _isSaved = false; } else { saved.add(key); _isSaved = true; } });
     await prefs.setStringList('bookmarks', saved);
   }
 
@@ -60,71 +38,40 @@ class _VerseCardState extends State<VerseCard> {
     return Container(
       margin: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
       decoration: BoxDecoration(
-        color: AppColors.bgSurface,
+        color: Colors.white,
         borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: AppColors.primary.withOpacity(0.3), width: 1.5),
         boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 15, offset: const Offset(0, 5))],
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-            decoration: BoxDecoration(color: AppColors.primary.withOpacity(0.1), borderRadius: const BorderRadius.vertical(top: Radius.circular(24))),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text('سورة ${widget.surahName}', style: const TextStyle(color: AppColors.primary, fontWeight: FontWeight.bold, fontSize: 16)),
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                  decoration: BoxDecoration(color: AppColors.primary, borderRadius: BorderRadius.circular(20)),
-                  child: Text('آية ${widget.verseNumber}', style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 12)),
-                ),
-              ],
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 40),
-            child: Text(
-              '﴿ ${widget.text} ﴾',
-              textDirection: TextDirection.rtl,
-              textAlign: TextAlign.center,
-              style: const TextStyle(color: AppColors.text, fontSize: 26, height: 2.2, fontFamily: 'UthmanicHafs'),
-            ),
-          ),
-          const Divider(color: AppColors.border, height: 1),
-          Row(
-            children: [
-              Expanded(
-                child: TextButton.icon(
-                  onPressed: _toggleSave,
-                  icon: Icon(_isSaved ? Icons.bookmark : Icons.bookmark_border, size: 18, color: _isSaved ? AppColors.primary : AppColors.textMuted),
-                  label: Text(_isSaved ? 'محفوظة' : 'حفظ', style: TextStyle(color: _isSaved ? AppColors.primary : AppColors.textMuted)),
-                ),
-              ),
-              Container(width: 1, height: 30, color: AppColors.border),
-              Expanded(
-                child: TextButton.icon(
-                  onPressed: () {
-                    Clipboard.setData(ClipboardData(text: '${widget.text}\n[سورة ${widget.surahName} - آية ${widget.verseNumber}]'));
-                    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('تم نسخ الآية')));
-                  },
-                  icon: const Icon(Icons.copy, size: 18, color: AppColors.textMuted),
-                  label: const Text('نسخ', style: TextStyle(color: AppColors.textMuted)),
-                ),
-              ),
-              Container(width: 1, height: 30, color: AppColors.border),
-              Expanded(
-                child: TextButton.icon(
-                  onPressed: widget.onTafsir,
-                  icon: const Icon(Icons.menu_book, size: 18, color: AppColors.primary),
-                  label: const Text('التفسير', style: TextStyle(color: AppColors.primary, fontWeight: FontWeight.bold)),
-                ),
-              ),
-            ],
-          )
-        ],
-      ),
+      child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+        Padding(
+          padding: const EdgeInsets.fromLTRB(20, 16, 20, 8),
+          child: Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
+            Row(children: [
+              const Icon(Icons.menu_book, color: AppColors.primary, size: 18),
+              const SizedBox(width: 8),
+              Text('مساعد القرآن • سورة ${widget.surahName} • الآية ${widget.verseNumber}', style: const TextStyle(color: AppColors.primary, fontWeight: FontWeight.bold, fontSize: 12)),
+            ]),
+          ]),
+        ),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
+          child: Text('﴿ ${widget.text} ﴾', textDirection: TextDirection.rtl, textAlign: TextAlign.center, style: const TextStyle(color: AppColors.text, fontSize: 26, height: 2.2, fontFamily: 'UthmanicHafs')),
+        ),
+        Padding(
+          padding: const EdgeInsets.only(left: 20, bottom: 8),
+          child: Align(alignment: Alignment.centerLeft, child: Text('سورة ${widget.surahName} - الآية ${widget.verseNumber}', style: const TextStyle(color: AppColors.textMuted, fontSize: 12))),
+        ),
+        const Divider(color: AppColors.border, height: 1),
+        Padding(
+          padding: const EdgeInsets.all(12),
+          child: Row(children: [
+            Expanded(child: OutlinedButton.icon(onPressed: widget.onTafsir, icon: const Icon(Icons.menu_book, size: 18), label: const Text('تفسير'), style: OutlinedButton.styleFrom(foregroundColor: AppColors.primary, side: const BorderSide(color: AppColors.primary), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))))),
+            const SizedBox(width: 12),
+            Expanded(child: OutlinedButton.icon(onPressed: () { Clipboard.setData(ClipboardData(text: '${widget.text}\n[سورة ${widget.surahName} - آية ${widget.verseNumber}]')); ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('تم النسخ'))); }, icon: const Icon(Icons.copy, size: 18), label: const Text('نسخ'), style: OutlinedButton.styleFrom(foregroundColor: AppColors.primary, side: const BorderSide(color: AppColors.primary), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))))),
+            IconButton(onPressed: _toggleSave, icon: Icon(_isSaved ? Icons.bookmark : Icons.bookmark_border, color: AppColors.primary)),
+          ]),
+        )
+      ]),
     );
   }
 }
