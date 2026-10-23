@@ -114,8 +114,8 @@ class QuranicBackground extends StatelessWidget {
           style: TextStyle(
             fontFamily: 'AmiriQuran',
             fontSize: fontSize,
-            // 🌟 رفعنا الشفافية من 0.04 إلى 0.15 عشان تبان بوضوح
-            color: AppColors.primary.withOpacity(0.15), 
+            // 🌟 لون صلب تماماً بدون شفافية (Solid Light Gray)
+            color: const Color(0xFFCBD5E1), 
             height: 2.0,
           ),
         ),
