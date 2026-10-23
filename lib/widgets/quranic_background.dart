@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import '../theme/app_colors.dart';
 
 class QuranicBackground extends StatelessWidget {
   final Widget child;
@@ -9,18 +8,17 @@ class QuranicBackground extends StatelessWidget {
   Widget build(BuildContext context) {
     return Stack(
       children: [
-        // 1. اللون الأساسي (بيج فاتح)
-        Container(color: AppColors.bgDeep),
+        // 1. لون البيج الفاتح (خلفية التصميم)
+        Container(color: const Color(0xFFF7F4EC)),
         
-        // 2. النقشة الإسلامية (بدون شفافية - بلون بيج غامق يطابق التصميم)
+        // 2. النقشة الإسلامية (مكررة - مكبّرة - بلون بني فاتح)
         Positioned.fill(
           child: Image.asset(
             'assets/images/islamic_pattern.png',
             repeat: ImageRepeat.repeat,
-            fit: BoxFit.none,
-            // 🌟 هنا بنصبغ النقشة بلون "بيج غامق/ذهبي هادئ" عشان تطابق التصميم
-            color: const Color(0xFFE8DCCB), // لون بيج غامق/ذهبي هادئ
-            colorBlendMode: BlendMode.srcIn, // بيخلي الخطوط بس تاخد اللون ده
+            scale: 1.5, // 🌟 تكبير النقشة عشان تبان زي التصميم
+            color: const Color(0xFFD4C4B0), // 🌟 لون بني/بيج غامق دافئ
+            colorBlendMode: BlendMode.srcIn,
           ),
         ),
         
