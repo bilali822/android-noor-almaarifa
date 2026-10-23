@@ -8,7 +8,7 @@ class VerseCard extends StatelessWidget {
   final int verseNumber;
   final String text;
   final String tafsirText;
-  final VoidCallback onTafsir; // 🌟 ضفنا المتغير ده عشان نربط الزر
+  final VoidCallback onTafsir;
 
   const VerseCard({
     super.key, 
@@ -17,7 +17,7 @@ class VerseCard extends StatelessWidget {
     required this.verseNumber, 
     required this.text, 
     required this.tafsirText,
-    required this.onTafsir, // 🌟
+    required this.onTafsir,
   });
 
   @override
@@ -48,8 +48,8 @@ class VerseCard extends StatelessWidget {
           
           // نص الآية
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-            child: Text('﴿ $text ﴾', textDirection: TextDirection.rtl, textAlign: TextAlign.center, style: const TextStyle(color: AppColors.text, fontSize: 24, height: 2.2, fontFamily: 'UthmanicHafs')),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            child: Text('﴿ $text ﴾', textDirection: TextDirection.rtl, textAlign: TextAlign.center, style: const TextStyle(color: AppColors.text, fontSize: 24, height: 2.0, fontFamily: 'UthmanicHafs')),
           ),
           
           // اسم السورة
@@ -63,36 +63,46 @@ class VerseCard extends StatelessWidget {
           // التفسير الافتراضي
           Padding(
             padding: const EdgeInsets.all(16),
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(maxHeight: 120),
-              child: SingleChildScrollView(
-                child: Text(tafsirText, textDirection: TextDirection.rtl, textAlign: TextAlign.justify, style: const TextStyle(color: AppColors.textSoft, fontSize: 14, height: 1.8)),
-              ),
-            ),
+            child: Text(tafsirText, textDirection: TextDirection.rtl, textAlign: TextAlign.justify, style: const TextStyle(color: AppColors.textSoft, fontSize: 14, height: 1.8)),
           ),
           
-          // الأزرار
+          // الأزرار (مضمونة الظهور)
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-            child: Row(children: [
-              Expanded(
-                child: OutlinedButton.icon(
-                  onPressed: () { Clipboard.setData(ClipboardData(text: text)); ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('تم النسخ'))); },
-                  icon: const Icon(Icons.copy, size: 16),
-                  label: const Text('نسخ', style: TextStyle(fontSize: 13)),
-                  style: OutlinedButton.styleFrom(foregroundColor: AppColors.primary, side: const BorderSide(color: AppColors.primary), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)), padding: const EdgeInsets.symmetric(vertical: 10)),
+            child: Row(
+              children: [
+                Expanded(
+                  child: OutlinedButton.icon(
+                    onPressed: () { 
+                      Clipboard.setData(ClipboardData(text: text)); 
+                      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('تم النسخ'))); 
+                    },
+                    icon: const Icon(Icons.copy, size: 16),
+                    label: const Text('نسخ', style: TextStyle(fontSize: 13)),
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: AppColors.primary, 
+                      side: const BorderSide(color: AppColors.primary), 
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)), 
+                      padding: const EdgeInsets.symmetric(vertical: 10)
+                    ),
+                  ),
                 ),
-              ),
-              const SizedBox(width: 8),
-              Expanded(
-                child: OutlinedButton.icon(
-                  onPressed: onTafsir, // 🌟 ربطنا الزر بالدالة اللي هتفتح التفاسير
-                  icon: const Icon(Icons.menu_book, size: 16),
-                  label: const Text('تفسير', style: TextStyle(fontSize: 13)),
-                  style: OutlinedButton.styleFrom(foregroundColor: AppColors.primary, side: const BorderSide(color: AppColors.primary), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)), padding: const EdgeInsets.symmetric(vertical: 10)),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: OutlinedButton.icon(
+                    onPressed: onTafsir, // ربط زر التفسير
+                    icon: const Icon(Icons.menu_book, size: 16),
+                    label: const Text('تفسير', style: TextStyle(fontSize: 13)),
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: AppColors.primary, 
+                      side: const BorderSide(color: AppColors.primary), 
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)), 
+                      padding: const EdgeInsets.symmetric(vertical: 10)
+                    ),
+                  ),
                 ),
-              ),
-            ]),
+              ],
+            ),
           )
         ],
       ),

@@ -6,7 +6,7 @@ import '../widgets/message_bubble.dart';
 import '../widgets/typing_indicator.dart';
 import '../widgets/verse_card.dart';
 import '../widgets/quranic_background.dart';
-import '../widgets/tafsir_sheet.dart'; // 🌟 استدعاء شاشة التفاسير
+import '../widgets/tafsir_sheet.dart';
 
 class ChatMessage {
   final String text; final bool isUser; final String time; final Map<String, dynamic>? verseData; final String? tafsirText;
@@ -29,13 +29,11 @@ class _ChatScreenState extends State<ChatScreen> {
     return '${now.hour.toString().padLeft(2, '0')}:${now.minute.toString().padLeft(2, '0')}';
   }
 
-  void _scrollBottom() => WidgetsBinding.instance.addPostFrameCallback((_) { if (_scrollCtrl.hasClients) _scrollCtrl.animateTo(_scrollCtrl.position.maxScrollExtent, duration: const Duration(milliseconds: 300), curve: Curves.easeOut); });
+  // 🌟 شيلنا دالة _scrollBottom عشان الشاشة مينزلش لتحت لوحدها
 
-  // 🌟 دالة فتح قائمة التفاسير
   void _openTafsir(Map<String, dynamic> data) async {
     final books = await DatabaseHelper.instance.getTafsirBooks();
     if (!mounted) return;
-    
     showModalBottomSheet(
       context: context, 
       isScrollControlled: true, 
@@ -55,7 +53,6 @@ class _ChatScreenState extends State<ChatScreen> {
     final currentTime = _formatTime();
     _inputCtrl.clear(); 
     setState(() { _messages.add(ChatMessage(text: text, isUser: true, time: currentTime)); _typing = true; }); 
-    _scrollBottom();
     
     try {
       final p = QueryParser.parse(text);
@@ -87,7 +84,7 @@ class _ChatScreenState extends State<ChatScreen> {
       setState(() => _messages.add(ChatMessage(text: 'حدث خطأ: $e', isUser: false, time: currentTime)));
     } finally { 
       if (mounted) setState(() => _typing = false); 
-      _scrollBottom(); 
+      // 🚫 شيلنا أمر النزول لتحت خالص
     }
   }
 
@@ -127,7 +124,7 @@ class _ChatScreenState extends State<ChatScreen> {
                           verseNumber: m.verseData!['verseNumber'] as int, 
                           text: m.verseData!['verseText'] as String, 
                           tafsirText: m.tafsirText ?? '',
-                          onTafsir: () => _openTafsir(m.verseData!), // 🌟 ربطنا الزر
+                          onTafsir: () => _openTafsir(m.verseData!), // 🌟 ربط الزر
                         ),
                         Padding(
                           padding: const EdgeInsets.only(right: 32, bottom: 16),
