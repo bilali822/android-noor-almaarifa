@@ -9,19 +9,23 @@ class QuranicBackground extends StatelessWidget {
   Widget build(BuildContext context) {
     return Stack(
       children: [
+        // 1. اللون الأساسي (بيج)
         Container(color: AppColors.bgDeep),
+        
+        // 2. النقشة الإسلامية (شفافية 20% ولون رمادي)
         Positioned.fill(
           child: Opacity(
-            opacity: 0.08,
+            opacity: 0.20, // 🌟 رفعنا الشفافية عشان تبان
             child: Image.asset(
               'assets/images/islamic_pattern.png',
               repeat: ImageRepeat.repeat,
               fit: BoxFit.none,
-              color: AppColors.primary,
-              colorBlendMode: BlendMode.srcIn,
+              // 🌟 شلنا colorBlendMode عشان الصورة تظهر بألوانها الطبيعية
             ),
           ),
         ),
+        
+        // 3. المحتوى
         child,
       ],
     );
