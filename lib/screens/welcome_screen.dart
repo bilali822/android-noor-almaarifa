@@ -15,7 +15,6 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
   final _nameController = TextEditingController();
   bool _isLoading = false;
 
-  // قائمة مواعظ وآيات تظهر بشكل عشوائي
   final List<Map<String, String>> _quotes = [
     {"text": "﴿ وَقُل رَّبِّ زِدْنِي عِلْمًا ﴾", "source": "سورة طه"},
     {"text": "﴿ أَلَا بِذِكْرِ اللَّهِ تَطْمَئِنُّ الْقُلُوبُ ﴾", "source": "سورة الرعد"},
@@ -74,7 +73,6 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  // الشعار
                   Container(
                     width: 100,
                     height: 100,
@@ -96,8 +94,6 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                     child: const Icon(Icons.auto_stories, color: Color(0xFF0B101E), size: 50),
                   ),
                   const SizedBox(height: 40),
-                  
-                  // الترحيب
                   const Text(
                     'نور المعرفة',
                     style: TextStyle(fontSize: 32, fontWeight: FontWeight.w900, color: Colors.white, letterSpacing: 1),
@@ -109,14 +105,18 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                   ),
                   const SizedBox(height: 40),
 
-                  // بطاقة الموعظة
+                  // بطاقة الموعظة (تم إصلاح الخاصية المكررة border هنا)
                   Container(
                     padding: const EdgeInsets.all(20),
                     decoration: BoxDecoration(
                       color: Colors.white.withOpacity(0.03),
-                      border: Border.all(color: Colors.white.withOpacity(0.05)),
                       borderRadius: BorderRadius.circular(16),
-                      border: const Border(right: BorderSide(color: Color(0xFFD4AF37), width: 4)),
+                      border: Border(
+                        right: const BorderSide(color: Color(0xFFD4AF37), width: 4),
+                        top: BorderSide(color: Colors.white.withOpacity(0.05)),
+                        bottom: BorderSide(color: Colors.white.withOpacity(0.05)),
+                        left: BorderSide(color: Colors.white.withOpacity(0.05)),
+                      ),
                     ),
                     child: Column(
                       children: [
@@ -135,7 +135,6 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                   ),
                   const SizedBox(height: 40),
 
-                  // حقل الاسم
                   TextField(
                     controller: _nameController,
                     textAlign: TextAlign.center,
@@ -162,7 +161,6 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                   ),
                   const SizedBox(height: 24),
 
-                  // زر المتابعة
                   SizedBox(
                     width: double.infinity,
                     height: 56,
