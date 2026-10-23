@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'dart:ui' show FontFeature;
 import '../theme/app_colors.dart';
 
 class VerseCard extends StatelessWidget {
@@ -64,31 +63,19 @@ class VerseCard extends StatelessWidget {
             ),
           ),
           
-          // النص العثماني
+          // نص الآية بالخط العثماني
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 40),
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 40),
             child: Text(
               '﴿ $text ﴾',
               textDirection: TextDirection.rtl,
               textAlign: TextAlign.center,
-              textHeightBehavior: const TextHeightBehavior(
-                applyHeightToFirstAscent: false,
-                applyHeightToLastDescent: false,
-              ),
               style: const TextStyle(
                 color: AppColors.text,
-                fontSize: 24, 
-                height: 2.4, // زيادة كبيرة في المسافة لاستيعاب الحركات
-                fontFamily: 'AmiriQuran',
-                letterSpacing: 1.5, // إضافة مسافة بين الحروف عشان الحركات متداخلش
-                fontFeatures: [
-                  FontFeature.enable('kern'),  // الكيرنينج
-                  FontFeature.enable('liga'),  // توصيل الحروف
-                  FontFeature.enable('calt'),  // البدائل السياقية
-                  FontFeature.enable('mark'),  // ترتيب الحركات (مهم جداً)
-                  FontFeature.enable('mkmk'),  // ترتيب الحركات فوق بعضها (مهم جداً)
-                  FontFeature.enable('ss01'),  // البديل الأسلوبي 1
-                ],
+                fontSize: 26, 
+                height: 2.2,  
+                fontFamily: 'UthmanicHafs', // 🌟 الخط العثماني الرسمي
+                letterSpacing: 0,
               ),
             ),
           ),

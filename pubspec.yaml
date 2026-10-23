@@ -30,6 +30,6 @@ flutter:
     - assets/noor_quran.db
 
   fonts:
-    - family: AmiriQuran
+    - family: UthmanicHafs
       fonts:
-        - asset: assets/fonts/AmiriQuran.ttf
+        - asset: assets/fonts/UthmanicHafs.ttf
