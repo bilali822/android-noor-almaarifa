@@ -29,7 +29,7 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.bgDeep, // لون صلب بدون أنميشن
+      backgroundColor: AppColors.bgDeep, // الخلفية العاجية
       extendBody: true,
       body: SafeArea(
         bottom: false,
@@ -73,14 +73,14 @@ class _HomeScreenState extends State<HomeScreen> {
                       child: Container(
                         padding: const EdgeInsets.all(24),
                         decoration: BoxDecoration(
+                          // تدرج خفيف جداً من الأخضر الفاتح للأبيض
                           gradient: LinearGradient(
-                            colors: [AppColors.primary.withOpacity(0.15), AppColors.bgSurface],
-                            begin: Alignment.topLeft,
-                            end: Alignment.bottomRight,
+                            colors: [AppColors.primary.withOpacity(0.08), AppColors.bgSurface],
+                            begin: Alignment.topRight,
+                            end: Alignment.bottomLeft,
                           ),
                           borderRadius: BorderRadius.circular(24),
-                          border: Border.all(color: AppColors.primary.withOpacity(0.3)),
-                          // إزالة الظل التقيل لتحسين الأداء
+                          border: Border.all(color: AppColors.primary.withOpacity(0.2)),
                         ),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
@@ -97,13 +97,23 @@ class _HomeScreenState extends State<HomeScreen> {
                               ],
                             ),
                             const SizedBox(height: 20),
-                            const Text('﴿ وَقُل رَّبِّ زِدْنِي عِلْمًا ﴾', textDirection: TextDirection.rtl, style: TextStyle(fontSize: 26, height: 1.6, color: AppColors.text, fontFamily: 'serif', fontWeight: FontWeight.bold)),
+                            const Text(
+                              '﴿ وَقُل رَّبِّ زِدْنِي عِلْمًا ﴾',
+                              textDirection: TextDirection.rtl,
+                              style: TextStyle(fontSize: 26, height: 1.6, color: AppColors.text, fontFamily: 'serif', fontWeight: FontWeight.bold),
+                            ),
                             const SizedBox(height: 20),
                             SizedBox(
                               width: double.infinity,
                               child: ElevatedButton(
                                 onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const ChatScreen())),
-                                style: ElevatedButton.styleFrom(backgroundColor: AppColors.primary, foregroundColor: Colors.white, padding: const EdgeInsets.symmetric(vertical: 16), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)), elevation: 0),
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: AppColors.primary,
+                                  foregroundColor: Colors.white,
+                                  padding: const EdgeInsets.symmetric(vertical: 16),
+                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                                  elevation: 0,
+                                ),
                                 child: const Text('تصفح القرآن الآن', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
                               ),
                             )
@@ -140,9 +150,10 @@ class _HomeScreenState extends State<HomeScreen> {
               margin: const EdgeInsets.fromLTRB(24, 0, 24, 16),
               height: 70,
               decoration: BoxDecoration(
-                color: const Color(0xFF101623), // لون صلب
+                color: AppColors.bgSurface, // شريط التنقل أبيض
                 borderRadius: BorderRadius.circular(35),
                 border: Border.all(color: AppColors.border),
+                boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10, offset: const Offset(0, 5))], // ظل خفيف جداً
               ),
               child: ClipRRect(
                 borderRadius: BorderRadius.circular(35),
@@ -169,17 +180,18 @@ class _HomeScreenState extends State<HomeScreen> {
       child: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: const Color(0xFF1E293B), // لون صلب بدون شفافية
+          color: AppColors.bgSurface, // البطاقة بيضاء
           borderRadius: BorderRadius.circular(24),
           border: Border.all(color: AppColors.border),
+          boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.03), blurRadius: 10, offset: const Offset(0, 5))],
         ),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Container(
               padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(color: const Color(0xFF101623), shape: BoxShape.circle), // لون صلب
-              child: Icon(icon, color: AppColors.primary, size: 28),
+              decoration: BoxDecoration(color: AppColors.primary.withOpacity(0.1), shape: BoxShape.circle), // خلفية الأيقونة خضراء فاتحة
+              child: Icon(icon, color: AppColors.primary, size: 28), // الأيقونة خضراء غامقة
             ),
             const SizedBox(height: 16),
             Text(title, textAlign: TextAlign.center, style: const TextStyle(color: AppColors.text, fontSize: 15, fontWeight: FontWeight.bold)),
@@ -207,7 +219,12 @@ class _HomeScreenState extends State<HomeScreen> {
 
   void _showComingSoon() {
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: const Text('هذه الميزة ستتوفر قريباً', textAlign: TextAlign.center, style: TextStyle(fontWeight: FontWeight.bold)), backgroundColor: const Color(0xFFD4AF37), behavior: SnackBarBehavior.floating, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))),
+      SnackBar(
+        content: const Text('هذه الميزة ستتوفر قريباً', textAlign: TextAlign.center, style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white)), 
+        backgroundColor: AppColors.primary, 
+        behavior: SnackBarBehavior.floating, 
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))
+      ),
     );
   }
 }

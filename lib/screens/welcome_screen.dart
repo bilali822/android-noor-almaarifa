@@ -47,34 +47,34 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
           Container(
             width: 100, height: 100,
             decoration: BoxDecoration(
-              gradient: const LinearGradient(colors: [Color(0xFFD4AF37), Color(0xFFA68A61)], begin: Alignment.topLeft, end: Alignment.bottomRight),
+              gradient: const LinearGradient(colors: [Color(0xFF0F4C3A), Color(0xFF0A3629)], begin: Alignment.topLeft, end: Alignment.bottomRight),
               borderRadius: BorderRadius.circular(30),
-              boxShadow: [BoxShadow(color: const Color(0xFFD4AF37).withOpacity(0.2), blurRadius: 30, offset: const Offset(0, 10))],
+              boxShadow: [BoxShadow(color: const Color(0xFF0F4C3A).withOpacity(0.2), blurRadius: 30, offset: const Offset(0, 10))],
             ),
             child: const Icon(Icons.auto_stories, color: Colors.white, size: 50),
           ),
           const SizedBox(height: 40),
-          const Text('نور المعرفة', style: TextStyle(fontSize: 32, fontWeight: FontWeight.w900, color: Colors.white, letterSpacing: 1)),
+          const Text('نور المعرفة', style: TextStyle(fontSize: 32, fontWeight: FontWeight.w900, color: AppColors.text, letterSpacing: 1)),
           const SizedBox(height: 40),
           Container(
             padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(
               color: AppColors.bgSurface,
               borderRadius: BorderRadius.circular(16),
-              border: Border(right: const BorderSide(color: Color(0xFFD4AF37), width: 4), top: BorderSide(color: Colors.white.withOpacity(0.05)), bottom: BorderSide(color: Colors.white.withOpacity(0.05)), left: BorderSide(color: Colors.white.withOpacity(0.05))),
+              border: Border(right: const BorderSide(color: Color(0xFF0F4C3A), width: 4), top: BorderSide(color: AppColors.border), bottom: BorderSide(color: AppColors.border), left: BorderSide(color: AppColors.border)),
             ),
             child: Column(
               children: [
-                Text(_currentQuote['text']!, textAlign: TextAlign.center, style: const TextStyle(fontSize: 18, height: 1.8, color: Colors.white, fontFamily: 'serif')),
+                Text(_currentQuote['text']!, textAlign: TextAlign.center, style: const TextStyle(fontSize: 18, height: 1.8, color: AppColors.text, fontFamily: 'serif')),
                 const SizedBox(height: 8),
-                Text(_currentQuote['source']!, style: const TextStyle(fontSize: 12, color: Color(0xFFD4AF37), fontWeight: FontWeight.bold))
+                Text(_currentQuote['source']!, style: const TextStyle(fontSize: 12, color: Color(0xFF0F4C3A), fontWeight: FontWeight.bold))
               ],
             ),
           ),
           const SizedBox(height: 40),
           TextField(
-            controller: _nameController, textAlign: TextAlign.center, style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
-            decoration: InputDecoration(hintText: 'أدخل اسمك للبدء', hintStyle: const TextStyle(color: AppColors.textMuted), filled: true, fillColor: const Color(0xFF101623), contentPadding: const EdgeInsets.symmetric(vertical: 20), border: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide.none), enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: const BorderSide(color: Color(0xFF1E293B))), focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: const BorderSide(color: Color(0xFFD4AF37), width: 2))),
+            controller: _nameController, textAlign: TextAlign.center, style: const TextStyle(color: AppColors.text, fontSize: 18, fontWeight: FontWeight.bold),
+            decoration: InputDecoration(hintText: 'أدخل اسمك للبدء', hintStyle: const TextStyle(color: AppColors.textMuted), filled: true, fillColor: AppColors.bgSurface, contentPadding: const EdgeInsets.symmetric(vertical: 20), border: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide.none), enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide(color: AppColors.border)), focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: const BorderSide(color: Color(0xFF0F4C3A), width: 2))),
           ),
           const SizedBox(height: 24),
           BouncyTap(
@@ -83,8 +83,8 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
               width: double.infinity, height: 56,
               child: ElevatedButton(
                 onPressed: _isLoading ? null : _saveName,
-                style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFFD4AF37), foregroundColor: const Color(0xFF06080E), elevation: 0, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16))),
-                child: _isLoading ? const SizedBox(width: 24, height: 24, child: CircularProgressIndicator(color: Color(0xFF06080E), strokeWidth: 2)) : const Text('الدخول للمنصة', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF0F4C3A), foregroundColor: Colors.white, elevation: 0, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16))),
+                child: _isLoading ? const SizedBox(width: 24, height: 24, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2)) : const Text('الدخول للمنصة', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
               ),
             ),
           ),
@@ -94,23 +94,18 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
 
     return Scaffold(
       backgroundColor: AppColors.bgDeep,
-      body: Container(
-        decoration: const BoxDecoration(
-          gradient: RadialGradient(center: Alignment(0, -0.5), radius: 1.2, colors: [Color(0xFF151B2B), AppColors.bgDeep]),
-        ),
-        child: Center(
-          child: kIsWeb 
-              ? content 
-              : TweenAnimationBuilder<double>(
-                  tween: Tween(begin: 0, end: 1),
-                  duration: const Duration(milliseconds: 800),
-                  curve: Curves.easeOutCubic,
-                  builder: (context, value, child) {
-                    return Transform.translate(offset: Offset(0, 30 * (1 - value)), child: Opacity(opacity: value, child: child));
-                  },
-                  child: content,
-                ),
-        ),
+      body: Center(
+        child: kIsWeb 
+            ? content 
+            : TweenAnimationBuilder<double>(
+                tween: Tween(begin: 0, end: 1),
+                duration: const Duration(milliseconds: 800),
+                curve: Curves.easeOutCubic,
+                builder: (context, value, child) {
+                  return Transform.translate(offset: Offset(0, 30 * (1 - value)), child: Opacity(opacity: value, child: child));
+                },
+                child: content,
+              ),
       ),
     );
   }
