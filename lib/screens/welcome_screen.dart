@@ -95,18 +95,20 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
 
     return Scaffold(
       backgroundColor: AppColors.bgDeep,
-      body: QuranicBackground(child: Center(
-        child: kIsWeb 
-            ? content 
-            : TweenAnimationBuilder<double>(
-                tween: Tween(begin: 0, end: 1),
-                duration: const Duration(milliseconds: 800),
-                curve: Curves.easeOutCubic,
-                builder: (context, value, child) {
-                  return Transform.translate(offset: Offset(0, 30 * (1 - value)), child: Opacity(opacity: value, child: child));
-                },
-                child: content,
-              ),
+      body: QuranicBackground(
+        child: Center(
+          child: kIsWeb 
+              ? content 
+              : TweenAnimationBuilder<double>(
+                  tween: Tween(begin: 0, end: 1),
+                  duration: const Duration(milliseconds: 800),
+                  curve: Curves.easeOutCubic,
+                  builder: (context, value, child) {
+                    return Transform.translate(offset: Offset(0, 30 * (1 - value)), child: Opacity(opacity: value, child: child));
+                  },
+                  child: content,
+                ),
+        ),
       ),
     );
   }
