@@ -2,6 +2,7 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../theme/app_colors.dart';
+import '../widgets/bouncy_tap.dart';
 import 'home_screen.dart';
 class WelcomeScreen extends StatefulWidget {
   const WelcomeScreen({super.key});
@@ -42,7 +43,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
               decoration: InputDecoration(hintText: 'أدخل اسمك للبدء', hintStyle: const TextStyle(color: AppColors.textMuted), filled: true, fillColor: const Color(0xFF101623), contentPadding: const EdgeInsets.symmetric(vertical: 20), border: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide.none), enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: const BorderSide(color: Color(0xFF1E293B))), focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: const BorderSide(color: Color(0xFFD4AF37), width: 2))),
             ),
             const SizedBox(height: 24),
-            SizedBox(width: double.infinity, height: 56, child: ElevatedButton(onPressed: _isLoading ? null : _saveName, style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFFD4AF37), foregroundColor: const Color(0xFF06080E), elevation: 0, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16))), child: _isLoading ? const SizedBox(width: 24, height: 24, child: CircularProgressIndicator(color: Color(0xFF06080E), strokeWidth: 2)) : const Text('الدخول للمنصة', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)))),
+            BouncyTap(onTap: _isLoading ? () {} : _saveName, child: SizedBox(width: double.infinity, height: 56, child: ElevatedButton(onPressed: _isLoading ? null : _saveName, style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFFD4AF37), foregroundColor: const Color(0xFF06080E), elevation: 0, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16))), child: _isLoading ? const SizedBox(width: 24, height: 24, child: CircularProgressIndicator(color: Color(0xFF06080E), strokeWidth: 2)) : const Text('الدخول للمنصة', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold))))),
           ]),
         ),
       ),

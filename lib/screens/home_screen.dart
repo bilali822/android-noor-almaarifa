@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../theme/app_colors.dart';
 import '../widgets/animated_background.dart';
+import '../widgets/bouncy_tap.dart';
 import 'chat_screen.dart';
 import 'welcome_screen.dart';
 
@@ -37,11 +38,11 @@ class _HomeScreenState extends State<HomeScreen> {
           const AnimatedBackground(),
           SafeArea(
             bottom: false,
-            child: Center( // 🌟 توسيط المحتوى في نص الشاشة
+            child: Center(
               child: ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 700), // 🌟 تحديد أقصى عرض (زي الموبايل)
+                constraints: const BoxConstraints(maxWidth: 700),
                 child: CustomScrollView(
-                  physics: const BouncingScrollPhysics(),
+                  physics: const BouncingScrollPhysics(), // 🌟 سكرول مطاطي ناعم
                   slivers: [
                     SliverToBoxAdapter(
                       child: Padding(
@@ -74,58 +75,61 @@ class _HomeScreenState extends State<HomeScreen> {
                     SliverToBoxAdapter(
                       child: Padding(
                         padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-                        child: Container(
-                          padding: const EdgeInsets.all(24),
-                          decoration: BoxDecoration(
-                            gradient: LinearGradient(
-                              colors: [AppColors.primary.withOpacity(0.15), AppColors.bgSurface],
-                              begin: Alignment.topLeft,
-                              end: Alignment.bottomRight,
+                        child: BouncyTap(
+                          onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const ChatScreen())),
+                          child: Container(
+                            padding: const EdgeInsets.all(24),
+                            decoration: BoxDecoration(
+                              gradient: LinearGradient(
+                                colors: [AppColors.primary.withOpacity(0.15), AppColors.bgSurface],
+                                begin: Alignment.topLeft,
+                                end: Alignment.bottomRight,
+                              ),
+                              borderRadius: BorderRadius.circular(24),
+                              border: Border.all(color: AppColors.primary.withOpacity(0.3)),
+                              boxShadow: [
+                                BoxShadow(color: AppColors.primary.withOpacity(0.05), blurRadius: 30, offset: const Offset(0, 10))
+                              ],
                             ),
-                            borderRadius: BorderRadius.circular(24),
-                            border: Border.all(color: AppColors.primary.withOpacity(0.3)),
-                            boxShadow: [
-                              BoxShadow(color: AppColors.primary.withOpacity(0.05), blurRadius: 30, offset: const Offset(0, 10))
-                            ],
-                          ),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Row(
-                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                children: [
-                                  Container(
-                                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                                    decoration: BoxDecoration(
-                                      color: AppColors.primary.withOpacity(0.1),
-                                      borderRadius: BorderRadius.circular(30),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Row(
+                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                                      decoration: BoxDecoration(
+                                        color: AppColors.primary.withOpacity(0.1),
+                                        borderRadius: BorderRadius.circular(30),
+                                      ),
+                                      child: const Text('آية اليوم', style: TextStyle(color: AppColors.primary, fontSize: 12, fontWeight: FontWeight.bold)),
                                     ),
-                                    child: const Text('آية اليوم', style: TextStyle(color: AppColors.primary, fontSize: 12, fontWeight: FontWeight.bold)),
-                                  ),
-                                  const Icon(Icons.auto_awesome, color: AppColors.primary, size: 20),
-                                ],
-                              ),
-                              const SizedBox(height: 20),
-                              const Text(
-                                '﴿ وَقُل رَّبِّ زِدْنِي عِلْمًا ﴾',
-                                textDirection: TextDirection.rtl,
-                                style: TextStyle(fontSize: 26, height: 1.6, color: Colors.white, fontFamily: 'serif', fontWeight: FontWeight.bold),
-                              ),
-                              const SizedBox(height: 20),
-                              SizedBox(
-                                width: double.infinity,
-                                child: ElevatedButton(
-                                  onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const ChatScreen())),
-                                  style: ElevatedButton.styleFrom(
-                                    backgroundColor: AppColors.primary,
-                                    foregroundColor: AppColors.bgDeep,
-                                    padding: const EdgeInsets.symmetric(vertical: 16),
-                                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                                  ),
-                                  child: const Text('تصفح القرآن الآن', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                                    const Icon(Icons.auto_awesome, color: AppColors.primary, size: 20),
+                                  ],
                                 ),
-                              )
-                            ],
+                                const SizedBox(height: 20),
+                                const Text(
+                                  '﴿ وَقُل رَّبِّ زِدْنِي عِلْمًا ﴾',
+                                  textDirection: TextDirection.rtl,
+                                  style: TextStyle(fontSize: 26, height: 1.6, color: Colors.white, fontFamily: 'serif', fontWeight: FontWeight.bold),
+                                ),
+                                const SizedBox(height: 20),
+                                SizedBox(
+                                  width: double.infinity,
+                                  child: ElevatedButton(
+                                    onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const ChatScreen())),
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor: AppColors.primary,
+                                      foregroundColor: AppColors.bgDeep,
+                                      padding: const EdgeInsets.symmetric(vertical: 16),
+                                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                                    ),
+                                    child: const Text('تصفح القرآن الآن', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                                  ),
+                                )
+                              ],
+                            ),
                           ),
                         ),
                       ),
@@ -137,37 +141,33 @@ class _HomeScreenState extends State<HomeScreen> {
                           crossAxisCount: 2,
                           crossAxisSpacing: 16,
                           mainAxisSpacing: 16,
-                          childAspectRatio: 1.0, // 🌟 نسبة مربعة عشان الكروت تبان زي البنتو بوكس
+                          childAspectRatio: 1.0,
                         ),
                         delegate: SliverChildListDelegate([
                           _buildBentoCard(
                             title: 'الحديث الشريف',
                             icon: Icons.library_books_rounded,
-                            color: const Color(0xFF1E293B),
                             onTap: () => _showComingSoon(),
                           ),
                           _buildBentoCard(
                             title: 'الذكاء الاصطناعي',
                             icon: Icons.psychology_rounded,
-                            color: const Color(0xFF1E293B),
                             onTap: () => _showComingSoon(),
                           ),
                           _buildBentoCard(
                             title: 'المحفوظات',
                             icon: Icons.bookmark_rounded,
-                            color: const Color(0xFF1E293B),
                             onTap: () => _showComingSoon(),
                           ),
                           _buildBentoCard(
                             title: 'الإعدادات',
                             icon: Icons.tune_rounded,
-                            color: const Color(0xFF1E293B),
                             onTap: () => _showComingSoon(),
                           ),
                         ]),
                       ),
                     ),
-                    const SliverToBoxAdapter(child: SizedBox(height: 120)), // مساحة لشريط التنقل
+                    const SliverToBoxAdapter(child: SizedBox(height: 120)),
                   ],
                 ),
               ),
@@ -179,7 +179,7 @@ class _HomeScreenState extends State<HomeScreen> {
         child: Center(
           heightFactor: 1,
           child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 700), // 🌟 تحديد عرض شريط التنقل
+            constraints: const BoxConstraints(maxWidth: 700),
             child: Container(
               margin: const EdgeInsets.fromLTRB(24, 0, 24, 16),
               height: 70,
@@ -210,14 +210,13 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _buildBentoCard({required String title, required IconData icon, required Color color, required VoidCallback onTap}) {
-    return InkWell(
+  Widget _buildBentoCard({required String title, required IconData icon, required VoidCallback onTap}) {
+    return BouncyTap(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(24),
       child: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: color.withOpacity(0.6),
+          color: const Color(0xFF1E293B).withOpacity(0.6),
           borderRadius: BorderRadius.circular(24),
           border: Border.all(color: AppColors.border),
         ),
@@ -276,7 +275,7 @@ class _HomeScreenState extends State<HomeScreen> {
         backgroundColor: const Color(0xFFD4AF37),
         behavior: SnackBarBehavior.floating,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        margin: const EdgeInsets.only(bottom: 100, left: 200, right: 200), // عشان تظهر في النص على الويب
+        margin: const EdgeInsets.only(bottom: 100, left: 200, right: 200),
       ),
     );
   }
