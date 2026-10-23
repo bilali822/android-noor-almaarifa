@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'dart:ui' show FontFeature;
 import '../theme/app_colors.dart';
 
 class VerseCard extends StatelessWidget {
@@ -36,7 +35,6 @@ class VerseCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          // رأس الكارت
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
             decoration: BoxDecoration(
@@ -65,33 +63,22 @@ class VerseCard extends StatelessWidget {
             ),
           ),
           
-          // نص الآية (تم ضبط الخط والتشكيل هنا)
+          // النص العثماني
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 40),
             child: Text(
               '﴿ $text ﴾',
               textDirection: TextDirection.rtl,
               textAlign: TextAlign.center,
-              textHeightBehavior: const TextHeightBehavior(
-                applyHeightToFirstAscent: false,
-                applyHeightToLastDescent: false,
-              ),
               style: const TextStyle(
                 color: AppColors.text,
-                fontSize: 22, // تصغير بسيط للخط عشان الحركات تبان
-                height: 1.8, // مسافة سطر مظبوطة
-                fontFamily: 'AmiriQuran',
-                letterSpacing: 0, // إلغاء أي تباعد بين الحروف
-                fontFeatures: [
-                  FontFeature.enable('kern'), // تفعيل الكيرنينج
-                  FontFeature.enable('liga'), // تفعيل توصيل الحروف
-                  FontFeature.enable('calt'), // تفعيل البدائل السياقية للحركات
-                ],
+                fontSize: 28, 
+                height: 2.0,  
+                fontFamily: 'AmiriQuran', // إجبار الخط
               ),
             ),
           ),
           
-          // أزرار التحكم
           const Divider(color: AppColors.border, height: 1),
           Row(
             children: [
