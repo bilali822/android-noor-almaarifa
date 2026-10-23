@@ -63,15 +63,22 @@ class _ChatScreenState extends State<ChatScreen> {
         child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 600),
           child: Column(children: [
-            Expanded(child: ListView.builder(
-              controller: _scrollCtrl, itemCount: _messages.length + (_typing ? 1 : 0), padding: const EdgeInsets.symmetric(vertical: 16),
-              itemBuilder: (context, i) {
-                if (i == _messages.length && _typing) return const TypingIndicator();
-                final m = _messages[i];
-                if (m.verseData != null) return VerseCard(surahId: m.verseData!['surahId'] as int, surahName: m.verseData!['surahName'] as String, verseNumber: m.verseData!['verseNumber'] as int, text: m.verseData!['verseText'] as String, onTafsir: () => _openTafsir(m.verseData!));
-                return MessageBubble(text: m.text, isUser: m.isUser);
-              }
-            )),
+            Expanded(child: _messages.isEmpty 
+              ? Center(child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
+                  const Icon(Icons.menu_book, size: 64, color: AppColors.primary),
+                  const SizedBox(height: 16),
+                  const Text('كيف يمكنني مساعدتك اليوم؟', style: TextStyle(color: AppColors.textMuted, fontSize: 16)),
+                ]))
+              : ListView.builder(
+                controller: _scrollCtrl, itemCount: _messages.length + (_typing ? 1 : 0), padding: const EdgeInsets.symmetric(vertical: 16),
+                itemBuilder: (context, i) {
+                  if (i == _messages.length && _typing) return const TypingIndicator();
+                  final m = _messages[i];
+                  if (m.verseData != null) return VerseCard(surahId: m.verseData!['surahId'] as int, surahName: m.verseData!['surahName'] as String, verseNumber: m.verseData!['verseNumber'] as int, text: m.verseData!['verseText'] as String, onTafsir: () => _openTafsir(m.verseData!));
+                  return MessageBubble(text: m.text, isUser: m.isUser);
+                }
+              ),
+            ),
             SafeArea(
               child: Padding(
                 padding: const EdgeInsets.all(16),
