@@ -1,10 +1,22 @@
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
+import 'db/database_helper.dart';
 import 'theme/app_colors.dart';
 import 'screens/chat_screen.dart';
 
-void main() {
+void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  
+  // ⚡ تهيئة قاعدة البيانات للموبايل فقط
+  if (!kIsWeb) {
+    try {
+      await DatabaseHelper.instance.init();
+    } catch (e) {
+      debugPrint('Database error: $e');
+    }
+  }
+  
   runApp(const NoorApp());
 }
 
