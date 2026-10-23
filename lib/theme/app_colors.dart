@@ -1,19 +1,21 @@
 import 'package:flutter/material.dart';
 
 class AppColors {
-  static const primary      = Color(0xFFD4AF37); 
-  static const primaryDark  = Color(0xFFA68A61);
-  static const accent       = Color(0xFFE2C799); 
+  // الألوان الأساسية (أخضر زمردي فخم)
+  static const primary      = Color(0xFF0F4C3A); 
+  static const primaryDark  = Color(0xFF0A3629);
+  static const accent       = Color(0xFFD4AF37); // لمسة ذهبية
   
-  static const bgDeep = Color(0xFF06080E); 
-  static const bgSurface = Color(0xFF101623); 
+  // الخلفيات (أبيض عاجي ورخامي)
+  static const bgDeep = Color(0xFFF8F6F0); // خلفية التطبيق
+  static const bgSurface = Color(0xFFFFFFFF); // لون البطاقات
+  static const surface = Color(0xFFFFFFFF); 
   
-  // إضافة surface كمرادف عشان الملفات القديمة تشتغل بدون أخطاء
-  static const surface = Color(0xFF101623); 
-  
-  static const text     = Color(0xFFF8F9FA);
-  static const textSoft = Color(0xFFCBD5E1);
-  static const textMuted= Color(0xFF64748B);
+  // النصوص
+  static const text     = Color(0xFF1F2937); // رمادي فحمي (أسهل للقراءة)
+  static const textSoft = Color(0xFF4B5563);
+  static const textMuted= Color(0xFF6B7280);
 
-  static const border = Color(0x1AFFFFFF); 
+  // الحدود والفواصل
+  static const border = Color(0xFFE5E7EB); 
 }

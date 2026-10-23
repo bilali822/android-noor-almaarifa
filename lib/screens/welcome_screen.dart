@@ -51,7 +51,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
               borderRadius: BorderRadius.circular(30),
               boxShadow: [BoxShadow(color: const Color(0xFFD4AF37).withOpacity(0.2), blurRadius: 30, offset: const Offset(0, 10))],
             ),
-            child: const Icon(Icons.auto_stories, color: Color(0xFF06080E), size: 50),
+            child: const Icon(Icons.auto_stories, color: Colors.white, size: 50),
           ),
           const SizedBox(height: 40),
           const Text('نور المعرفة', style: TextStyle(fontSize: 32, fontWeight: FontWeight.w900, color: Colors.white, letterSpacing: 1)),
@@ -59,7 +59,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
           Container(
             padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.03),
+              color: AppColors.bgSurface,
               borderRadius: BorderRadius.circular(16),
               border: Border(right: const BorderSide(color: Color(0xFFD4AF37), width: 4), top: BorderSide(color: Colors.white.withOpacity(0.05)), bottom: BorderSide(color: Colors.white.withOpacity(0.05)), left: BorderSide(color: Colors.white.withOpacity(0.05))),
             ),

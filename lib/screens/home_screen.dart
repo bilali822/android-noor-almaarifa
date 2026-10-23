@@ -50,7 +50,7 @@ class _HomeScreenState extends State<HomeScreen> {
                           children: [
                             const Text('السلام عليكم،', style: TextStyle(color: AppColors.textMuted, fontSize: 14, fontWeight: FontWeight.w500)),
                             const SizedBox(height: 4),
-                            Text(_userName, style: const TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.bold, letterSpacing: 0.5)),
+                            Text(_userName, style: const TextStyle(color: AppColors.text, fontSize: 24, fontWeight: FontWeight.bold, letterSpacing: 0.5)),
                           ],
                         ),
                         IconButton(
@@ -97,13 +97,13 @@ class _HomeScreenState extends State<HomeScreen> {
                               ],
                             ),
                             const SizedBox(height: 20),
-                            const Text('﴿ وَقُل رَّبِّ زِدْنِي عِلْمًا ﴾', textDirection: TextDirection.rtl, style: TextStyle(fontSize: 26, height: 1.6, color: Colors.white, fontFamily: 'serif', fontWeight: FontWeight.bold)),
+                            const Text('﴿ وَقُل رَّبِّ زِدْنِي عِلْمًا ﴾', textDirection: TextDirection.rtl, style: TextStyle(fontSize: 26, height: 1.6, color: AppColors.text, fontFamily: 'serif', fontWeight: FontWeight.bold)),
                             const SizedBox(height: 20),
                             SizedBox(
                               width: double.infinity,
                               child: ElevatedButton(
                                 onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const ChatScreen())),
-                                style: ElevatedButton.styleFrom(backgroundColor: AppColors.primary, foregroundColor: AppColors.bgDeep, padding: const EdgeInsets.symmetric(vertical: 16), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)), elevation: 0),
+                                style: ElevatedButton.styleFrom(backgroundColor: AppColors.primary, foregroundColor: Colors.white, padding: const EdgeInsets.symmetric(vertical: 16), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)), elevation: 0),
                                 child: const Text('تصفح القرآن الآن', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
                               ),
                             )
@@ -182,7 +182,7 @@ class _HomeScreenState extends State<HomeScreen> {
               child: Icon(icon, color: AppColors.primary, size: 28),
             ),
             const SizedBox(height: 16),
-            Text(title, textAlign: TextAlign.center, style: const TextStyle(color: Colors.white, fontSize: 15, fontWeight: FontWeight.bold)),
+            Text(title, textAlign: TextAlign.center, style: const TextStyle(color: AppColors.text, fontSize: 15, fontWeight: FontWeight.bold)),
           ],
         ),
       ),
@@ -199,7 +199,7 @@ class _HomeScreenState extends State<HomeScreen> {
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-        decoration: BoxDecoration(color: isSelected ? AppColors.primary.withOpacity(0.15) : Colors.transparent, borderRadius: BorderRadius.circular(30)),
+        decoration: BoxDecoration(color: isSelected ? AppColors.primary.withOpacity(0.1) : Colors.transparent, borderRadius: BorderRadius.circular(30)),
         child: Icon(icon, color: isSelected ? AppColors.primary : AppColors.textMuted, size: 26),
       ),
     );

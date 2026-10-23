@@ -12,7 +12,6 @@ void main() async {
   runApp(NoorApp(hasName: hasName));
 }
 
-// 🌟 إزالة تأثير السكرول الرمادي المزعج في أندرويد (Glow) عشان يبان احترافي
 class NoGlowScrollBehavior extends MaterialScrollBehavior {
   @override
   Widget buildOverscrollIndicator(BuildContext context, Widget child, ScrollableDetails details) {
@@ -29,27 +28,23 @@ class NoorApp extends StatelessWidget {
     return MaterialApp(
       title: 'نور المعرفة',
       debugShowCheckedModeBanner: false,
-      scrollBehavior: NoGlowScrollBehavior(), // 🌟 تفعيل السكرول النظيف
+      scrollBehavior: NoGlowScrollBehavior(),
       theme: ThemeData(
-        brightness: Brightness.dark,
+        brightness: Brightness.light, // 🌟 تغيير للنظام الفاتح
         useMaterial3: true,
         scaffoldBackgroundColor: AppColors.bgDeep,
-        colorScheme: const ColorScheme.dark(
+        colorScheme: const ColorScheme.light( // 🌟 تغيير الـ Scheme
           primary: AppColors.primary,
           secondary: AppColors.accent,
           surface: AppColors.bgSurface,
-          onPrimary: AppColors.bgDeep,
+          onPrimary: Colors.white, // النص فوق اللون الأساسي
           onSurface: AppColors.text,
         ),
         fontFamily: 'Cairo',
-        // 🌟 تبديل الصفحات بسلاسة (Fade + Slide)
         pageTransitionsTheme: const PageTransitionsTheme(
           builders: {
             TargetPlatform.android: FadeUpwardsPageTransitionsBuilder(),
             TargetPlatform.iOS: CupertinoPageTransitionsBuilder(),
-            TargetPlatform.linux: FadeUpwardsPageTransitionsBuilder(),
-            TargetPlatform.windows: FadeUpwardsPageTransitionsBuilder(),
-            TargetPlatform.macOS: CupertinoPageTransitionsBuilder(),
           },
         ),
         appBarTheme: const AppBarTheme(
