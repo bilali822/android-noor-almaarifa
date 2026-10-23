@@ -98,7 +98,7 @@ class _HomeScreenState extends State<HomeScreen> {
                               _buildFeatureCard('المحفوظات', Icons.bookmark_border, () => Navigator.push(context, MaterialPageRoute(builder: (_) => const BookmarksScreen()))),
                             ],
                           ),
-                          const SizedBox(height: 100),
+                          const SizedBox(height: 120),
                         ],
                       ),
                     ),

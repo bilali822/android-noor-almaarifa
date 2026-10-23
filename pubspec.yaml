@@ -32,6 +32,7 @@ flutter:
 
   assets:
     - assets/noor_quran.db
+    - assets/images/islamic_pattern.png
 
   fonts:
     - family: UthmanicHafs
