@@ -22,7 +22,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Future<void> _loadName() async {
     final prefs = await SharedPreferences.getInstance();
-    setState(() => _userName = prefs.getString('user_name') ?? '');
+    setState(() => _userName = prefs.getString('user_name') ?? 'زائر');
   }
 
   @override
@@ -30,10 +30,10 @@ class _HomeScreenState extends State<HomeScreen> {
     return Scaffold(
       backgroundColor: AppColors.bgDeep,
       appBar: AppBar(
-        title: const Text('نور المعرفة'),
+        title: const Text('نور المعرفة', style: TextStyle(letterSpacing: 1)),
         actions: [
           IconButton(
-            icon: const Icon(Icons.refresh, color: AppColors.primary),
+            icon: const Icon(Icons.logout, color: AppColors.textMuted, size: 22),
             onPressed: () async {
               final prefs = await SharedPreferences.getInstance();
               await prefs.clear();
@@ -47,109 +47,130 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
         ],
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            // Header Greeting
-            Container(
-              padding: const EdgeInsets.all(24),
-              decoration: BoxDecoration(
-                color: AppColors.surface,
-                border: Border.all(color: AppColors.border),
-                borderRadius: BorderRadius.circular(16),
+      body: TweenAnimationBuilder<double>(
+        tween: Tween(begin: 0, end: 1),
+        duration: const Duration(milliseconds: 600),
+        curve: Curves.easeOut,
+        builder: (context, value, child) {
+          return Opacity(
+            opacity: value,
+            child: Transform.translate(offset: Offset(0, 20 * (1 - value)), child: child),
+          );
+        },
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              // بطاقة الترحيب
+              Container(
+                padding: const EdgeInsets.all(24),
+                decoration: BoxDecoration(
+                  gradient: const LinearGradient(
+                    colors: [Color(0xFF1E293B), Color(0xFF151B2B)],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(color: const Color(0xFF334155).withOpacity(0.5)),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'أهلاً بك، $_userName',
+                      style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.white),
+                    ),
+                    const SizedBox(height: 8),
+                    const Text(
+                      'نتمنى لك رحلة إيمانية ومعرفية مليئة بالنفع.',
+                      style: TextStyle(fontSize: 14, color: AppColors.textMuted, height: 1.5),
+                    ),
+                  ],
+                ),
               ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+              const SizedBox(height: 32),
+              const Text(
+                'الأقسام الرئيسية',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white),
+              ),
+              const SizedBox(height: 16),
+              
+              // الكروت
+              GridView.count(
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                crossAxisCount: 2,
+                crossAxisSpacing: 16,
+                mainAxisSpacing: 16,
+                childAspectRatio: 0.85,
                 children: [
-                  Text(
-                    'أهلاً بك، $_userName',
-                    style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: AppColors.text),
-                  ),
-                  const SizedBox(height: 8),
-                  const Text(
-                    'منصة متكاملة للقرآن الكريم والتفاسير المعتمدة',
-                    style: TextStyle(fontSize: 14, color: AppColors.textMuted),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 32),
-            
-            // Features Grid
-            Row(
-              children: [
-                Expanded(
-                  child: _buildCard(
+                  _buildCard(
                     title: 'القرآن والتفسير',
+                    subtitle: 'تصفح السور والتفاسير المعتمدة',
                     icon: Icons.menu_book,
                     onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const ChatScreen())),
                   ),
-                ),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: _buildCard(
+                  _buildCard(
                     title: 'الحديث الشريف',
+                    subtitle: 'البحث في الأحاديث النبوية',
                     icon: Icons.library_books,
                     onTap: () => _showComingSoon(),
                   ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 16),
-            Row(
-              children: [
-                Expanded(
-                  child: _buildCard(
+                  _buildCard(
                     title: 'الذكاء الاصطناعي',
+                    subtitle: 'مساعد ذكي للإجابة على استفساراتك',
                     icon: Icons.smart_toy,
                     onTap: () => _showComingSoon(),
                   ),
-                ),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: _buildCard(
+                  _buildCard(
                     title: 'الإعدادات',
+                    subtitle: 'تخصيص تجربة الاستخدام',
                     icon: Icons.settings,
                     onTap: () => _showComingSoon(),
                   ),
-                ),
-              ],
-            ),
-          ],
+                ],
+              ),
+            ],
+          ),
         ),
       ),
     );
   }
 
-  Widget _buildCard({required String title, required IconData icon, required VoidCallback onTap}) {
+  Widget _buildCard({required String title, required String subtitle, required IconData icon, required VoidCallback onTap}) {
     return InkWell(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(16),
+      borderRadius: BorderRadius.circular(20),
       child: Container(
         padding: const EdgeInsets.all(20),
         decoration: BoxDecoration(
-          color: AppColors.surface,
-          border: Border.all(color: AppColors.border),
-          borderRadius: BorderRadius.circular(16),
+          color: const Color(0xFF151B2B),
+          border: Border.all(color: const Color(0xFF1E293B)),
+          borderRadius: BorderRadius.circular(20),
         ),
         child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Container(
-              width: 60,
-              height: 60,
+              padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: AppColors.primary.withOpacity(0.1),
-                shape: BoxShape.circle,
+                color: const Color(0xFFD4AF37).withOpacity(0.1),
+                borderRadius: BorderRadius.circular(16),
               ),
-              child: Icon(icon, color: AppColors.primary, size: 30),
+              child: Icon(icon, color: const Color(0xFFD4AF37), size: 28),
             ),
-            const SizedBox(height: 16),
+            const Spacer(),
             Text(
               title,
-              textAlign: TextAlign.center,
-              style: const TextStyle(color: AppColors.text, fontSize: 15, fontWeight: FontWeight.bold),
+              style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              subtitle,
+              style: const TextStyle(color: AppColors.textMuted, fontSize: 12, height: 1.4),
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
             ),
           ],
         ),
@@ -159,7 +180,12 @@ class _HomeScreenState extends State<HomeScreen> {
 
   void _showComingSoon() {
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('هذه الميزة قادمة في التحديث القادم', textAlign: TextAlign.center), backgroundColor: AppColors.primary),
+      SnackBar(
+        content: const Text('هذه الميزة ستتوفر في التحديث القادم', textAlign: TextAlign.center, style: TextStyle(fontWeight: FontWeight.bold)),
+        backgroundColor: const Color(0xFFD4AF37),
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      ),
     );
   }
 }
