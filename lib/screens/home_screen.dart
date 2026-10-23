@@ -5,6 +5,8 @@ import '../widgets/bouncy_tap.dart';
 import '../widgets/quranic_background.dart';
 import 'chat_screen.dart';
 import 'welcome_screen.dart';
+import 'bookmarks_screen.dart';
+import 'settings_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -134,8 +136,8 @@ class _HomeScreenState extends State<HomeScreen> {
                         delegate: SliverChildListDelegate([
                           _buildBentoCard(title: 'الحديث الشريف', icon: Icons.library_books_rounded, onTap: () => _showComingSoon()),
                           _buildBentoCard(title: 'الذكاء الاصطناعي', icon: Icons.psychology_rounded, onTap: () => _showComingSoon()),
-                          _buildBentoCard(title: 'المحفوظات', icon: Icons.bookmark_rounded, onTap: () => _showComingSoon()),
-                          _buildBentoCard(title: 'الإعدادات', icon: Icons.tune_rounded, onTap: () => _showComingSoon()),
+                          _buildBentoCard(title: 'المحفوظات', icon: Icons.bookmark_rounded, onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const BookmarksScreen()))),
+                          _buildBentoCard(title: 'الإعدادات', icon: Icons.tune_rounded, onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const SettingsScreen()))),
                         ]),
                       ),
                     ),
@@ -213,6 +215,8 @@ class _HomeScreenState extends State<HomeScreen> {
       onTap: () {
         setState(() => _currentIndex = index);
         if (index == 1) Navigator.push(context, MaterialPageRoute(builder: (_) => const ChatScreen()));
+        if (index == 2) Navigator.push(context, MaterialPageRoute(builder: (_) => const BookmarksScreen()));
+        if (index == 3) Navigator.push(context, MaterialPageRoute(builder: (_) => const SettingsScreen()));
       },
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
