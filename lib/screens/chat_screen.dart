@@ -58,7 +58,9 @@ class _ChatScreenState extends State<ChatScreen> {
       backgroundColor: AppColors.bgDeep,
       appBar: AppBar(title: const Text('المحادثة الذكية'), leading: IconButton(icon: const Icon(Icons.arrow_back_ios_new, size: 20), onPressed: () => Navigator.pop(context))),
       body: Column(children: [
-        Expanded(child: _messages.isEmpty ? WelcomeView(onExample: (text) => _handleSubmit(text)) : ListView.builder(controller: _scrollCtrl, itemCount: _messages.length + (_typing ? 1 : 0), padding: const EdgeInsets.only(top: 16, bottom: 20), itemBuilder: (context, i) {
+        Expanded(child: _messages.isEmpty ? WelcomeView(onExample: (text) => _handleSubmit(text)) : ListView.builder(controller: _scrollCtrl, itemCount: _messages.length + (_typing ? 1 : 0),
+                    addAutomaticKeepAlives: false,
+                    addRepaintBoundaries: true, padding: const EdgeInsets.only(top: 16, bottom: 20), itemBuilder: (context, i) {
           if (i == _messages.length && _typing) return const TypingIndicator();
           final m = _messages[i];
           if (m.verseData != null) return VerseCard(surahName: m.verseData!['surahName'] as String, verseNumber: m.verseData!['verseNumber'] as int, text: m.verseData!['verseText'] as String, onTafsir: () => _openTafsir(m.verseData!));
