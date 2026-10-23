@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'dart:ui' show FontFeature;
 import '../theme/app_colors.dart';
 
 class VerseCard extends StatelessWidget {
@@ -21,7 +22,7 @@ class VerseCard extends StatelessWidget {
     return Container(
       margin: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
       decoration: BoxDecoration(
-        color: AppColors.bgSurface, // خلفية بيضاء
+        color: AppColors.bgSurface,
         borderRadius: BorderRadius.circular(24),
         border: Border.all(color: AppColors.primary.withOpacity(0.3), width: 1.5),
         boxShadow: [
@@ -35,7 +36,7 @@ class VerseCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          // رأس الكارت (اسم السورة ورقم الآية)
+          // رأس الكارت
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
             decoration: BoxDecoration(
@@ -63,21 +64,33 @@ class VerseCard extends StatelessWidget {
               ],
             ),
           ),
-          // نص الآية (تم إصلاح اللون هنا)
+          
+          // نص الآية (تم ضبط الخط والتشكيل هنا)
           Padding(
-            padding: const EdgeInsets.all(24),
+            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
             child: Text(
               '﴿ $text ﴾',
               textDirection: TextDirection.rtl,
               textAlign: TextAlign.center,
+              textHeightBehavior: const TextHeightBehavior(
+                applyHeightToFirstAscent: false,
+                applyHeightToLastDescent: false,
+              ),
               style: const TextStyle(
-                color: AppColors.text, // 🌟 تغيير اللون من أبيض إلى رمادي غامق
-                fontSize: 24,
-                height: 2.0,
-                fontFamily: 'AmiriQuran', // استخدام الخط العثماني
+                color: AppColors.text,
+                fontSize: 22, // تصغير بسيط للخط عشان الحركات تبان
+                height: 1.8, // مسافة سطر مظبوطة
+                fontFamily: 'AmiriQuran',
+                letterSpacing: 0, // إلغاء أي تباعد بين الحروف
+                fontFeatures: [
+                  FontFeature.enable('kern'), // تفعيل الكيرنينج
+                  FontFeature.enable('liga'), // تفعيل توصيل الحروف
+                  FontFeature.enable('calt'), // تفعيل البدائل السياقية للحركات
+                ],
               ),
             ),
           ),
+          
           // أزرار التحكم
           const Divider(color: AppColors.border, height: 1),
           Row(
