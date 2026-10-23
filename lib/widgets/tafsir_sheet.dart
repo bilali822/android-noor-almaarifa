@@ -26,19 +26,24 @@ class _TafsirSheetState extends State<TafsirSheet> {
   }
 
   Future<void> _loadTafsir() async {
+    if (widget.books.isEmpty) return;
     setState(() => _isLoading = true);
     final book = widget.books[_selectedBookIndex];
     final tafsirs = await DatabaseHelper.instance.getTafsirs(widget.surahId, widget.verseNumber);
-    final selected = tafsirs.firstWhere((t) => t['book_key'] == book['key'], orElse: () => {});
+    final selected = tafsirs.firstWhere((t) => t['book_key'] == book['key'], orElse: () => <String, Object?>{});
     
     setState(() {
-      _tafsirText = selected['text_ar'] ?? 'التفسير غير متوفر لهذه الآية.';
+      _tafsirText = selected['text_ar'] as String? ?? 'التفسير غير متوفر لهذه الآية.';
       _isLoading = false;
     });
   }
 
   @override
   Widget build(BuildContext context) {
+    if (widget.books.isEmpty) {
+      return const Center(child: Text('لا توجد كتب تفسير متاحة.'));
+    }
+
     return DraggableScrollableSheet(
       initialChildSize: 0.9, minChildSize: 0.5, maxChildSize: 0.95, expand: false,
       builder: (context, scrollCtrl) {
@@ -97,7 +102,7 @@ class _TafsirSheetState extends State<TafsirSheet> {
                 padding: const EdgeInsets.all(20),
                 decoration: BoxDecoration(color: const Color(0xFFF8F6F0), borderRadius: BorderRadius.circular(20)),
                 child: _isLoading 
-                  ? const Center(child: CircularProgressIndicator())
+                  ? const Center(child: CircularProgressIndicator(color: AppColors.primary))
                   : SingleChildScrollView(
                       controller: scrollCtrl,
                       child: Text(_tafsirText, textDirection: TextDirection.rtl, textAlign: TextAlign.justify, style: const TextStyle(fontSize: 18, height: 2.0, color: AppColors.text)),

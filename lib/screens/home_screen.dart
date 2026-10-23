@@ -49,7 +49,7 @@ class _HomeScreenState extends State<HomeScreen> {
             padding: const EdgeInsets.only(left: 16),
             child: CircleAvatar(
               backgroundColor: AppColors.primary.withOpacity(0.2),
-              child: Icon(Icons.person, color: AppColors.primary),
+              child: const Icon(Icons.person, color: AppColors.primary),
             ),
           )
         ],
@@ -67,36 +67,25 @@ class _HomeScreenState extends State<HomeScreen> {
                   padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
                   child: Column(
                     children: [
-                      // كارت الآية الكبير
+                      // كارت الآية
                       BouncyTap(
                         onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const ChatScreen())),
                         child: Container(
                           padding: const EdgeInsets.symmetric(vertical: 40, horizontal: 20),
                           decoration: BoxDecoration(
-                            color: const Color(0xFFF4EAE0), // لون بيج فاتح
+                            color: const Color(0xFFF4EAE0), // بيج فاتح
                             borderRadius: BorderRadius.circular(32),
                             border: Border.all(color: AppColors.primary.withOpacity(0.1)),
                           ),
                           child: Column(
                             children: [
-                              const Text(
-                                '﴿ وَقُل رَّبِّ زِدْنِي عِلْمًا ﴾',
-                                textDirection: TextDirection.rtl,
-                                textAlign: TextAlign.center,
-                                style: TextStyle(fontSize: 32, height: 1.8, color: AppColors.primary, fontFamily: 'UthmanicHafs', fontWeight: FontWeight.bold),
-                              ),
+                              const Text('﴿ وَقُل رَّبِّ زِدْنِي عِلْمًا ﴾', textDirection: TextDirection.rtl, textAlign: TextAlign.center, style: TextStyle(fontSize: 32, height: 1.8, color: AppColors.primary, fontFamily: 'UthmanicHafs', fontWeight: FontWeight.bold)),
                               const SizedBox(height: 12),
                               const Text('سورة طه • الآية 114', style: TextStyle(color: AppColors.textMuted, fontSize: 14)),
                               const SizedBox(height: 24),
                               ElevatedButton(
                                 onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const ChatScreen())),
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: AppColors.primary,
-                                  foregroundColor: Colors.white,
-                                  padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 14),
-                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                                  elevation: 0,
-                                ),
+                                style: ElevatedButton.styleFrom(backgroundColor: AppColors.primary, foregroundColor: Colors.white, padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 14), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)), elevation: 0),
                                 child: const Text('تصفح القرآن الآن', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
                               )
                             ],
@@ -105,22 +94,18 @@ class _HomeScreenState extends State<HomeScreen> {
                       ),
                       const SizedBox(height: 24),
                       // الكروت الأربعة
-                      Row(
-                        children: [
-                          Expanded(child: _buildFeatureCard('الذكاء الاصطناعي', Icons.psychology, () => _showComingSoon())),
-                          const SizedBox(width: 16),
-                          Expanded(child: _buildFeatureCard('الحديث', Icons.menu_book, () => _showComingSoon())),
-                        ],
-                      ),
+                      Row(children: [
+                        Expanded(child: _buildFeatureCard('الذكاء الاصطناعي', Icons.psychology, () => Navigator.push(context, MaterialPageRoute(builder: (_) => const ChatScreen())))),
+                        const SizedBox(width: 16),
+                        Expanded(child: _buildFeatureCard('الحديث', Icons.menu_book, () {})),
+                      ]),
                       const SizedBox(height: 16),
-                      Row(
-                        children: [
-                          Expanded(child: _buildFeatureCard('الإعدادات', Icons.settings_outlined, () => Navigator.push(context, MaterialPageRoute(builder: (_) => const SettingsScreen())))),
-                          const SizedBox(width: 16),
-                          Expanded(child: _buildFeatureCard('المحفوظات', Icons.bookmark_border, () => Navigator.push(context, MaterialPageRoute(builder: (_) => const BookmarksScreen())))),
-                        ],
-                      ),
-                      const SizedBox(height: 100), // مساحة لشريط التنقل
+                      Row(children: [
+                        Expanded(child: _buildFeatureCard('الإعدادات', Icons.settings_outlined, () => Navigator.push(context, MaterialPageRoute(builder: (_) => const SettingsScreen())))),
+                        const SizedBox(width: 16),
+                        Expanded(child: _buildFeatureCard('المحفوظات', Icons.bookmark_border, () => Navigator.push(context, MaterialPageRoute(builder: (_) => const BookmarksScreen())))),
+                      ]),
+                      const SizedBox(height: 100),
                     ],
                   ),
                 ),
@@ -129,16 +114,11 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
         ],
       ),
-      // شريط التنقل الجديد (5 أزرار)
       bottomNavigationBar: SafeArea(
         child: Container(
           margin: const EdgeInsets.fromLTRB(16, 0, 16, 16),
           height: 70,
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(24),
-            boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 20, offset: const Offset(0, 10))],
-          ),
+          decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(24), boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 20, offset: const Offset(0, 10))]),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             children: [
@@ -159,22 +139,12 @@ class _HomeScreenState extends State<HomeScreen> {
       onTap: onTap,
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 24),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(24),
-          boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.03), blurRadius: 10, offset: const Offset(0, 5))],
-        ),
-        child: Column(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(shape: BoxShape.circle, border: Border.all(color: AppColors.primary.withOpacity(0.2), width: 2)),
-              child: Icon(icon, color: AppColors.primary, size: 32),
-            ),
-            const SizedBox(height: 12),
-            Text(title, style: const TextStyle(color: AppColors.text, fontSize: 14, fontWeight: FontWeight.bold)),
-          ],
-        ),
+        decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(24), boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.03), blurRadius: 10, offset: const Offset(0, 5))]),
+        child: Column(children: [
+          Container(padding: const EdgeInsets.all(12), decoration: BoxDecoration(shape: BoxShape.circle, border: Border.all(color: AppColors.primary.withOpacity(0.2), width: 2)), child: Icon(icon, color: AppColors.primary, size: 32)),
+          const SizedBox(height: 12),
+          Text(title, style: const TextStyle(color: AppColors.text, fontSize: 14, fontWeight: FontWeight.bold)),
+        ]),
       ),
     );
   }
@@ -187,18 +157,11 @@ class _HomeScreenState extends State<HomeScreen> {
         if (index == 1 || index == 3) Navigator.push(context, MaterialPageRoute(builder: (_) => const ChatScreen()));
         if (index == 4) Navigator.push(context, MaterialPageRoute(builder: (_) => const SettingsScreen()));
       },
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(icon, color: isSelected ? AppColors.primary : AppColors.textMuted, size: 24),
-          const SizedBox(height: 4),
-          Text(label, style: TextStyle(color: isSelected ? AppColors.primary : AppColors.textMuted, fontSize: 10, fontWeight: isSelected ? FontWeight.bold : FontWeight.normal)),
-        ],
-      ),
+      child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
+        Icon(icon, color: isSelected ? AppColors.primary : AppColors.textMuted, size: 24),
+        const SizedBox(height: 4),
+        Text(label, style: TextStyle(color: isSelected ? AppColors.primary : AppColors.textMuted, fontSize: 10, fontWeight: isSelected ? FontWeight.bold : FontWeight.normal)),
+      ]),
     );
-  }
-
-  void _showComingSoon() {
-    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('قريباً', textAlign: TextAlign.center)));
   }
 }
