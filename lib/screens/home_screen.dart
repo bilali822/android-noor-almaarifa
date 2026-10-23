@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../theme/app_colors.dart';
@@ -35,14 +36,27 @@ class _HomeScreenState extends State<HomeScreen> {
       extendBody: true,
       body: Stack(
         children: [
-          const AnimatedBackground(),
+          // 🌟 على الويب نستخدم خلفية ثابتة خفيفة، وعلى الموبايل نستخدم الأنميشن
+          if (kIsWeb)
+            Container(
+              decoration: const BoxDecoration(
+                gradient: RadialGradient(
+                  center: Alignment(0, -0.5),
+                  radius: 1.2,
+                  colors: [Color(0xFF151B2B), AppColors.bgDeep],
+                ),
+              ),
+            )
+          else
+            const AnimatedBackground(),
+            
           SafeArea(
             bottom: false,
             child: Center(
               child: ConstrainedBox(
                 constraints: const BoxConstraints(maxWidth: 700),
                 child: CustomScrollView(
-                  physics: const BouncingScrollPhysics(), // 🌟 سكرول مطاطي ناعم
+                  physics: const BouncingScrollPhysics(),
                   slivers: [
                     SliverToBoxAdapter(
                       child: Padding(
@@ -144,26 +158,10 @@ class _HomeScreenState extends State<HomeScreen> {
                           childAspectRatio: 1.0,
                         ),
                         delegate: SliverChildListDelegate([
-                          _buildBentoCard(
-                            title: 'الحديث الشريف',
-                            icon: Icons.library_books_rounded,
-                            onTap: () => _showComingSoon(),
-                          ),
-                          _buildBentoCard(
-                            title: 'الذكاء الاصطناعي',
-                            icon: Icons.psychology_rounded,
-                            onTap: () => _showComingSoon(),
-                          ),
-                          _buildBentoCard(
-                            title: 'المحفوظات',
-                            icon: Icons.bookmark_rounded,
-                            onTap: () => _showComingSoon(),
-                          ),
-                          _buildBentoCard(
-                            title: 'الإعدادات',
-                            icon: Icons.tune_rounded,
-                            onTap: () => _showComingSoon(),
-                          ),
+                          _buildBentoCard(title: 'الحديث الشريف', icon: Icons.library_books_rounded, onTap: () => _showComingSoon()),
+                          _buildBentoCard(title: 'الذكاء الاصطناعي', icon: Icons.psychology_rounded, onTap: () => _showComingSoon()),
+                          _buildBentoCard(title: 'المحفوظات', icon: Icons.bookmark_rounded, onTap: () => _showComingSoon()),
+                          _buildBentoCard(title: 'الإعدادات', icon: Icons.tune_rounded, onTap: () => _showComingSoon()),
                         ]),
                       ),
                     ),
@@ -187,9 +185,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 color: const Color(0xFF101623).withOpacity(0.95),
                 borderRadius: BorderRadius.circular(35),
                 border: Border.all(color: AppColors.border),
-                boxShadow: [
-                  BoxShadow(color: Colors.black.withOpacity(0.3), blurRadius: 20, offset: const Offset(0, 10))
-                ],
+                boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.3), blurRadius: 20, offset: const Offset(0, 10))],
               ),
               child: ClipRRect(
                 borderRadius: BorderRadius.circular(35),
@@ -225,18 +221,11 @@ class _HomeScreenState extends State<HomeScreen> {
           children: [
             Container(
               padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.05),
-                shape: BoxShape.circle,
-              ),
+              decoration: BoxDecoration(color: Colors.white.withOpacity(0.05), shape: BoxShape.circle),
               child: Icon(icon, color: AppColors.primary, size: 28),
             ),
             const SizedBox(height: 16),
-            Text(
-              title,
-              textAlign: TextAlign.center,
-              style: const TextStyle(color: Colors.white, fontSize: 15, fontWeight: FontWeight.bold),
-            ),
+            Text(title, textAlign: TextAlign.center, style: const TextStyle(color: Colors.white, fontSize: 15, fontWeight: FontWeight.bold)),
           ],
         ),
       ),
@@ -248,22 +237,13 @@ class _HomeScreenState extends State<HomeScreen> {
     return GestureDetector(
       onTap: () {
         setState(() => _currentIndex = index);
-        if (index == 1) {
-          Navigator.push(context, MaterialPageRoute(builder: (_) => const ChatScreen()));
-        }
+        if (index == 1) Navigator.push(context, MaterialPageRoute(builder: (_) => const ChatScreen()));
       },
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 300),
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-        decoration: BoxDecoration(
-          color: isSelected ? AppColors.primary.withOpacity(0.15) : Colors.transparent,
-          borderRadius: BorderRadius.circular(30),
-        ),
-        child: Icon(
-          icon,
-          color: isSelected ? AppColors.primary : AppColors.textMuted,
-          size: 26,
-        ),
+        decoration: BoxDecoration(color: isSelected ? AppColors.primary.withOpacity(0.15) : Colors.transparent, borderRadius: BorderRadius.circular(30)),
+        child: Icon(icon, color: isSelected ? AppColors.primary : AppColors.textMuted, size: 26),
       ),
     );
   }

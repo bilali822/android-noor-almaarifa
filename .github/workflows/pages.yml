@@ -33,7 +33,7 @@ jobs:
 
       # بناء نسخة الويب مع تحديد اسم المستودع في الرابط
       - name: Build Web
-        run: flutter build web --release --base-href /android-noor-almaarifa/
+        run: flutter build web --release --base-href /android-noor-almaarifa/ --web-renderer html
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
