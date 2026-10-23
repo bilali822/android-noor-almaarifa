@@ -12,58 +12,46 @@ class QuranicBackground extends StatelessWidget {
         // الخلفية العاجية الأساسية
         Container(color: AppColors.bgDeep),
         
-        // الزخرفة الهندسية (النجمة الثمانية)
-        Positioned.fill(
-          child: CustomPaint(
-            painter: _IslamicPatternPainter(),
+        // الآيات بخط عثماني كعلامة مائية
+        Positioned(
+          top: 40,
+          right: -30,
+          child: Transform.rotate(
+            angle: -0.15, // ميل خفيف جداً
+            child: Text(
+              'وَنُنَزِّلُ مِنَ الْقُرْآنِ\nمَا هُوَ شِفَاءٌ وَرَحْمَةٌ',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontFamily: 'AmiriQuran',
+                fontSize: 45,
+                color: AppColors.primary.withOpacity(0.04), // شفافية عالية جداً
+                height: 2.0,
+              ),
+            ),
           ),
         ),
         
+        Positioned(
+          bottom: 100,
+          left: -20,
+          child: Transform.rotate(
+            angle: 0.1,
+            child: Text(
+              'إِنَّ هَذَا الْقُرْآنَ\nيَهْدِي لِلَّتِي هِيَ أَقْوَمُ',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontFamily: 'AmiriQuran',
+                fontSize: 45,
+                color: AppColors.primary.withOpacity(0.04),
+                height: 2.0,
+              ),
+            ),
+          ),
+        ),
+
         // المحتوى
         child,
       ],
     );
   }
-}
-
-class _IslamicPatternPainter extends CustomPainter {
-  @override
-  void paint(Canvas canvas, Size size) {
-    // لون الزخرفة (أخضر زمردي بشفافية خفيفة جداً 3%)
-    final paint = Paint()
-      ..color = AppColors.primary.withOpacity(0.04)
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 1.5;
-
-    const double spacing = 80.0; // المسافة بين كل نجمة والتانية
-
-    for (double x = 0; x < size.width + spacing; x += spacing) {
-      for (double y = 0; y < size.height + spacing; y += spacing) {
-        _drawEightPointedStar(canvas, Offset(x, y), 25, paint);
-      }
-    }
-  }
-
-  // دالة رسم النجمة الثمانية (خاتم سليمان)
-  void _drawEightPointedStar(Canvas canvas, Offset center, double radius, Paint paint) {
-    final path = Path();
-    for (int i = 0; i < 8; i++) {
-      double angle = (i * 45) * (3.14159 / 180);
-      double x = center.dx + radius * (i % 2 == 0 ? 1 : 0.5) * _cos(angle);
-      double y = center.dy + radius * (i % 2 == 0 ? 1 : 0.5) * _sin(angle);
-      if (i == 0) {
-        path.moveTo(x, y);
-      } else {
-        path.lineTo(x, y);
-      }
-    }
-    path.close();
-    canvas.drawPath(path, paint);
-  }
-
-  double _cos(double angle) => angle == 0 ? 1 : (angle == 1.5708 ? 0 : (angle == 3.14159 ? -1 : (angle == 4.71239 ? 0 : (angle < 1.5708 ? 0.707 : (angle < 3.14159 ? -0.707 : (angle < 4.71239 ? -0.707 : 0.707))))));
-  double _sin(double angle) => angle == 0 ? 0 : (angle == 1.5708 ? 1 : (angle == 3.14159 ? 0 : (angle == 4.71239 ? -1 : (angle < 1.5708 ? 0.707 : (angle < 3.14159 ? 0.707 : (angle < 4.71239 ? -0.707 : -0.707))))));
-
-  @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }

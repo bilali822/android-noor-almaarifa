@@ -29,6 +29,11 @@ flutter:
   assets:
     - assets/noor_quran.db
 
+  fonts:
+    - family: AmiriQuran
+      fonts:
+        - asset: assets/fonts/AmiriQuran.ttf
+
 flutter_launcher_icons:
   android: "launcher_icon"
   ios: false
