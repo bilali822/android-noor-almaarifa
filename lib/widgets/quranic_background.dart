@@ -10,15 +10,14 @@ class QuranicBackground extends StatelessWidget {
     return Stack(
       children: [
         Container(color: AppColors.bgDeep),
-        // نقشة إسلامية خفيفة جداً في الخلفية
+        // نقشة خفيفة جداً (نستخدم أيقونة مسجد مكررة بشكل شفاف)
         Positioned.fill(
           child: Opacity(
-            opacity: 0.03,
-            child: Image.network(
-              'https://www.transparenttextures.com/patterns/arabesque.png',
-              repeat: ImageRepeat.repeat,
-              fit: BoxFit.none,
-              errorBuilder: (context, error, stackTrace) => const SizedBox(),
+            opacity: 0.02,
+            child: GridView.builder(
+              physics: const NeverScrollableScrollPhysics(),
+              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: 3),
+              itemBuilder: (context, i) => const Icon(Icons.mosque, size: 100, color: AppColors.primary),
             ),
           ),
         ),
