@@ -204,11 +204,7 @@ class _MushafScreenState extends State<MushafScreen> {
                       Navigator.pop(context);
                       _openTafsir(surahId, surahName, verseNumber, verseText);
                     }),
-                    _buildOptionButton(Icons.bookmark_add, 'حفظ', Colors.purple, () {
-                      Navigator.pop(context);
-                      _saveVerse(surahId, verseNumber);
-                    }),
-                    _buildOptionButton(Icons.push_pin, 'تعليم', Colors.redAccent, () {
+                    _buildOptionButton(Icons.workspace_premium, 'تعليم', const Color(0xFFD4AF37), () {
                       Navigator.pop(context);
                       _setLastRead(surahId, verseNumber);
                     }),
@@ -433,15 +429,7 @@ class _MushafSurahPageState extends State<_MushafSurahPage> {
                   alignment: PlaceholderAlignment.middle,
                   child: Padding(
                     padding: const EdgeInsets.only(left: 4, right: 4),
-                    child: Icon(Icons.push_pin, color: Colors.redAccent, size: 18),
-                  ),
-                ),
-              if (isBookmarked)
-                WidgetSpan(
-                  alignment: PlaceholderAlignment.middle,
-                  child: Padding(
-                    padding: const EdgeInsets.only(left: 4, right: 4),
-                    child: Icon(Icons.bookmark, color: Colors.purple, size: 18),
+                    child: Icon(Icons.workspace_premium, color: const Color(0xFFD4AF37), size: 20), // 🌟 وسام ذهبي
                   ),
                 ),
             ],
