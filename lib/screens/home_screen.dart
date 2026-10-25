@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'dart:async';
 import 'package:intl/intl.dart' hide TextDirection;
+import 'package:intl/date_symbol_data_local.dart';
 import 'package:hijri/hijri_calendar.dart';
 import '../services/notification_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -35,15 +36,31 @@ class _HomeScreenState extends State<HomeScreen> {
     _initNotifications();
   }
 
+  // دالة مساعدة لتحويل الأرقام الإنجليزية إلى عربية
+  String _toArabicNumbers(String input) {
+    const english = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9'];
+    const arabic = ['٠', '١', '٢', '٣', '٤', '٥', '٦', '٧', '٨', '٩'];
+    for (int i = 0; i < english.length; i++) {
+      input = input.replaceAll(english[i], arabic[i]);
+    }
+    return input;
+  }
+
   void _updateTime() {
     final now = DateTime.now();
+    
+    // تفعيل اللغة العربية للوقت
+    initializeDateFormatting('ar', null);
     final format = DateFormat('hh:mm a', 'ar');
+    
+    // تفعيل اللغة العربية للتاريخ الهجري
+    HijriCalendar.setLocal('ar');
     final hijri = HijriCalendar.fromDate(now);
     
     if (mounted) {
       setState(() {
-        _timeString = format.format(now);
-        _hijriDate = '${hijri.hDay} ${hijri.longMonthName} ${hijri.hYear} هـ';
+        _timeString = _toArabicNumbers(format.format(now)); // الوقت بالأرقام العربية
+        _hijriDate = _toArabicNumbers('${hijri.hDay} ${hijri.longMonthName} ${hijri.hYear} هـ'); // التاريخ بالعربي
       });
     }
   }
@@ -83,12 +100,34 @@ class _HomeScreenState extends State<HomeScreen> {
                         Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text(_timeString, style: const TextStyle(color: AppColors.primary, fontSize: 18, fontWeight: FontWeight.bold, fontFamily: 'Cairo')),
-                            const SizedBox(height: 2),
-                            Text(_hijriDate, style: const TextStyle(color: AppColors.textMuted, fontSize: 13, fontFamily: 'Cairo')),
-                            const SizedBox(height: 8),
-                            const Text('السلام عليكم', style: TextStyle(color: AppColors.text, fontSize: 22, fontWeight: FontWeight.w900)),
+                            const Text('السلام عليكم', style: TextStyle(color: AppColors.text, fontSize: 24, fontWeight: FontWeight.w900)),
+                            const SizedBox(height: 4),
                             Text('$_name، نتمنى لك يوماً مباركاً', style: const TextStyle(color: AppColors.textMuted, fontSize: 13)),
+                            const SizedBox(height: 12),
+                            // 🌟 البطاقة الزمنية الاحترافية
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                              decoration: BoxDecoration(
+                                color: Colors.white,
+                                borderRadius: BorderRadius.circular(20),
+                                boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 10, offset: const Offset(0, 4))],
+                                border: Border.all(color: AppColors.primary.withOpacity(0.1)),
+                              ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  const Icon(Icons.access_time_filled, color: AppColors.primary, size: 16),
+                                  const SizedBox(width: 6),
+                                  Text(_timeString, style: const TextStyle(color: AppColors.primary, fontSize: 14, fontWeight: FontWeight.bold, fontFamily: 'Cairo')),
+                                  const SizedBox(width: 12),
+                                  Container(width: 1, height: 14, color: Colors.grey.shade300), // فاصل
+                                  const SizedBox(width: 12),
+                                  const Icon(Icons.calendar_month, color: AppColors.primary, size: 16),
+                                  const SizedBox(width: 6),
+                                  Text(_hijriDate, style: const TextStyle(color: AppColors.textMuted, fontSize: 13, fontWeight: FontWeight.bold, fontFamily: 'Cairo')),
+                                ],
+                              ),
+                            ),
                           ],
                         ),
                         Row(
