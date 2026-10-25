@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 import 'package:sqflite/sqflite.dart';
+import '../utils/arabic_normalizer.dart';
 
 class DatabaseHelper {
   static final DatabaseHelper instance = DatabaseHelper._();
@@ -41,10 +42,10 @@ class DatabaseHelper {
   Future<List<Map<String, Object?>>> getSurah(int id) async => (await db).query('surahs', where: 'id = ?', whereArgs: [id], limit: 1);
   Future<List<Map<String, Object?>>> getVerses(int surahId) async => (await db).query('verses', where: 'surah_id = ?', whereArgs: [surahId], orderBy: 'verse_number ASC');
   Future<List<Map<String, Object?>>> getVerse(int surahId, int verseNumber) async => (await db).query('verses', where: 'surah_id = ? AND verse_number = ?', whereArgs: [surahId, verseNumber], limit: 1);
+  
   Future<List<Map<String, Object?>>> getTafsirs(int surahId, int verseNumber) async => (await db).query('tafsirs', where: 'surah_id = ? AND verse_number = ?', whereArgs: [surahId, verseNumber]);
   Future<List<Map<String, Object?>>> getTafsirBooks() async => (await db).query('tafsir_books');
-
-  /// 🌟 جلب كتب التفسير اللي عندها تفسير فعلي للآية المحددة فقط
+  
   Future<List<Map<String, Object?>>> getTafsirBooksForVerse(int surahId, int verseNumber) async {
     final d = await db;
     return d.rawQuery('''
@@ -60,21 +61,22 @@ class DatabaseHelper {
     ''', [surahId, verseNumber]);
   }
 
+  // 🌟 دالة البحث الذكية (تتجاهل الحركات)
   Future<List<Map<String, Object?>>> searchVerses(String query, {int limit = 100}) async {
     final d = await db;
+    final normalizedQuery = ArabicNormalizer.normalize(query);
     return d.rawQuery('''
-      SELECT verses.*, surahs.name_ar as surah_name 
-      FROM verses 
-      JOIN surahs ON verses.surah_id = surahs.id 
-      WHERE verses.text_simple LIKE ? 
+      SELECT verses.*, surahs.name_ar as surah_name
+      FROM verses
+      JOIN surahs ON verses.surah_id = surahs.id
+      WHERE verses.text_simple LIKE ?
       LIMIT ?
-    ''', ['%$query%', limit]);
+    ''', ['%$normalizedQuery%', limit]);
   }
 
   // ═══ دوال الحديث ═══
-  Future<List<Map<String, Object?>>> getHadiths() async => (await db).query('hadiths', orderBy: 'book ASC, hadith_number ASC');
+  Future<List<Map<String, Object?>>> getHadiths() async => (await db).query('hadiths', orderBy: 'id ASC');
 
-  /// 🌟 جلب الأحاديث على دفعات (Pagination) لسرعة فائقة
   Future<List<Map<String, Object?>>> getHadithsPaginated(int limit, int offset) async {
     final d = await db;
     return d.query('hadiths', orderBy: 'id ASC', limit: limit, offset: offset);
@@ -91,10 +93,8 @@ class DatabaseHelper {
     return d.query('hadiths', where: 'book = ?', whereArgs: [book], orderBy: 'hadith_number ASC');
   }
 
-  // 🌟 دالة البحث الذكية في الأحاديث
   Future<List<Map<String, Object?>>> searchHadiths(String query) async {
     final d = await db;
-    // لو المستخدم كتب رقم صافي، ابحث برقم الحديث أو نص فيه الرقم
     if (int.tryParse(query) != null) {
       final number = int.parse(query);
       final results = await d.rawQuery(
@@ -103,7 +103,6 @@ class DatabaseHelper {
       );
       if (results.isNotEmpty) return results;
     }
-    // بحث عادي في النص والراوي
     return d.rawQuery(
       'SELECT * FROM hadiths WHERE arabic_text LIKE ? OR narrator LIKE ?',
       ['%$query%', '%$query%']
