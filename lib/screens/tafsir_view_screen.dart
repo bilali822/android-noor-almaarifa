@@ -126,7 +126,7 @@ class _TafsirViewScreenState extends State<TafsirViewScreen> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('تعذر مشاركة الصورة.'), backgroundColor: Colors.red),
+          SnackBar(content: Text('تعذر مشاركة الصورة: $e'), backgroundColor: Colors.red),
         );
       }
     }
