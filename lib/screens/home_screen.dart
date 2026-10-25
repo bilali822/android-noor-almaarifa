@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'dart:async';
-import 'package:intl/intl.dart';
+import 'package:intl/intl.dart' hide TextDirection;
 import 'package:hijri/hijri_calendar.dart';
 import '../services/notification_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
