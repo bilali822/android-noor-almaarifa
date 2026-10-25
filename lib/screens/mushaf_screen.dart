@@ -488,3 +488,68 @@ class _MushafSurahPageState extends State<_MushafSurahPage> {
     return result;
   }
 }
+
+
+// 🌟 كلاس الأنميشن الذهبي لرقم الآية المعلّمة
+class AnimatedGoldVerseNumber extends StatefulWidget {
+  final String text;
+  const AnimatedGoldVerseNumber({Key? key, required this.text}) : super(key: key);
+
+  @override
+  State<AnimatedGoldVerseNumber> createState() => _AnimatedGoldVerseNumberState();
+}
+
+class _AnimatedGoldVerseNumberState extends State<AnimatedGoldVerseNumber> with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+  late Animation<double> _animation;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(vsync: this, duration: const Duration(seconds: 2))..repeat(reverse: true);
+    _animation = Tween<double>(begin: 0.0, end: 1.0).animate(CurvedAnimation(parent: _controller, curve: Curves.easeInOut));
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: _animation,
+      builder: (context, child) {
+        return Container(
+          margin: const EdgeInsets.symmetric(horizontal: 4),
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+          decoration: BoxDecoration(
+            color: const Color(0xFFD4AF37).withOpacity(0.1 + (0.2 * _animation.value)),
+            borderRadius: BorderRadius.circular(10),
+            border: Border.all(
+              color: const Color(0xFFD4AF37).withOpacity(0.5 + (0.5 * _animation.value)), 
+              width: 1.5
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: const Color(0xFFD4AF37).withOpacity(0.4 * _animation.value),
+                blurRadius: 10 * _animation.value,
+                spreadRadius: 2 * _animation.value,
+              )
+            ],
+          ),
+          child: Text(
+            widget.text,
+            style: const TextStyle(
+              fontFamily: 'UthmanicHafs',
+              color: Color(0xFFD4AF37), // ذهبي
+              fontSize: 22,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+        );
+      },
+    );
+  }
+}
