@@ -81,11 +81,10 @@ class _HadithScreenState extends State<HadithScreen> {
       }
     } else {
       // تصفح عادي: استخدام التمرير (Pagination) لجلب أول 20
-      final results = await DatabaseHelper.instance.getHadithsPaginated(_limit, _offset);
+      final results = await DatabaseHelper.instance.getHadithsPaginated(_limit); // لا نمرر lastId هنا
       if (mounted) {
         setState(() {
           _hadiths = results;
-          _offset += results.length;
           _hasMore = results.length == _limit;
           _loading = false;
         });
@@ -96,12 +95,18 @@ class _HadithScreenState extends State<HadithScreen> {
   // جلب المزيد عند التمرير
   Future<void> _loadMore() async {
     setState(() => _isLoadingMore = true);
-    final results = await DatabaseHelper.instance.getHadithsPaginated(_limit, _offset);
+    
+    // 🌟 جلب آخر ID تم تحميله بدلاً من الـ Offset البطيء
+    int? lastId;
+    if (_hadiths.isNotEmpty) {
+      lastId = _hadiths.last['id'] as int;
+    }
+    
+    final results = await DatabaseHelper.instance.getHadithsPaginated(_limit, lastId: lastId);
     
     if (mounted) {
       setState(() {
         _hadiths.addAll(results);
-        _offset += results.length;
         _hasMore = results.length == _limit;
         _isLoadingMore = false;
       });

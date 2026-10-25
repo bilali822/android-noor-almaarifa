@@ -32,6 +32,7 @@ class DatabaseHelper {
       singleInstance: true,
       onConfigure: (db) async {
         await db.execute('PRAGMA cache_size = 10000');
+        await db.execute('CREATE INDEX IF NOT EXISTS idx_hadiths_book ON hadiths(book)');
         await db.execute('PRAGMA temp_store = MEMORY');
       },
     );
@@ -74,12 +75,39 @@ class DatabaseHelper {
     ''', ['%$normalizedQuery%', limit]);
   }
 
+
+  // 🌟 جلب آيات صفحة معينة (للمصحف)
+  Future<List<Map<String, Object?>>> getVersesByPage(int pageNumber) async {
+    final d = await db;
+    return d.rawQuery('''
+      SELECT verses.*, surahs.name_ar as surah_name
+      FROM verses
+      JOIN surahs ON verses.surah_id = surahs.id
+      WHERE verses.page_number = ?
+      ORDER BY verses.surah_id ASC, verses.verse_number ASC
+    ''', [pageNumber]);
+  }
+
+  // 🌟 جلب رقم الصفحة الأولى لسورة معينة (عند اختيار السورة)
+  Future<int> getSurahStartPage(int surahId) async {
+    final d = await db;
+    final res = await d.rawQuery('SELECT page_number FROM verses WHERE surah_id = ? ORDER BY verse_number ASC LIMIT 1', [surahId]);
+    if (res.isNotEmpty) return (res.first['page_number'] as int?) ?? 1;
+    return 1;
+  }
+
   // ═══ دوال الحديث ═══
   Future<List<Map<String, Object?>>> getHadiths() async => (await db).query('hadiths', orderBy: 'id ASC');
 
-  Future<List<Map<String, Object?>>> getHadithsPaginated(int limit, int offset) async {
+  Future<List<Map<String, Object?>>> getHadithsPaginated(int limit, {int? lastId}) async {
     final d = await db;
-    return d.query('hadiths', orderBy: 'id ASC', limit: limit, offset: offset);
+    if (lastId == null) {
+      // أول 20 حديثاً
+      return d.query('hadiths', orderBy: 'id ASC', limit: limit);
+    } else {
+      // الأحاديث التي تأتي بعد آخر ID تم تحميله
+      return d.query('hadiths', where: 'id > ?', whereArgs: [lastId], orderBy: 'id ASC', limit: limit);
+    }
   }
 
   Future<List<Map<String, Object?>>> getHadithBooks() async {
