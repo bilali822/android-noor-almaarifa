@@ -29,18 +29,17 @@ class _HadithScreenState extends State<HadithScreen> with AutomaticKeepAliveClie
   final int _limit = 20;
 
   @override
-  bool get wantKeepAlive => true; // 🌟 يحفظ الشاشة في الذاكرة
+  bool get wantKeepAlive => true;
 
   @override
   void initState() {
     super.initState();
-    SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky); // 🌟 شاشة كاملة
+    SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
     _loadBooks();
     _resetAndLoad();
     
     _scrollCtrl.addListener(() {
-      if (_scrollCtrl.position.pixels >= _scrollCtrl.position.maxScrollExtent - 200 && 
-          !_isLoadingMore && _hasMore) {
+      if (_scrollCtrl.position.pixels >= _scrollCtrl.position.maxScrollExtent - 200 && !_isLoadingMore && _hasMore) {
         _loadMore();
       }
     });
@@ -48,48 +47,21 @@ class _HadithScreenState extends State<HadithScreen> with AutomaticKeepAliveClie
 
   Future<void> _loadBooks() async {
     final b = await DatabaseHelper.instance.getHadithBooks();
-    if (mounted) {
-      setState(() => _books = ['الكل', ...b.map((e) => e['name'] as String)]);
-    }
+    if (mounted) setState(() => _books = ['الكل', ...b.map((e) => e['name'] as String)]);
   }
 
   Future<void> _resetAndLoad() async {
-    setState(() {
-      _loading = true;
-      _offset = 0;
-      _hasMore = true;
-      _hadiths.clear();
-    });
+    setState(() { _loading = true; _offset = 0; _hasMore = true; _hadiths.clear(); });
 
     if (_searchCtrl.text.isNotEmpty) {
       final results = await DatabaseHelper.instance.searchHadiths(_searchCtrl.text);
-      if (mounted) {
-        setState(() {
-          _hadiths = results;
-          _loading = false;
-          _hasMore = false;
-        });
-      }
+      if (mounted) setState(() { _hadiths = results; _loading = false; _hasMore = false; });
     } else if (_selectedBook != 'الكل') {
       final results = await DatabaseHelper.instance.getHadithsByBookPaginated(_selectedBook, _limit, 0);
-      if (mounted) {
-        setState(() {
-          _hadiths = results;
-          _offset = results.length;
-          _hasMore = results.length == _limit;
-          _loading = false;
-        });
-      }
+      if (mounted) setState(() { _hadiths = results; _offset = results.length; _hasMore = results.length == _limit; _loading = false; });
     } else {
       final results = await DatabaseHelper.instance.getHadithsPaginated(_limit, 0);
-      if (mounted) {
-        setState(() {
-          _hadiths = results;
-          _offset = results.length;
-          _hasMore = results.length == _limit;
-          _loading = false;
-        });
-      }
+      if (mounted) setState(() { _hadiths = results; _offset = results.length; _hasMore = results.length == _limit; _loading = false; });
     }
   }
 
@@ -162,7 +134,7 @@ class _HadithScreenState extends State<HadithScreen> with AutomaticKeepAliveClie
 
   @override
   Widget build(BuildContext context) {
-    super.build(context); // 🌟 مطلوب لـ KeepAlive
+    super.build(context);
     return Scaffold(
       backgroundColor: const Color(0xFFF8F4EC),
       appBar: AppBar(
@@ -254,20 +226,16 @@ class _HadithScreenState extends State<HadithScreen> with AutomaticKeepAliveClie
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Row(
-                  children: [
-                    CircleAvatar(radius: 14, backgroundColor: AppColors.primary.withOpacity(0.1), child: const Icon(Icons.person, size: 16, color: AppColors.primary)),
-                    const SizedBox(width: 8),
-                    Text('الراوي: ${h['narrator'] ?? 'غير معروف'}', style: const TextStyle(color: AppColors.textMuted, fontSize: 13, fontWeight: FontWeight.w600)),
-                  ],
-                ),
-                Row(
-                  children: [
-                    IconButton(icon: const Icon(Icons.copy, size: 20, color: AppColors.textMuted), onPressed: () {}),
-                    IconButton(icon: const Icon(Icons.share, size: 20, color: AppColors.primary), onPressed: () => _shareHadithImage(h)),
-                    IconButton(icon: const Icon(Icons.bookmark_border, size: 20, color: AppColors.textMuted), onPressed: () {}),
-                  ],
-                )
+                Row(children: [
+                  CircleAvatar(radius: 14, backgroundColor: AppColors.primary.withOpacity(0.1), child: const Icon(Icons.person, size: 16, color: AppColors.primary)),
+                  const SizedBox(width: 8),
+                  Text('الراوي: ${h['narrator'] ?? 'غير معروف'}', style: const TextStyle(color: AppColors.textMuted, fontSize: 13, fontWeight: FontWeight.w600)),
+                ]),
+                Row(children: [
+                  IconButton(icon: const Icon(Icons.copy, size: 20, color: AppColors.textMuted), onPressed: () {}),
+                  IconButton(icon: const Icon(Icons.share, size: 20, color: AppColors.primary), onPressed: () => _shareHadithImage(h)),
+                  IconButton(icon: const Icon(Icons.bookmark_border, size: 20, color: AppColors.textMuted), onPressed: () {}),
+                ])
               ],
             ),
           ),

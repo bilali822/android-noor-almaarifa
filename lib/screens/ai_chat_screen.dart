@@ -49,11 +49,7 @@ class _AIChatScreenState extends State<AIChatScreen> {
           model: 'gemini-flash-lite-latest',
           apiKey: _apiKey,
           generationConfig: GenerationConfig(maxOutputTokens: 2048),
-          systemInstruction: Content.system(
-            'أنت "مساعد نور المعرفة"، مساعد ذكي مخصص لتطبيق إسلامي. '
-            'لا تبدأ ردك بالسلام أو الترحيب إلا إذا بدأ المستخدم رسالته بالسلام. '
-            'أجب على سؤال المستخدم مباشرة. لا تقل أنك ChatGPT.'
-          ),
+          systemInstruction: Content.system('أنت "مساعد نور المعرفة"، مساعد ذكي مخصص لتطبيق إسلامي. أجب على سؤال المستخدم مباشرة.'),
         );
         _chatSession = model.startChat();
       } catch (e) {
@@ -80,22 +76,15 @@ class _AIChatScreenState extends State<AIChatScreen> {
 
   Future<void> _loadConversation(SavedConversation conv) async {
     setState(() {
-      _currentConvId = conv.id;
-      _convTitle = conv.title;
-      _messages.clear();
+      _currentConvId = conv.id; _convTitle = conv.title; _messages.clear();
       for (var m in conv.messages) { _messages.add(AIMessage(text: m.text, isUser: m.isUser)); }
       _isWaiting = false;
     });
-    _initSession();
-    _scrollToBottom();
+    _initSession(); _scrollToBottom();
   }
 
   void _newChat() {
-    setState(() {
-      _messages.clear();
-      _currentConvId = DateTime.now().millisecondsSinceEpoch.toString();
-      _convTitle = 'محادثة جديدة';
-    });
+    setState(() { _messages.clear(); _currentConvId = DateTime.now().millisecondsSinceEpoch.toString(); _convTitle = 'محادثة جديدة'; });
     _initSession();
   }
 
@@ -103,13 +92,10 @@ class _AIChatScreenState extends State<AIChatScreen> {
     final text = _inputCtrl.text.trim();
     if (text.isEmpty) return;
 
-    // 🌟 التشخيص الأول: هل المفتاح موجود؟
     if (_apiKey.isEmpty) {
-      _showSupportDialog(); // استدعاء الدعم الفني
-      return;
+      _showSupportDialog(); return;
     }
     
-    // 🌟 التشخيص الثاني: هل الجلسة مهيأة؟
     if (_chatSession == null) {
       _initSession();
       if (_chatSession == null) {
@@ -119,10 +105,7 @@ class _AIChatScreenState extends State<AIChatScreen> {
     }
 
     _inputCtrl.clear();
-    setState(() {
-      _messages.add(AIMessage(text: text, isUser: true));
-      _isWaiting = true;
-    });
+    setState(() { _messages.add(AIMessage(text: text, isUser: true)); _isWaiting = true; });
     _scrollToBottom();
 
     try {
@@ -133,36 +116,23 @@ class _AIChatScreenState extends State<AIChatScreen> {
       await for (final response in responseStream) {
         fullText += response.text ?? '';
         String cleanText = fullText.replaceAll('**', '').replaceAll('*', '•');
-
         setState(() {
-          if (isFirstChunk) {
-            _isWaiting = false;
-            _messages.add(AIMessage(text: cleanText, isUser: false));
-            isFirstChunk = false;
-          } else {
-            _messages[_messages.length - 1] = AIMessage(text: cleanText, isUser: false);
-          }
+          if (isFirstChunk) { _isWaiting = false; _messages.add(AIMessage(text: cleanText, isUser: false)); isFirstChunk = false; }
+          else { _messages[_messages.length - 1] = AIMessage(text: cleanText, isUser: false); }
         });
         _scrollToBottom();
       }
       await _saveCurrentConversation();
     } catch (e) {
       if (mounted) {
-        setState(() {
-          _isWaiting = false;
-          _messages.add(AIMessage(text: 'عذراً، حدث خطأ في الاتصال. يرجى التواصل مع الدعم الفني.', isUser: false));
-        });
-        _scrollToBottom();
-        _showSupportDialog(); // استدعاء الدعم الفني عند الخطأ
+        setState(() { _isWaiting = false; _messages.add(AIMessage(text: 'عذراً، حدث خطأ في الاتصال. يرجى التواصل مع الدعم الفني.', isUser: false)); });
+        _scrollToBottom(); _showSupportDialog();
       }
     }
   }
 
   void _showSupportDialog() {
-    showDialog(
-      context: context,
-      builder: (context) => const Dialog(backgroundColor: Colors.transparent, insetPadding: EdgeInsets.all(20), child: SupportCard()),
-    );
+    showDialog(context: context, builder: (context) => const Dialog(backgroundColor: Colors.transparent, insetPadding: EdgeInsets.all(20), child: SupportCard()));
   }
 
   @override
@@ -171,15 +141,7 @@ class _AIChatScreenState extends State<AIChatScreen> {
       backgroundColor: bgColor,
       appBar: AppBar(
         backgroundColor: bgColor, elevation: 0,
-        title: const Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(Icons.auto_awesome, color: goldAccent),
-            SizedBox(width: 8),
-            Text('مساعد نور الذكي', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 18)),
-            SizedBox(width: 40),
-          ],
-        ),
+        title: const Row(mainAxisAlignment: MainAxisAlignment.center, children: [Icon(Icons.auto_awesome, color: goldAccent), SizedBox(width: 8), Text('مساعد نور الذكي', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 18)), SizedBox(width: 40)]),
         leading: IconButton(icon: const Icon(Icons.arrow_back_ios_new, color: Colors.white, size: 20), onPressed: () => Navigator.pop(context)),
         actions: [
           IconButton(icon: const Icon(Icons.history, color: Colors.white), onPressed: () async {
@@ -221,13 +183,7 @@ class _AIChatScreenState extends State<AIChatScreen> {
           const SizedBox(height: 8),
           const Text('أنا هنا لمساعدتك في فهم القرآن، السنة، والفتاوى.', style: TextStyle(color: Colors.white54, fontSize: 14)),
           const SizedBox(height: 32),
-          Wrap(
-            spacing: 12,
-            children: [
-              _buildSuggestionCard(Icons.menu_book, 'اشرح لي الصبر'),
-              _buildSuggestionCard(Icons.lightbulb_outline, 'أركان الإسلام'),
-            ],
-          )
+          Wrap(spacing: 12, children: [_buildSuggestionCard(Icons.menu_book, 'اشرح لي الصبر'), _buildSuggestionCard(Icons.lightbulb_outline, 'أركان الإسلام')])
         ],
       ),
     );

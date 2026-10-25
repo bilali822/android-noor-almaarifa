@@ -32,13 +32,11 @@ class DatabaseHelper {
       singleInstance: true,
       onConfigure: (db) async {
         await db.execute('PRAGMA cache_size = 10000');
-        await db.execute('CREATE INDEX IF NOT EXISTS idx_hadiths_book ON hadiths(book)');
         await db.execute('PRAGMA temp_store = MEMORY');
       },
     );
   }
 
-  // ═══ دوال القرآن ═══
   Future<List<Map<String, Object?>>> getSurahs() async => (await db).query('surahs', orderBy: 'id ASC');
   Future<List<Map<String, Object?>>> getSurah(int id) async => (await db).query('surahs', where: 'id = ?', whereArgs: [id], limit: 1);
   Future<List<Map<String, Object?>>> getVerses(int surahId) async => (await db).query('verses', where: 'surah_id = ?', whereArgs: [surahId], orderBy: 'verse_number ASC');
@@ -54,97 +52,47 @@ class DatabaseHelper {
       FROM tafsir_books b
       WHERE EXISTS (
         SELECT 1 FROM tafsirs t
-        WHERE t.book_key = b.key
-          AND t.surah_id = ?
-          AND t.verse_number = ?
-      )
-      ORDER BY b.key
+        WHERE t.book_key = b.key AND t.surah_id = ? AND t.verse_number = ?
+      ) ORDER BY b.key
     ''', [surahId, verseNumber]);
   }
 
-  // 🌟 دالة البحث الذكية (تتجاهل الحركات)
   Future<List<Map<String, Object?>>> searchVerses(String query, {int limit = 100}) async {
     final d = await db;
     final normalizedQuery = ArabicNormalizer.normalize(query);
     return d.rawQuery('''
       SELECT verses.*, surahs.name_ar as surah_name
-      FROM verses
-      JOIN surahs ON verses.surah_id = surahs.id
-      WHERE verses.text_simple LIKE ?
-      LIMIT ?
+      FROM verses JOIN surahs ON verses.surah_id = surahs.id
+      WHERE verses.text_simple LIKE ? LIMIT ?
     ''', ['%$normalizedQuery%', limit]);
   }
 
-
-  // 🌟 جلب آيات صفحة معينة (للمصحف)
-  Future<List<Map<String, Object?>>> getVersesByPage(int pageNumber) async {
-    final d = await db;
-    return d.rawQuery('''
-      SELECT verses.*, surahs.name_ar as surah_name
-      FROM verses
-      JOIN surahs ON verses.surah_id = surahs.id
-      WHERE verses.page_number = ?
-      ORDER BY verses.surah_id ASC, verses.verse_number ASC
-    ''', [pageNumber]);
-  }
-
-  // 🌟 جلب رقم الصفحة الأولى لسورة معينة (عند اختيار السورة)
-  Future<int> getSurahStartPage(int surahId) async {
-    final d = await db;
-    final res = await d.rawQuery('SELECT page_number FROM verses WHERE surah_id = ? ORDER BY verse_number ASC LIMIT 1', [surahId]);
-    if (res.isNotEmpty) return (res.first['page_number'] as int?) ?? 1;
-    return 1;
-  }
-
-
-  // 🌟 جلب أحاديث كتاب معين على دفعات (سريع جداً)
-  Future<List<Map<String, Object?>>> getHadithsByBookPaginated(String book, int limit, {int? lastId}) async {
-    final d = await db;
-    if (lastId == null) {
-      return d.query('hadiths', where: 'book = ?', whereArgs: [book], orderBy: 'id ASC', limit: limit);
-    } else {
-      return d.query('hadiths', where: 'book = ? AND id > ?', whereArgs: [book, lastId], orderBy: 'id ASC', limit: limit);
-    }
-  }
-
-  // ═══ دوال الحديث ═══
   Future<List<Map<String, Object?>>> getHadiths() async => (await db).query('hadiths', orderBy: 'id ASC');
+  
+  Future<List<Map<String, Object?>>> getHadithsPaginated(int limit, int offset) async {
+    return (await db).query('hadiths', orderBy: 'id ASC', limit: limit, offset: offset);
+  }
 
-  Future<List<Map<String, Object?>>> getHadithsPaginated(int limit, {int? lastId}) async {
-    final d = await db;
-    if (lastId == null) {
-      // أول 20 حديثاً
-      return d.query('hadiths', orderBy: 'id ASC', limit: limit);
-    } else {
-      // الأحاديث التي تأتي بعد آخر ID تم تحميله
-      return d.query('hadiths', where: 'id > ?', whereArgs: [lastId], orderBy: 'id ASC', limit: limit);
-    }
+  Future<List<Map<String, Object?>>> getHadithsByBookPaginated(String book, int limit, int offset) async {
+    return (await db).query('hadiths', where: 'book = ?', whereArgs: [book], orderBy: 'hadith_number ASC', limit: limit, offset: offset);
   }
 
   Future<List<Map<String, Object?>>> getHadithBooks() async {
-    final d = await db;
-    final res = await d.rawQuery('SELECT DISTINCT book FROM hadiths');
+    final res = await (await db).rawQuery('SELECT DISTINCT book FROM hadiths');
     return res.map((row) => {'name': row['book']}).toList();
   }
 
   Future<List<Map<String, Object?>>> getHadithsByBook(String book) async {
-    final d = await db;
-    return d.query('hadiths', where: 'book = ?', whereArgs: [book], orderBy: 'hadith_number ASC');
+    return (await db).query('hadiths', where: 'book = ?', whereArgs: [book], orderBy: 'hadith_number ASC');
   }
 
   Future<List<Map<String, Object?>>> searchHadiths(String query) async {
     final d = await db;
     if (int.tryParse(query) != null) {
       final number = int.parse(query);
-      final results = await d.rawQuery(
-        'SELECT * FROM hadiths WHERE hadith_number = ? OR arabic_text LIKE ?',
-        [number, '%$query%']
-      );
+      final results = await d.rawQuery('SELECT * FROM hadiths WHERE hadith_number = ? OR arabic_text LIKE ?', [number, '%$query%']);
       if (results.isNotEmpty) return results;
     }
-    return d.rawQuery(
-      'SELECT * FROM hadiths WHERE arabic_text LIKE ? OR narrator LIKE ?',
-      ['%$query%', '%$query%']
-    );
+    return d.rawQuery('SELECT * FROM hadiths WHERE arabic_text LIKE ? OR narrator LIKE ?', ['%$query%', '%$query%']);
   }
 }
