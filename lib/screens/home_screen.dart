@@ -1,4 +1,8 @@
 import 'package:flutter/material.dart';
+import 'dart:async';
+import 'package:intl/intl.dart';
+import 'package:hijri/hijri_calendar.dart';
+import '../services/notification_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../theme/app_colors.dart';
 import '../widgets/bouncy_tap.dart';
@@ -17,11 +21,44 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   String _name = '';
+  String _timeString = '';
+  String _hijriDate = '';
+  Timer? _timer;
 
   @override
   void initState() {
     super.initState();
     SharedPreferences.getInstance().then((p) => setState(() => _name = p.getString('user_name') ?? 'زائر'));
+    
+    _updateTime();
+    _timer = Timer.periodic(const Duration(seconds: 1), (Timer t) => _updateTime());
+    _initNotifications();
+  }
+
+  void _updateTime() {
+    final now = DateTime.now();
+    final format = DateFormat('hh:mm a', 'ar');
+    final hijri = HijriCalendar.fromDate(now);
+    
+    if (mounted) {
+      setState(() {
+        _timeString = format.format(now);
+        _hijriDate = '${hijri.hDay} ${hijri.longMonthName} ${hijri.hYear} هـ';
+      });
+    }
+  }
+
+  Future<void> _initNotifications() async {
+    await NotificationService.instance.init();
+    await NotificationService.instance.showWelcomeNotification();
+    await NotificationService.instance.scheduleDailyNotification();
+    await NotificationService.instance.showPersistentPrayerNotification('العصر', '3:30 م', _hijriDate);
+  }
+
+  @override
+  void dispose() {
+    _timer?.cancel();
+    super.dispose();
   }
 
   @override
@@ -45,8 +82,11 @@ class _HomeScreenState extends State<HomeScreen> {
                         Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            const Text('السلام عليكم', style: TextStyle(color: AppColors.text, fontSize: 26, fontWeight: FontWeight.w900)),
-                            const SizedBox(height: 4),
+                            Text(_timeString, style: const TextStyle(color: AppColors.primary, fontSize: 18, fontWeight: FontWeight.bold, fontFamily: 'Cairo')),
+                            const SizedBox(height: 2),
+                            Text(_hijriDate, style: const TextStyle(color: AppColors.textMuted, fontSize: 13, fontFamily: 'Cairo')),
+                            const SizedBox(height: 8),
+                            const Text('السلام عليكم', style: TextStyle(color: AppColors.text, fontSize: 22, fontWeight: FontWeight.w900)),
                             Text('$_name، نتمنى لك يوماً مباركاً', style: const TextStyle(color: AppColors.textMuted, fontSize: 13)),
                           ],
                         ),
