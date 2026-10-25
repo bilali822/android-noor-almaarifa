@@ -5,6 +5,7 @@ import 'package:share_plus/share_plus.dart';
 import 'package:path_provider/path_provider.dart';
 import '../db/database_helper.dart';
 import '../theme/app_colors.dart';
+import '../widgets/support_card.dart';
 
 class HadithScreen extends StatefulWidget {
   const HadithScreen({super.key});
@@ -381,6 +382,11 @@ class _HadithScreenState extends State<HadithScreen> {
             icon: const Icon(Icons.refresh),
             label: const Text('مسح الفلاتر والبحث'),
             style: ElevatedButton.styleFrom(backgroundColor: AppColors.primary, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))),
+          ),
+          const SizedBox(height: 32),
+          const Padding(
+            padding: EdgeInsets.symmetric(horizontal: 16),
+            child: SupportCard(), // 🌟 بطاقة الدعم الفني تظهر هنا
           )
         ],
       ),

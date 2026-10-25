@@ -5,6 +5,7 @@ import 'package:google_generative_ai/google_generative_ai.dart';
 import '../models/chat_history.dart';
 import '../services/chat_history_service.dart';
 import 'chat_history_screen.dart';
+import '../widgets/support_card.dart';
 
 const Color bgColor = Color(0xFF0B101E);
 const Color aiBubbleColor = Color(0xFF1E293B);
@@ -140,6 +141,17 @@ class _AIChatScreenState extends State<AIChatScreen> {
         _scrollToBottom();
       }
     }
+  }
+
+  void _showSupportDialog() {
+    showDialog(
+      context: context,
+      builder: (context) => const Dialog(
+        backgroundColor: Colors.transparent,
+        insetPadding: EdgeInsets.all(20),
+        child: SupportCard(),
+      ),
+    );
   }
 
   @override

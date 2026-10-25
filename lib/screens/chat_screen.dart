@@ -12,6 +12,7 @@ import '../widgets/tafsir_sheet.dart';
 import '../models/chat_history.dart';
 import '../services/chat_history_service.dart';
 import 'chat_history_screen.dart';
+import '../widgets/support_card.dart';
 
 class ChatMessage {
   final String text; 
@@ -175,12 +176,24 @@ class _ChatScreenState extends State<ChatScreen> {
         setState(() => _messages.add(ChatMessage(text: 'جرب تسأل عن آية أو سورة.', isUser: false, time: currentTime)));
       }
     } catch (e) {
-      setState(() => _messages.add(ChatMessage(text: 'حدث خطأ: $e', isUser: false, time: currentTime)));
+      setState(() => _messages.add(ChatMessage(text: 'حدث خطأ في الاتصال. يرجى التواصل مع الدعم الفني.', isUser: false, time: currentTime)));
+      _showSupportDialog();
     } finally { 
       if (mounted) setState(() => _typing = false); 
       _scrollToBottom();
       await _saveConversation();
     }
+  }
+
+  void _showSupportDialog() {
+    showDialog(
+      context: context,
+      builder: (context) => const Dialog(
+        backgroundColor: Colors.transparent,
+        insetPadding: EdgeInsets.all(20),
+        child: SupportCard(),
+      ),
+    );
   }
 
   @override Widget build(BuildContext context) {
