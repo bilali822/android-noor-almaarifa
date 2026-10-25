@@ -46,10 +46,10 @@ class _AIChatScreenState extends State<AIChatScreen> {
       try {
         // 🌟 استخدام الموديل المطلوب من جوجل
         final model = GenerativeModel(
-          model: 'gemini-3.8-flash',
+          model: 'gemini-flash-lite-latest',
           apiKey: _apiKey,
-          generationConfig: GenerationConfig(maxOutputTokens: 2048),
-          systemInstruction: Content.system('أنت "مساعد نور المعرفة"، مساعد ذكي مخصص لتطبيق إسلامي. أجب على سؤال المستخدم مباشرة.'),
+          generationConfig: GenerationConfig(maxOutputTokens: 500),
+          systemInstruction: Content.system('أنت "مساعد نور المعرفة". أجب على سؤال المستخدم بإيجاز شديد ومباشر. لا تكتب مقدمات ولا خواتيم طويلة. اجعل الرد في نقاط أو فقرة قصيرة جداً.'),
         );
         _chatSession = model.startChat();
       } catch (e) {
