@@ -46,7 +46,7 @@ class _AIChatScreenState extends State<AIChatScreen> {
       try {
         // 🌟 استخدام الموديل الأحدث والمستقر (لأن 1.5 تم إيقافه)
         final model = GenerativeModel(
-          model: 'gemini-2.5-flash', // أو 'gemini-flash-lite-latest'
+          model: 'gemini-3.8-flash', // أو 'gemini-flash-lite-latest'
           apiKey: _apiKey,
           generationConfig: GenerationConfig(maxOutputTokens: 2048),
           systemInstruction: Content.system('أنت "مساعد نور المعرفة"، مساعد ذكي مخصص لتطبيق إسلامي. أجب على سؤال المستخدم مباشرة.'),
