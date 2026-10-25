@@ -16,7 +16,7 @@ class NotificationService {
   Future<void> init() async {
     tz.initializeTimeZones();
     
-    const AndroidInitializationSettings initializationSettingsAndroid = AndroidInitializationSettings('@mipmap/ic_launcher');
+    const AndroidInitializationSettings initializationSettingsAndroid = AndroidInitializationSettings('@mipmap/launcher_icon');
     const InitializationSettings initializationSettings = InitializationSettings(android: initializationSettingsAndroid);
 
     await flutterLocalNotificationsPlugin.initialize(
@@ -116,7 +116,7 @@ class NotificationService {
       showWhen: false,
       onlyAlertOnce: true,
       color: const Color(0xFF155E35), // لون الأيقونة أخضر
-      icon: '@mipmap/ic_launcher',
+      icon: '@mipmap/launcher_icon',
       // إعدادات النص الكبير (عند سحب الإشعار)
       styleInformation: BigTextStyleInformation(
         schedule, // النص الكبير الذي يظهر عند السحب
