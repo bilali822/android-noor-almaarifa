@@ -51,3 +51,10 @@ flutter:
     - family: UthmanicHafs
       fonts:
         - asset: assets/fonts/UthmanicHafs.ttf
+
+
+
+
+
+dependency_overrides:
+  geolocator_android: 4.6.1
