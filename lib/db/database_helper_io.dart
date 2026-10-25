@@ -74,6 +74,12 @@ class DatabaseHelper {
   // ═══ دوال الحديث ═══
   Future<List<Map<String, Object?>>> getHadiths() async => (await db).query('hadiths', orderBy: 'book ASC, hadith_number ASC');
 
+  /// 🌟 جلب الأحاديث على دفعات (Pagination) لسرعة فائقة
+  Future<List<Map<String, Object?>>> getHadithsPaginated(int limit, int offset) async {
+    final d = await db;
+    return d.query('hadiths', orderBy: 'id ASC', limit: limit, offset: offset);
+  }
+
   Future<List<Map<String, Object?>>> getHadithBooks() async {
     final d = await db;
     final res = await d.rawQuery('SELECT DISTINCT book FROM hadiths');

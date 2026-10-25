@@ -122,7 +122,19 @@ class _HomeScreenState extends State<HomeScreen> {
                                 Navigator.push(context, MaterialPageRoute(builder: (_) => const AIChatScreen()));
                               }),
                               _buildFeatureCard('الحديث', Icons.menu_book, () {
-                                Navigator.push(context, MaterialPageRoute(builder: (_) => const HadithScreen()));
+                                Navigator.push(context, PageRouteBuilder(
+                                  pageBuilder: (_, __, ___) => const HadithScreen(),
+                                  transitionsBuilder: (_, animation, __, child) {
+                                    return FadeTransition(
+                                      opacity: animation,
+                                      child: SlideTransition(
+                                        position: Tween<Offset>(begin: const Offset(0, 0.05), end: Offset.zero).animate(animation),
+                                        child: child,
+                                      ),
+                                    );
+                                  },
+                                  transitionDuration: const Duration(milliseconds: 300),
+                                ));
                               }),
 
                               // 🌟 الصف الثالث: الإعدادات والمحفوظات

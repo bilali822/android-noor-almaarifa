@@ -135,6 +135,12 @@ class DatabaseHelper {
     ];
   }
 
+  Future<List<Map<String, Object?>>> getHadithsPaginated(int limit, int offset) async {
+    final all = await getHadiths();
+    if (offset >= all.length) return [];
+    return all.skip(offset).take(limit).toList();
+  }
+
   Future<List<Map<String, Object?>>> getHadithBooks() async {
     return [
       {'name': 'صحيح البخاري'},
