@@ -57,6 +57,27 @@ class DatabaseHelper {
     ''', [surahId, verseNumber]);
   }
 
+
+  Future<List<Map<String, Object?>>> getVersesByPage(int pageNumber) async {
+    final d = await db;
+    return d.rawQuery('''
+      SELECT verses.*, surahs.name_ar as surah_name
+      FROM verses
+      JOIN surahs ON verses.surah_id = surahs.id
+      WHERE verses.page_number = ?
+      ORDER BY verses.verse_number ASC
+    ''', [pageNumber]);
+  }
+
+  Future<int> getSurahStartPage(int surahId) async {
+    final d = await db;
+    final res = await d.rawQuery('SELECT MIN(page_number) as start_page FROM verses WHERE surah_id = ?', [surahId]);
+    if (res.isNotEmpty && res.first['start_page'] != null) {
+      return res.first['start_page'] as int;
+    }
+    return 1;
+  }
+
   Future<List<Map<String, Object?>>> searchVerses(String query, {int limit = 100}) async {
     final d = await db;
     final normalizedQuery = ArabicNormalizer.normalize(query);

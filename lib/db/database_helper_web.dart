@@ -47,6 +47,33 @@ class DatabaseHelper {
     return allBooks.where((b) => available.contains(b['key'])).toList();
   }
 
+
+  Future<List<Map<String, Object?>>> getVersesByPage(int pageNumber) async {
+    if (pageNumber == 1) {
+      return [
+        {'surah_id': 1, 'surah_name': 'الفاتحة', 'verse_number': 1, 'text_ar': 'بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ', 'page_number': 1},
+        {'surah_id': 1, 'surah_name': 'الفاتحة', 'verse_number': 2, 'text_ar': 'الْحَمْدُ لِلَّهِ رَبِّ الْعَالَمِينَ', 'page_number': 1},
+        {'surah_id': 1, 'surah_name': 'الفاتحة', 'verse_number': 3, 'text_ar': 'الرَّحْمَٰنِ الرَّحِيمِ', 'page_number': 1},
+        {'surah_id': 1, 'surah_name': 'الفاتحة', 'verse_number': 4, 'text_ar': 'مَالِكِ يَوْمِ الدِّينِ', 'page_number': 1},
+        {'surah_id': 1, 'surah_name': 'الفاتحة', 'verse_number': 5, 'text_ar': 'إِيَّاكَ نَعْبُدُ وَإِيَّاكَ نَسْتَعِينُ', 'page_number': 1},
+        {'surah_id': 1, 'surah_name': 'الفاتحة', 'verse_number': 6, 'text_ar': 'اهْدِنَا الصِّرَاطَ الْمُسْتَقِيمَ', 'page_number': 1},
+        {'surah_id': 1, 'surah_name': 'الفاتحة', 'verse_number': 7, 'text_ar': 'صِرَاطَ الَّذِينَ أَنْعَمْتَ عَلَيْهِمْ غَيْرِ الْمَغْضُوبِ عَلَيْهِمْ وَلَا الضَّالِّينَ', 'page_number': 1},
+      ];
+    } else if (pageNumber == 2) {
+      return [
+        {'surah_id': 2, 'surah_name': 'البقرة', 'verse_number': 1, 'text_ar': 'الم', 'page_number': 2},
+        {'surah_id': 2, 'surah_name': 'البقرة', 'verse_number': 2, 'text_ar': 'ذَٰلِكَ الْكِتَابُ لَا رَيْبَ ۛ فِيهِ ۛ هُدًى لِّلْمُتَّقِينَ', 'page_number': 2},
+      ];
+    }
+    return [];
+  }
+
+  Future<int> getSurahStartPage(int surahId) async {
+    if (surahId == 1) return 1;
+    if (surahId == 2) return 2;
+    return 1;
+  }
+
   Future<List<Map<String, Object?>>> searchVerses(String query, {int limit = 100}) async {
     final normalizedQuery = ArabicNormalizer.normalize(query);
     final all = await getVerses(1) + await getVerses(112);
