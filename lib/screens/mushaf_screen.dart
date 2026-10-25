@@ -23,6 +23,7 @@ class _MushafScreenState extends State<MushafScreen> {
   late PageController _pageController;
   int _currentSurah = 1;
   int? _highlightedVerse;
+  String _currentSurahName = 'الفاتحة';
 
   // لون الورق البيج
   final Color bgColor = const Color(0xFFFDFBF7); 
@@ -60,8 +61,12 @@ class _MushafScreenState extends State<MushafScreen> {
           PageView.builder(
             controller: _pageController,
             itemCount: 114,
-            onPageChanged: (index) {
+            onPageChanged: (index) async {
               setState(() => _currentSurah = index + 1);
+              final s = await DatabaseHelper.instance.getSurah(_currentSurah);
+              if (s.isNotEmpty && mounted) {
+                setState(() => _currentSurahName = s.first['name_ar'] as String);
+              }
             },
             itemBuilder: (context, index) {
               final surahId = index + 1;
@@ -75,7 +80,7 @@ class _MushafScreenState extends State<MushafScreen> {
             },
           ),
 
-          // 2. الأزرار العائمة (Floating Controls)
+          // 2. الشريط العلوي العائم الفخم
           Positioned(
             top: MediaQuery.of(context).padding.top + 10,
             left: 16,
@@ -83,28 +88,40 @@ class _MushafScreenState extends State<MushafScreen> {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                // زر الرجوع
-                _buildFloatingButton(
-                  icon: Icons.arrow_back_ios_new,
-                  onPressed: () => Navigator.pop(context),
-                ),
-                
-                // اسم التطبيق أو مساحة فارغة (للتوازن)
-                const SizedBox(),
-
-                // أزرار البحث والسور
+                // يسار: أزرار البحث والسور
                 Row(
                   children: [
                     _buildFloatingButton(
                       icon: Icons.search,
                       onPressed: _openSearch,
                     ),
-                    const SizedBox(width: 12),
+                    const SizedBox(width: 8),
                     _buildFloatingButton(
                       icon: Icons.format_list_bulleted,
                       onPressed: _showSurahSelection,
                     ),
                   ],
+                ),
+
+                // منتصف: اسم السورة
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.95),
+                    borderRadius: BorderRadius.circular(20),
+                    boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10, offset: const Offset(0, 4))],
+                    border: Border.all(color: frameColor.withOpacity(0.1)),
+                  ),
+                  child: Text(
+                    'سورة $_currentSurahName',
+                    style: TextStyle(color: frameColor, fontWeight: FontWeight.bold, fontSize: 16, fontFamily: 'UthmanicHafs'),
+                  ),
+                ),
+
+                // يمين: زر الرجوع (واضح جداً)
+                _buildFloatingButton(
+                  icon: Icons.arrow_forward_ios, // سهم يشير لليمين (لأننا في واجهة عربية)
+                  onPressed: () => Navigator.pop(context),
                 ),
               ],
             ),
@@ -185,11 +202,12 @@ class _MushafScreenState extends State<MushafScreen> {
                 }),
               ],
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 24), // مساحة سفلية
           ],
         ),
       ),
-      ), // إغلاق SafeArea
+        ),
+      ),
     );
   }
 
