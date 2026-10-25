@@ -1,0 +1,12 @@
+{
+    "name": "نور المعرفة",
+    "short_name": "نور المعرفة",
+    "start_url": ".",
+    "display": "standalone",
+    "background_color": "#0B101E",
+    "theme_color": "#C5A880",
+    "description": "منصة إسلامية للقرآن الكريم والتفاسير",
+    "orientation": "portrait-primary",
+    "prefer_related_applications": false,
+    "icons": []
+}

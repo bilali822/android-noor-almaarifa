@@ -1,0 +1,88 @@
+name: Build Flutter APK
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          lfs: true
+
+      - name: Setup Java 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'zulu'
+          java-version: '17'
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.24.5'
+          channel: 'stable'
+          cache: true
+
+      - name: Decode keystore
+        run: |
+          mkdir -p android/app
+          printf '%s' "${{ secrets.KEYSTORE_BASE64 }}" | tr -d '\n\r\t ' > /tmp/ks.b64
+          echo "Base64 size: $(wc -c < /tmp/ks.b64) bytes"
+          echo "First 40 chars: $(head -c 40 /tmp/ks.b64)"
+          echo "Last 40 chars: $(tail -c 40 /tmp/ks.b64)"
+          base64 -d /tmp/ks.b64 > android/app/release.jks
+          ls -la android/app/release.jks
+          file android/app/release.jks
+
+      - name: Create key.properties
+        run: |
+          cat > android/key.properties << KEOF
+          storePassword=${{ secrets.KEYSTORE_PASSWORD }}
+          keyPassword=${{ secrets.KEY_PASSWORD }}
+          keyAlias=${{ secrets.KEY_ALIAS }}
+          storeFile=release.jks
+          KEOF
+          cat android/key.properties
+
+      - name: Extract database
+        run: |
+          gzip -d assets/noor_quran.db.gz || true
+          ls -lh assets/
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Generate launcher icons
+        run: dart run flutter_launcher_icons || true
+
+      - name: Build APK (release, signed)
+        run: flutter build apk --release --split-per-abi --dart-define=GEMINI_API_KEY=${{ secrets.GEMINI_API_KEY }}
+
+      - name: Build AAB (release, signed)
+        run: flutter build appbundle --release
+
+      - name: Rename APKs
+        run: |
+          cd build/app/outputs/flutter-apk
+          for f in app-*-release.apk; do
+            mv "$f" "noor-${f#app-}"
+          done
+          ls -lh
+
+      - name: Upload APKs
+        uses: actions/upload-artifact@v4
+        with:
+          name: noor-apk-signed
+          path: build/app/outputs/flutter-apk/noor-*.apk
+          retention-days: 30
+
+      - name: Upload AAB
+        uses: actions/upload-artifact@v4
+        with:
+          name: noor-aab-signed
+          path: build/app/outputs/bundle/release/app-release.aab
+          retention-days: 30
