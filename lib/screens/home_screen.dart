@@ -5,6 +5,8 @@ import 'package:intl/intl.dart' hide TextDirection;
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:hijri/hijri_calendar.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:geolocator/geolocator.dart';
+import 'package:adhan/adhan.dart';
 import '../theme/app_colors.dart';
 import '../widgets/bouncy_tap.dart';
 import '../widgets/quranic_background.dart';
@@ -25,6 +27,7 @@ class _HomeScreenState extends State<HomeScreen> {
   String _name = '';
   String _timeString = '';
   String _hijriDate = '';
+  String _nextPrayerTime = 'جاري التحديد...';
   Timer? _timer;
 
   @override
@@ -40,6 +43,8 @@ class _HomeScreenState extends State<HomeScreen> {
     
     _updateTime();
     _timer = Timer.periodic(const Duration(seconds: 1), (Timer t) => _updateTime());
+    
+    _fetchNextPrayer();
     _initNotifications();
   }
 
@@ -47,7 +52,45 @@ class _HomeScreenState extends State<HomeScreen> {
     await NotificationService.instance.init();
     await NotificationService.instance.showWelcomeNotification();
     await NotificationService.instance.scheduleDailyNotification();
-    await NotificationService.instance.updatePrayerTimesByLocation();
+  }
+
+  Future<void> _fetchNextPrayer() async {
+    try {
+      LocationPermission permission = await Geolocator.checkPermission();
+      if (permission == LocationPermission.denied) {
+        permission = await Geolocator.requestPermission();
+        if (permission == LocationPermission.denied) return;
+      }
+      Position position = await Geolocator.getCurrentPosition(desiredAccuracy: LocationAccuracy.low);
+      
+      final coordinates = Coordinates(position.latitude, position.longitude);
+      final params = CalculationMethod.umm_al_qura.getParameters();
+      final date = DateComponents.from(DateTime.now());
+      final prayerTimes = PrayerTimes(coordinates, date, params);
+
+      final nextPrayer = prayerTimes.nextPrayer();
+      String nextName = 'الصلاة القادمة';
+      DateTime nextTime = DateTime.now();
+
+      if (nextPrayer == Prayer.fajr) { nextName = 'الفجر'; nextTime = prayerTimes.fajr; }
+      else if (nextPrayer == Prayer.dhuhr) { nextName = 'الظهر'; nextTime = prayerTimes.dhuhr; }
+      else if (nextPrayer == Prayer.asr) { nextName = 'العصر'; nextTime = prayerTimes.asr; }
+      else if (nextPrayer == Prayer.maghrib) { nextName = 'المغرب'; nextTime = prayerTimes.maghrib; }
+      else if (nextPrayer == Prayer.isha) { nextName = 'العشاء'; nextTime = prayerTimes.isha; }
+
+      final timeFormat = DateFormat('hh:mm a', 'ar');
+      if (mounted) {
+        setState(() {
+          _nextPrayerTime = '$nextName ${_toArabicNumbers(timeFormat.format(nextTime))}';
+        });
+      }
+      
+      final hijri = HijriCalendar.fromDate(DateTime.now());
+      final hDate = _toArabicNumbers('${hijri.hDay} ${hijri.longMonthName} ${hijri.hYear} هـ');
+      await NotificationService.instance.showPersistentPrayerNotification(nextName, _toArabicNumbers(timeFormat.format(nextTime)), hDate, '');
+    } catch (e) {
+      if (mounted) setState(() => _nextPrayerTime = 'توقيت الصلاة');
+    }
   }
 
   String _toArabicNumbers(String input) {
@@ -92,43 +135,33 @@ class _HomeScreenState extends State<HomeScreen> {
             constraints: const BoxConstraints(maxWidth: 500),
             child: Column(
               children: [
-                // الهيدر (تم إضافة مسافة علوية لتجنب الكاميرا)
+                // الهيدر (الساعة والتاريخ في الأعلى بالضبط كما كانا)
                 Padding(
-                  padding: EdgeInsets.fromLTRB(24, topPadding + 10, 24, 16),
+                  padding: EdgeInsets.fromLTRB(24, topPadding + 20, 24, 16),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
+                          // 🌟 الساعة والتاريخ
+                          Text(_timeString, style: const TextStyle(color: AppColors.primary, fontSize: 18, fontWeight: FontWeight.bold, fontFamily: 'Cairo')),
+                          const SizedBox(height: 2),
+                          Text(_hijriDate, style: const TextStyle(color: AppColors.textMuted, fontSize: 13, fontFamily: 'Cairo')),
+                          const SizedBox(height: 6),
+                          // 🌟 الصلاة القادمة
+                          Row(
+                            children: [
+                              const Icon(Icons.mosque, color: AppColors.primary, size: 14),
+                              const SizedBox(width: 4),
+                              Text('الصلاة القادمة: $_nextPrayerTime', style: const TextStyle(color: AppColors.primary, fontSize: 12, fontWeight: FontWeight.bold, fontFamily: 'Cairo')),
+                            ],
+                          ),
+                          const SizedBox(height: 12),
+                          // 🌟 الترحيب
                           const Text('السلام عليكم', style: TextStyle(color: AppColors.text, fontSize: 24, fontWeight: FontWeight.w900)),
                           const SizedBox(height: 4),
                           Text('$_name، نتمنى لك يوماً مباركاً', style: const TextStyle(color: AppColors.textMuted, fontSize: 13)),
-                          const SizedBox(height: 12),
-                          // البطاقة الزمنية
-                          Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                            decoration: BoxDecoration(
-                              color: Colors.white,
-                              borderRadius: BorderRadius.circular(20),
-                              boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 10, offset: const Offset(0, 4))],
-                              border: Border.all(color: AppColors.primary.withOpacity(0.1)),
-                            ),
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                const Icon(Icons.access_time_filled, color: AppColors.primary, size: 16),
-                                const SizedBox(width: 6),
-                                Text(_timeString, style: const TextStyle(color: AppColors.primary, fontSize: 14, fontWeight: FontWeight.bold, fontFamily: 'Cairo')),
-                                const SizedBox(width: 12),
-                                Container(width: 1, height: 14, color: Colors.grey.shade300),
-                                const SizedBox(width: 12),
-                                const Icon(Icons.calendar_month, color: AppColors.primary, size: 16),
-                                const SizedBox(width: 6),
-                                Text(_hijriDate, style: const TextStyle(color: AppColors.textMuted, fontSize: 13, fontWeight: FontWeight.bold, fontFamily: 'Cairo')),
-                              ],
-                            ),
-                          ),
                         ],
                       ),
                       Row(
@@ -157,7 +190,6 @@ class _HomeScreenState extends State<HomeScreen> {
                     padding: const EdgeInsets.symmetric(horizontal: 24),
                     child: Column(
                       children: [
-                        // كارت الآية (الرئيسي)
                         BouncyTap(
                           onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const MushafScreen())),
                           child: Container(
@@ -180,8 +212,6 @@ class _HomeScreenState extends State<HomeScreen> {
                           ),
                         ),
                         const SizedBox(height: 24),
-
-                        // الكروت الستة
                         GridView.count(
                           crossAxisCount: 2,
                           shrinkWrap: true,
