@@ -27,7 +27,6 @@ class _MushafScreenState extends State<MushafScreen> {
 
   int? _lastReadSurah;
   int? _lastReadVerse;
-  Set<String> _bookmarks = {};
 
   final Color bgColor = const Color(0xFFFDFBF7); 
   final Color frameColor = const Color(0xFF155E35);
@@ -50,7 +49,6 @@ class _MushafScreenState extends State<MushafScreen> {
       setState(() {
         _lastReadSurah = prefs.getInt('last_read_surah');
         _lastReadVerse = prefs.getInt('last_read_verse');
-        _bookmarks = (prefs.getStringList('bookmarks') ?? []).toSet();
       });
     }
   }
@@ -89,7 +87,6 @@ class _MushafScreenState extends State<MushafScreen> {
                 surahId: surahId,
                 highlightedVerse: _highlightedVerse,
                 lastReadVerse: (_lastReadSurah == surahId) ? _lastReadVerse : null,
-                bookmarks: _bookmarks,
                 onVerseTap: (surahName, verseNumber, verseText) {
                   _showVerseOptions(surahId, surahName, verseNumber, verseText);
                 },
@@ -108,8 +105,8 @@ class _MushafScreenState extends State<MushafScreen> {
                   children: [
                     if (_lastReadSurah != null) ...[
                       _buildFloatingButton(
-                        icon: Icons.bookmark,
-                        iconColor: Colors.orange,
+                        icon: Icons.workspace_premium, // 🌟 وسام ذهبي في الأعلى
+                        iconColor: const Color(0xFFD4AF37),
                         onPressed: () {
                           _pageController.jumpToPage(_lastReadSurah! - 1);
                           setState(() => _highlightedVerse = _lastReadVerse);
@@ -189,7 +186,6 @@ class _MushafScreenState extends State<MushafScreen> {
                   ],
                 ),
                 const SizedBox(height: 24),
-                // 🌟 الأزرار الخمسة الفخمة
                 Wrap(
                   alignment: WrapAlignment.center,
                   spacing: 20,
@@ -234,21 +230,6 @@ class _MushafScreenState extends State<MushafScreen> {
         ],
       ),
     );
-  }
-
-  Future<void> _saveVerse(int surahId, int verseNumber) async {
-    final prefs = await SharedPreferences.getInstance();
-    final saved = prefs.getStringList('bookmarks') ?? [];
-    final key = '$surahId:$verseNumber';
-    
-    if (saved.contains(key)) {
-      _showSnack('الآية محفوظة مسبقاً في المفضلة');
-    } else {
-      saved.add(key);
-      await prefs.setStringList('bookmarks', saved);
-      _showSnack('✅ تم حفظ الآية في المفضلة');
-      _loadSavedData(); 
-    }
   }
 
   Future<void> _setLastRead(int surahId, int verseNumber) async {
@@ -344,14 +325,12 @@ class _MushafSurahPage extends StatefulWidget {
   final int surahId;
   final int? highlightedVerse;
   final int? lastReadVerse;
-  final Set<String> bookmarks;
   final Function(String, int, String) onVerseTap;
 
   const _MushafSurahPage({
     required this.surahId, 
     this.highlightedVerse, 
     this.lastReadVerse,
-    required this.bookmarks,
     required this.onVerseTap
   });
 
@@ -406,7 +385,6 @@ class _MushafSurahPageState extends State<_MushafSurahPage> {
           
           final isHighlighted = verseNumber == widget.highlightedVerse;
           final isLastRead = verseNumber == widget.lastReadVerse;
-          final isBookmarked = widget.bookmarks.contains('${widget.surahId}:$verseNumber');
 
           textSpans.add(TextSpan(
             children: [
@@ -415,22 +393,21 @@ class _MushafSurahPageState extends State<_MushafSurahPage> {
                 recognizer: recognizer, 
                 style: TextStyle(backgroundColor: isHighlighted ? const Color(0xFFF1E5C9) : null)
               ),
-              TextSpan(
-                text: '﴿$arabicNum﴾ ', 
-                style: TextStyle(
-                  color: frameColor, 
-                  fontSize: 22, 
-                  backgroundColor: isHighlighted ? const Color(0xFFF1E5C9) : null
-                ), 
-                recognizer: recognizer
-              ),
+              // 🌟 الرقم العادي أو الأنميشن الذهبي
               if (isLastRead)
                 WidgetSpan(
                   alignment: PlaceholderAlignment.middle,
-                  child: Padding(
-                    padding: const EdgeInsets.only(left: 4, right: 4),
-                    child: Icon(Icons.workspace_premium, color: const Color(0xFFD4AF37), size: 20), // 🌟 وسام ذهبي
-                  ),
+                  child: AnimatedGoldVerseNumber(text: '﴿$arabicNum﴾'),
+                )
+              else
+                TextSpan(
+                  text: '﴿$arabicNum﴾ ', 
+                  style: TextStyle(
+                    color: frameColor, 
+                    fontSize: 22, 
+                    backgroundColor: isHighlighted ? const Color(0xFFF1E5C9) : null
+                  ), 
+                  recognizer: recognizer
                 ),
             ],
           ));
@@ -440,7 +417,6 @@ class _MushafSurahPageState extends State<_MushafSurahPage> {
           builder: (context, constraints) {
             return SingleChildScrollView(
               controller: _scrollController,
-              // مسافة علوية لتجنب الأزرار العائمة والكاميرا
               padding: EdgeInsets.only(top: MediaQuery.of(context).padding.top + 80, left: 20, right: 20, bottom: 40),
               child: ConstrainedBox(
                 constraints: BoxConstraints(minHeight: constraints.maxHeight - 120),
@@ -488,7 +464,6 @@ class _MushafSurahPageState extends State<_MushafSurahPage> {
     return result;
   }
 }
-
 
 // 🌟 كلاس الأنميشن الذهبي لرقم الآية المعلّمة
 class AnimatedGoldVerseNumber extends StatefulWidget {
