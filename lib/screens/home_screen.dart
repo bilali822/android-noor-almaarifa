@@ -159,7 +159,7 @@ class _HomeScreenState extends State<HomeScreen> {
                               const SizedBox(width: 8),
                               Container(width: 1, height: 12, color: Colors.grey.shade300),
                               const SizedBox(width: 8),
-                              const Icon(Icons.mosque, color: AppColors.gold, size: 14),
+                              const Icon(Icons.mosque, color: const Color(0xFFD4AF37), size: 14),
                               const SizedBox(width: 4),
                               Text(_nextPrayerTime, style: const TextStyle(color: AppColors.primary, fontSize: 12, fontWeight: FontWeight.bold, fontFamily: 'Cairo')),
                             ],

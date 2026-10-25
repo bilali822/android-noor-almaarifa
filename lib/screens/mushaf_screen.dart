@@ -189,10 +189,11 @@ class _MushafScreenState extends State<MushafScreen> {
                   ],
                 ),
                 const SizedBox(height: 24),
+                // 🌟 الأزرار الخمسة الفخمة
                 Wrap(
                   alignment: WrapAlignment.center,
-                  spacing: 16,
-                  runSpacing: 16,
+                  spacing: 20,
+                  runSpacing: 20,
                   children: [
                     _buildOptionButton(Icons.copy, 'نسخ', Colors.blue, () {
                       Clipboard.setData(ClipboardData(text: verseText));
