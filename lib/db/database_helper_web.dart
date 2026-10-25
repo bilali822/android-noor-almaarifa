@@ -6,8 +6,13 @@ class DatabaseHelper {
 
   Future<void> init() async {}
 
+  // إضافة بعض السور لكي تظهر في القائمة
   Future<List<Map<String, Object?>>> getSurahs() async {
-    return [{'id':1,'name_ar':'الفاتحة','verses_count':7}, {'id':2,'name_ar':'البقرة','verses_count':286}];
+    return [
+      {'id': 1, 'name_ar': 'الفاتحة', 'verses_count': 7}, 
+      {'id': 2, 'name_ar': 'البقرة', 'verses_count': 286},
+      {'id': 114, 'name_ar': 'الناس', 'verses_count': 6}
+    ];
   }
 
   Future<List<Map<String, Object?>>> getSurah(int id) async {
@@ -15,6 +20,7 @@ class DatabaseHelper {
     return all.where((e) => e['id'] == id).toList();
   }
 
+  // 🌟 بيانات تجريبية لعدة صفحات لتجربة التمرير
   Future<List<Map<String, Object?>>> getVersesByPage(int pageNumber) async {
     if (pageNumber == 1) {
       return [
@@ -27,18 +33,34 @@ class DatabaseHelper {
         {'surah_id': 1, 'surah_name': 'الفاتحة', 'verse_number': 7, 'text_ar': 'صِرَاطَ الَّذِينَ أَنْعَمْتَ عَلَيْهِمْ غَيْرِ الْمَغْضُوبِ عَلَيْهِمْ وَلَا الضَّالِّينَ'},
       ];
     }
+    
     if (pageNumber == 2) {
       return [
         {'surah_id': 2, 'surah_name': 'البقرة', 'verse_number': 1, 'text_ar': 'الم'},
         {'surah_id': 2, 'surah_name': 'البقرة', 'verse_number': 2, 'text_ar': 'ذَٰلِكَ الْكِتَابُ لَا رَيْبَ ۛ فِيهِ ۛ هُدًى لِّلْمُتَّقِينَ'},
+        {'surah_id': 2, 'surah_name': 'البقرة', 'verse_number': 3, 'text_ar': 'الَّذِينَ يُؤْمِنُونَ بِالْغَيْبِ وَيُقِيمُونَ الصَّلَاةَ وَمِمَّا رَزَقْنَاهُمْ يُنفِقُونَ'},
+        {'surah_id': 2, 'surah_name': 'البقرة', 'verse_number': 4, 'text_ar': 'وَالَّذِينَ يُؤْمِنُونَ بِمَا أُنزِلَ إِلَيْكَ وَمَا أُنزِلَ مِن قَبْلِكَ وَبِالْآخِرَةِ هُمْ يُوقِنُونَ'},
+        {'surah_id': 2, 'surah_name': 'البقرة', 'verse_number': 5, 'text_ar': 'أُولَٰئِكَ عَلَىٰ هُدًى مِّن رَّبِّهِمْ ۖ وَأُولَٰئِكَ هُمُ الْمُفْلِحُونَ'},
       ];
     }
-    return []; 
+
+    if (pageNumber == 604) {
+      return [
+        {'surah_id': 114, 'surah_name': 'الناس', 'verse_number': 1, 'text_ar': 'قُلْ أَعُوذُ بِرَبِّ النَّاسِ'},
+        {'surah_id': 114, 'surah_name': 'الناس', 'verse_number': 2, 'text_ar': 'مَلِكِ النَّاسِ'},
+        {'surah_id': 114, 'surah_name': 'الناس', 'verse_number': 3, 'text_ar': 'إِلَٰهِ النَّاسِ'},
+        {'surah_id': 114, 'surah_name': 'الناس', 'verse_number': 4, 'text_ar': 'مِن شَرِّ الْوَسْوَاسِ الْخَنَّاسِ'},
+        {'surah_id': 114, 'surah_name': 'الناس', 'verse_number': 5, 'text_ar': 'الَّذِي يُوَسْوِسُ فِي صُدُورِ النَّاسِ'},
+        {'surah_id': 114, 'surah_name': 'الناس', 'verse_number': 6, 'text_ar': 'مِنَ الْجِنَّةِ وَالنَّاسِ'},
+      ];
+    }
+    return [];
   }
 
   Future<int> getSurahStartPage(int surahId) async {
     if (surahId == 1) return 1;
     if (surahId == 2) return 2;
+    if (surahId == 114) return 604;
     return 1;
   }
 
@@ -72,9 +94,16 @@ class DatabaseHelper {
     return [];
   }
 
+  // 🌟 الدوال الجديدة التي أضفناها للأحاديث لكي ينجح بناء الويب
   Future<List<Map<String, Object?>>> getHadiths() async => [];
-  Future<List<Map<String, Object?>>> getHadithsPaginated(int limit, int offset) async => [];
+  
+  Future<List<Map<String, Object?>>> getHadithsPaginated(int limit, {int? lastId}) async => [];
+  
+  Future<List<Map<String, Object?>>> getHadithsByBookPaginated(String book, int limit, {int? lastId}) async => [];
+  
   Future<List<Map<String, Object?>>> getHadithBooks() async => [];
+  
   Future<List<Map<String, Object?>>> getHadithsByBook(String book) async => [];
+  
   Future<List<Map<String, Object?>>> searchHadiths(String query) async => [];
 }
