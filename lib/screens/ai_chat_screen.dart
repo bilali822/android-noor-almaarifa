@@ -44,9 +44,9 @@ class _AIChatScreenState extends State<AIChatScreen> {
   void _initSession() {
     if (_apiKey.isNotEmpty) {
       try {
-        // 🌟 استخدام الموديل الأحدث والمستقر (لأن 1.5 تم إيقافه)
+        // 🌟 استخدام الموديل المطلوب من جوجل
         final model = GenerativeModel(
-          model: 'gemini-3.8-flash', // أو 'gemini-flash-lite-latest'
+          model: 'gemini-3.8-flash',
           apiKey: _apiKey,
           generationConfig: GenerationConfig(maxOutputTokens: 2048),
           systemInstruction: Content.system('أنت "مساعد نور المعرفة"، مساعد ذكي مخصص لتطبيق إسلامي. أجب على سؤال المستخدم مباشرة.'),
@@ -92,7 +92,6 @@ class _AIChatScreenState extends State<AIChatScreen> {
     final text = _inputCtrl.text.trim();
     if (text.isEmpty) return;
 
-    // التحقق من المفتاح
     if (_apiKey.isEmpty) {
       setState(() {
         _messages.add(AIMessage(text: text, isUser: true));
@@ -119,6 +118,7 @@ class _AIChatScreenState extends State<AIChatScreen> {
     _scrollToBottom();
 
     try {
+      // 🌟 زيادة وقت الانتظار إلى 60 ثانية
       final responseStream = _chatSession!.sendMessageStream(Content.text(text)).timeout(const Duration(seconds: 60));
       bool isFirstChunk = true;
       String fullText = '';
@@ -137,7 +137,6 @@ class _AIChatScreenState extends State<AIChatScreen> {
       if (mounted) {
         setState(() {
           _isWaiting = false;
-          // 🌟 عرض الخطأ الحقيقي داخل الشات لكي نعرف السبب (حتى في APK)
           _messages.add(AIMessage(text: '❌ عذراً، حدث خطأ في الاتصال:\n$e', isUser: false));
         });
         _scrollToBottom();
