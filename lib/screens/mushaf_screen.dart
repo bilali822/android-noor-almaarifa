@@ -144,53 +144,69 @@ class _MushafScreenState extends State<MushafScreen> {
 
   void _showVerseOptions(int surahId, String surahName, int verseNumber, String verseText) {
     showModalBottomSheet(
-      context: context, 
+      context: context,
       backgroundColor: Colors.transparent,
       isScrollControlled: true,
-      builder: (context) => Container(
-        decoration: const BoxDecoration(color: Colors.white, borderRadius: BorderRadius.vertical(top: Radius.circular(30))),
-        child: SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Container(width: 40, height: 4, decoration: BoxDecoration(color: Colors.grey[300], borderRadius: BorderRadius.circular(2))),
-                const SizedBox(height: 8),
-                // زر الإغلاق واسم الآية
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      builder: (context) {
+        return Container(
+          // 🌟 وضع حد أقصى لارتفاع النافذة (70% من الشاشة)
+          constraints: BoxConstraints(
+            maxHeight: MediaQuery.of(context).size.height * 0.7,
+          ),
+          decoration: const BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.vertical(top: Radius.circular(30)),
+          ),
+          child: SafeArea(
+            child: SingleChildScrollView( // 🌟 يسمح بالتمرير إذا كانت الشاشة قصيرة
+              child: Padding(
+                padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
                   children: [
-                    IconButton(icon: const Icon(Icons.close, color: Colors.grey, size: 28), onPressed: () => Navigator.pop(context)),
-                    Text('سورة $surahName - آية $verseNumber', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18, color: AppColors.primary)),
-                    const SizedBox(width: 48), // للتوازن
+                    Container(width: 40, height: 4, decoration: BoxDecoration(color: Colors.grey[300], borderRadius: BorderRadius.circular(2))),
+                    const SizedBox(height: 16),
+                    // 🌟 الشريط العلوي (زر الرجوع + اسم الآية)
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        IconButton(
+                          icon: const Icon(Icons.close, color: Colors.redAccent, size: 32), // زر أحمر وواضح
+                          onPressed: () => Navigator.pop(context),
+                          tooltip: 'رجوع',
+                        ),
+                        Text('سورة $surahName - آية $verseNumber', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18, color: AppColors.primary)),
+                        const SizedBox(width: 48), // للتوازن البصري
+                      ],
+                    ),
+                    const SizedBox(height: 24),
+                    // 🌟 أزرار الخيارات
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                      children: [
+                        _buildOptionButton(Icons.copy, 'نسخ', Colors.blue, () {
+                          Clipboard.setData(ClipboardData(text: verseText));
+                          Navigator.pop(context);
+                          _showSnack('تم نسخ الآية');
+                        }),
+                        _buildOptionButton(Icons.menu_book, 'تفسير', Colors.green, () {
+                          Navigator.pop(context);
+                          _openTafsir(surahId, surahName, verseNumber, verseText);
+                        }),
+                        _buildOptionButton(Icons.share, 'مشاركة', Colors.purple, () {
+                          Navigator.pop(context);
+                          _shareVerse(surahName, verseNumber, verseText);
+                        }),
+                      ],
+                    ),
+                    const SizedBox(height: 32), // مساحة سفلية مريحة
                   ],
                 ),
-                const SizedBox(height: 24),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                  children: [
-                    _buildOptionButton(Icons.copy, 'نسخ', Colors.blue, () {
-                      Clipboard.setData(ClipboardData(text: verseText));
-                      Navigator.pop(context);
-                      _showSnack('تم نسخ الآية');
-                    }),
-                    _buildOptionButton(Icons.menu_book, 'تفسير', Colors.green, () {
-                      Navigator.pop(context);
-                      _openTafsir(surahId, surahName, verseNumber, verseText);
-                    }),
-                    _buildOptionButton(Icons.share, 'مشاركة', Colors.purple, () {
-                      Navigator.pop(context);
-                      _shareVerse(surahName, verseNumber, verseText);
-                    }),
-                  ],
-                ),
-                const SizedBox(height: 24),
-              ],
+              ),
             ),
           ),
-        ),
-      ),
+        );
+      },
     );
   }
 
