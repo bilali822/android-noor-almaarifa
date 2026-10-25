@@ -90,8 +90,19 @@ class _ChatScreenState extends State<ChatScreen> {
   }
 
   Future<void> _openTafsir(Map<String, dynamic> data) async {
-    final books = await DatabaseHelper.instance.getTafsirBooks();
+    // 🌟 نجيب بس الكتب اللي عندها تفسير للآية دي
+    final books = await DatabaseHelper.instance.getTafsirBooksForVerse(
+      data['surahId'] as int,
+      data['verseNumber'] as int,
+    );
     if (!mounted) return;
+
+    if (books.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('لا يوجد تفسير متاح لهذه الآية')),
+      );
+      return;
+    }
 
     final selectedBooks = await showModalBottomSheet<List<String>>(
       context: context, isScrollControlled: true, backgroundColor: Colors.transparent, 

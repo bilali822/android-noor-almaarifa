@@ -216,8 +216,15 @@ class _MushafScreenState extends State<MushafScreen> {
   }
 
   void _openTafsir(int surahId, String surahName, int verseNumber, String verseText) async {
-    final books = await DatabaseHelper.instance.getTafsirBooks();
+    // 🌟 نجيب بس الكتب اللي عندها تفسير للآية دي
+    final books = await DatabaseHelper.instance.getTafsirBooksForVerse(surahId, verseNumber);
     if (!mounted) return;
+
+    if (books.isEmpty) {
+      _showSnack('لا يوجد تفسير متاح لهذه الآية');
+      return;
+    }
+
     final selected = await showModalBottomSheet<List<String>>(
       context: context, isScrollControlled: true, backgroundColor: Colors.transparent,
       builder: (_) => TafsirSheet(surahName: surahName, surahId: surahId, verseNumber: verseNumber, verseText: verseText, books: books),

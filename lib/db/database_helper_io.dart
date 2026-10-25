@@ -44,6 +44,22 @@ class DatabaseHelper {
   Future<List<Map<String, Object?>>> getTafsirs(int surahId, int verseNumber) async => (await db).query('tafsirs', where: 'surah_id = ? AND verse_number = ?', whereArgs: [surahId, verseNumber]);
   Future<List<Map<String, Object?>>> getTafsirBooks() async => (await db).query('tafsir_books');
 
+  /// 🌟 جلب كتب التفسير اللي عندها تفسير فعلي للآية المحددة فقط
+  Future<List<Map<String, Object?>>> getTafsirBooksForVerse(int surahId, int verseNumber) async {
+    final d = await db;
+    return d.rawQuery('''
+      SELECT b.key, b.name_ar
+      FROM tafsir_books b
+      WHERE EXISTS (
+        SELECT 1 FROM tafsirs t
+        WHERE t.book_key = b.key
+          AND t.surah_id = ?
+          AND t.verse_number = ?
+      )
+      ORDER BY b.key
+    ''', [surahId, verseNumber]);
+  }
+
   Future<List<Map<String, Object?>>> searchVerses(String query, {int limit = 100}) async {
     final d = await db;
     return d.rawQuery('''
