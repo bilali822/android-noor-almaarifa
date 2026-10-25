@@ -81,7 +81,7 @@ class _HadithScreenState extends State<HadithScreen> {
       }
     } else {
       // تصفح عادي: استخدام التمرير (Pagination) لجلب أول 20
-      final results = await DatabaseHelper.instance.getHadithsPaginated(_limit); // لا نمرر lastId هنا
+      final results = await DatabaseHelper.instance.getHadithsPaginated(_limit);
       if (mounted) {
         setState(() {
           _hadiths = results;
@@ -92,17 +92,48 @@ class _HadithScreenState extends State<HadithScreen> {
     }
   }
 
+  // دالة مساعدة لفلترة النتائج (تُستخدم عند البحث أو اختيار كتاب)
+  Future<void> _loadFilteredOrSearchedData() async {
+    if (_searchCtrl.text.isNotEmpty || _selectedBook != 'الكل') {
+      List<Map<String, Object?>> results = [];
+      if (_searchCtrl.text.isNotEmpty) {
+        results = await DatabaseHelper.instance.searchHadiths(_searchCtrl.text);
+      } else if (_selectedBook != 'الكل') {
+        // 🌟 استخدام الدالة الجديدة السريعة لجلب الكتاب
+        results = await DatabaseHelper.instance.getHadithsByBookPaginated(_selectedBook, _limit);
+      }
+
+      if (_selectedGrade != 'الكل') {
+        results = results.where((h) => h['grade'] == _selectedGrade).toList();
+      }
+
+      if (mounted) {
+        setState(() {
+          _hadiths = results;
+          _loading = false;
+          _hasMore = _searchCtrl.text.isEmpty && _selectedBook != 'الكل' && results.length == _limit;
+        });
+      }
+    }
+  }
+
   // جلب المزيد عند التمرير
   Future<void> _loadMore() async {
     setState(() => _isLoadingMore = true);
     
-    // 🌟 جلب آخر ID تم تحميله بدلاً من الـ Offset البطيء
     int? lastId;
     if (_hadiths.isNotEmpty) {
       lastId = _hadiths.last['id'] as int;
     }
-    
-    final results = await DatabaseHelper.instance.getHadithsPaginated(_limit, lastId: lastId);
+
+    List<Map<String, Object?>> results = [];
+    if (_selectedBook != 'الكل' && _searchCtrl.text.isEmpty) {
+      // 🌟 التحميل من كتاب محدد
+      results = await DatabaseHelper.instance.getHadithsByBookPaginated(_selectedBook, _limit, lastId: lastId);
+    } else {
+      // التحميل من كل الكتب
+      results = await DatabaseHelper.instance.getHadithsPaginated(_limit, lastId: lastId);
+    }
     
     if (mounted) {
       setState(() {

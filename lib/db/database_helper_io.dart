@@ -96,6 +96,17 @@ class DatabaseHelper {
     return 1;
   }
 
+
+  // 🌟 جلب أحاديث كتاب معين على دفعات (سريع جداً)
+  Future<List<Map<String, Object?>>> getHadithsByBookPaginated(String book, int limit, {int? lastId}) async {
+    final d = await db;
+    if (lastId == null) {
+      return d.query('hadiths', where: 'book = ?', whereArgs: [book], orderBy: 'id ASC', limit: limit);
+    } else {
+      return d.query('hadiths', where: 'book = ? AND id > ?', whereArgs: [book, lastId], orderBy: 'id ASC', limit: limit);
+    }
+  }
+
   // ═══ دوال الحديث ═══
   Future<List<Map<String, Object?>>> getHadiths() async => (await db).query('hadiths', orderBy: 'id ASC');
 
