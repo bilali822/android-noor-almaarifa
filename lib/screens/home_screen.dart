@@ -172,7 +172,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                   ElevatedButton(
                                     onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const MushafScreen())),
                                     style: ElevatedButton.styleFrom(backgroundColor: AppColors.primary, foregroundColor: Colors.white, padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 14), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)), elevation: 0),
-                                    child: const Text('إقرأ كلامُ الله', style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold)),
+                                    child: const Text('إقرأ كلامَ الله', style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold)),
                                   )
                                 ],
                               ),
