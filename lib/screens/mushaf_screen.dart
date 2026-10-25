@@ -2,9 +2,9 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/services.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:screenshot/screenshot.dart';
 import 'package:share_plus/share_plus.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../db/database_helper.dart';
 import '../theme/app_colors.dart';
 import '../widgets/tafsir_sheet.dart';
@@ -38,7 +38,6 @@ class _MushafScreenState extends State<MushafScreen> {
     _pageController = PageController(initialPage: _currentSurah - 1);
     _loadSurahName(_currentSurah);
     
-    // إخفاء شريط الحالة العلوي للهاتف (شاشة كاملة)
     SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
   }
 
@@ -62,7 +61,6 @@ class _MushafScreenState extends State<MushafScreen> {
       backgroundColor: bgColor,
       body: Stack(
         children: [
-          // 1. النص القرآني (يملأ الشاشة)
           PageView.builder(
             controller: _pageController,
             itemCount: 114,
@@ -81,8 +79,6 @@ class _MushafScreenState extends State<MushafScreen> {
               );
             },
           ),
-
-          // 2. الشريط العلوي العائم الفخم
           Positioned(
             top: MediaQuery.of(context).padding.top + 10,
             left: 16,
@@ -90,7 +86,6 @@ class _MushafScreenState extends State<MushafScreen> {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                // يسار: أزرار البحث والسور
                 Row(
                   children: [
                     _buildFloatingButton(icon: Icons.search, onPressed: _openSearch),
@@ -98,7 +93,6 @@ class _MushafScreenState extends State<MushafScreen> {
                     _buildFloatingButton(icon: Icons.format_list_bulleted, onPressed: _showSurahSelection),
                   ],
                 ),
-                // منتصف: اسم السورة
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                   decoration: BoxDecoration(
@@ -109,7 +103,6 @@ class _MushafScreenState extends State<MushafScreen> {
                   ),
                   child: Text('سورة $_currentSurahName', style: TextStyle(color: frameColor, fontWeight: FontWeight.bold, fontSize: 16, fontFamily: 'UthmanicHafs')),
                 ),
-                // يمين: زر الرجوع
                 _buildFloatingButton(icon: Icons.arrow_forward_ios, onPressed: () => Navigator.pop(context)),
               ],
             ),
@@ -145,76 +138,62 @@ class _MushafScreenState extends State<MushafScreen> {
 
   void _showVerseOptions(int surahId, String surahName, int verseNumber, String verseText) {
     showModalBottomSheet(
-      context: context,
+      context: context, 
       backgroundColor: Colors.transparent,
       isScrollControlled: true,
-      builder: (context) {
-        return Container(
-          constraints: BoxConstraints(
-            maxHeight: MediaQuery.of(context).size.height * 0.7,
-          ),
-          decoration: const BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.vertical(top: Radius.circular(30)),
-          ),
-          child: SafeArea(
-            child: SingleChildScrollView(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
+      builder: (context) => Container(
+        decoration: const BoxDecoration(color: Colors.white, borderRadius: BorderRadius.vertical(top: Radius.circular(30))),
+        child: SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(width: 40, height: 4, decoration: BoxDecoration(color: Colors.grey[300], borderRadius: BorderRadius.circular(2))),
+                const SizedBox(height: 8),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Container(width: 40, height: 4, decoration: BoxDecoration(color: Colors.grey[300], borderRadius: BorderRadius.circular(2))),
-                    const SizedBox(height: 16),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        IconButton(
-                          icon: const Icon(Icons.close, color: Colors.redAccent, size: 32),
-                          onPressed: () => Navigator.pop(context),
-                          tooltip: 'رجوع',
-                        ),
-                        Text('سورة $surahName - آية $verseNumber', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18, color: AppColors.primary)),
-                        const SizedBox(width: 48),
-                      ],
-                    ),
-                    const SizedBox(height: 24),
-                    Wrap(
-                      alignment: WrapAlignment.center,
-                      spacing: 16,
-                      runSpacing: 16,
-                      children: [
-                        _buildOptionButton(Icons.copy, 'نسخ', Colors.blue, () {
-                          Clipboard.setData(ClipboardData(text: verseText));
-                          Navigator.pop(context);
-                          _showSnack('تم نسخ الآية');
-                        }),
-                        _buildOptionButton(Icons.menu_book, 'تفسير', Colors.green, () {
-                          Navigator.pop(context);
-                          _openTafsir(surahId, surahName, verseNumber, verseText);
-                        }),
-                        _buildOptionButton(Icons.bookmark_add, 'حفظ', Colors.orange, () {
-                          Navigator.pop(context);
-                          _saveVerse(surahId, verseNumber);
-                        }),
-                        _buildOptionButton(Icons.push_pin, 'تعليم', Colors.redAccent, () {
-                          Navigator.pop(context);
-                          _setLastRead(surahId, verseNumber);
-                        }),
-                        _buildOptionButton(Icons.share, 'مشاركة', Colors.purple, () {
-                          Navigator.pop(context);
-                          _shareVerse(surahName, verseNumber, verseText);
-                        }),
-                      ],
-                    ),
-                    const SizedBox(height: 32),
+                    IconButton(icon: const Icon(Icons.close, color: Colors.grey, size: 28), onPressed: () => Navigator.pop(context)),
+                    Text('سورة $surahName - آية $verseNumber', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18, color: AppColors.primary)),
+                    const SizedBox(width: 48),
                   ],
                 ),
-              ),
+                const SizedBox(height: 24),
+                Wrap(
+                  alignment: WrapAlignment.center,
+                  spacing: 16,
+                  runSpacing: 16,
+                  children: [
+                    _buildOptionButton(Icons.copy, 'نسخ', Colors.blue, () {
+                      Clipboard.setData(ClipboardData(text: verseText));
+                      Navigator.pop(context);
+                      _showSnack('تم نسخ الآية');
+                    }),
+                    _buildOptionButton(Icons.menu_book, 'تفسير', Colors.green, () {
+                      Navigator.pop(context);
+                      _openTafsir(surahId, surahName, verseNumber, verseText);
+                    }),
+                    _buildOptionButton(Icons.bookmark_add, 'حفظ', Colors.orange, () {
+                      Navigator.pop(context);
+                      _saveVerse(surahId, verseNumber);
+                    }),
+                    _buildOptionButton(Icons.push_pin, 'تعليم', Colors.redAccent, () {
+                      Navigator.pop(context);
+                      _setLastRead(surahId, verseNumber);
+                    }),
+                    _buildOptionButton(Icons.share, 'مشاركة', Colors.purple, () {
+                      Navigator.pop(context);
+                      _shareVerse(surahName, verseNumber, verseText);
+                    }),
+                  ],
+                ),
+                const SizedBox(height: 24),
+              ],
             ),
           ),
-        );
-      },
+        ),
+      ),
     );
   }
 
@@ -229,6 +208,27 @@ class _MushafScreenState extends State<MushafScreen> {
         ],
       ),
     );
+  }
+
+  Future<void> _saveVerse(int surahId, int verseNumber) async {
+    final prefs = await SharedPreferences.getInstance();
+    final saved = prefs.getStringList('bookmarks') ?? [];
+    final key = '$surahId:$verseNumber';
+    
+    if (saved.contains(key)) {
+      _showSnack('الآية محفوظة مسبقاً');
+    } else {
+      saved.add(key);
+      await prefs.setStringList('bookmarks', saved);
+      _showSnack('✅ تم حفظ الآية في المفضلة');
+    }
+  }
+
+  Future<void> _setLastRead(int surahId, int verseNumber) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setInt('last_read_surah', surahId);
+    await prefs.setInt('last_read_verse', verseNumber);
+    if (mounted) _showSnack('📍 تم تعيين علامة القراءة (تعليم) هنا');
   }
 
   void _showSnack(String msg) {
@@ -265,7 +265,6 @@ class _MushafScreenState extends State<MushafScreen> {
         Material(color: Colors.transparent, child: Container(padding: const EdgeInsets.all(32), decoration: BoxDecoration(color: const Color(0xFFF4EAE0), borderRadius: BorderRadius.circular(24), border: Border.all(color: AppColors.primary, width: 2)), child: Column(mainAxisSize: MainAxisSize.min, children: [Text('﴿ $verseText ﴾', textDirection: TextDirection.rtl, textAlign: TextAlign.center, style: const TextStyle(color: AppColors.text, fontSize: 28, height: 2.2, fontFamily: 'UthmanicHafs')), const SizedBox(height: 16), Text('سورة $surahName - الآية $verseNumber', style: const TextStyle(color: AppColors.primary, fontWeight: FontWeight.bold, fontSize: 14)), const SizedBox(height: 16), const Text('تطبيق نور المعرفة', style: TextStyle(color: AppColors.textMuted, fontSize: 10))]))), delay: const Duration(milliseconds: 10),
       );
       
-      // مشاركة البيانات مباشرة (يدعم الويب والهاتف)
       final xFile = XFile.fromData(image, mimeType: 'image/png', name: 'ayah_${surahName}_$verseNumber.png');
       await Share.shareXFiles([xFile], text: 'آية من القرآن الكريم');
     } catch (e) { 
@@ -313,7 +312,6 @@ class _MushafScreenState extends State<MushafScreen> {
   }
 }
 
-// 🌟 صفحة السورة (بدون إطارات - شاشة كاملة ومتوسطة)
 class _MushafSurahPage extends StatefulWidget {
   final int surahId;
   final int? highlightedVerse;
@@ -327,12 +325,14 @@ class _MushafSurahPage extends StatefulWidget {
 
 class _MushafSurahPageState extends State<_MushafSurahPage> {
   final ScrollController _scrollController = ScrollController();
+  final List<TapGestureRecognizer> _recognizers = [];
   final Color frameColor = const Color(0xFF155E35);
   final Color textColor = const Color(0xFF1A1A1A);
 
   @override
   void dispose() {
     _scrollController.dispose();
+    for (var r in _recognizers) { r.dispose(); }
     super.dispose();
   }
 
@@ -356,15 +356,18 @@ class _MushafSurahPageState extends State<_MushafSurahPage> {
 
         final surahName = surahInfo.first['name_ar'] as String;
 
+        for (var r in _recognizers) { r.dispose(); }
+        _recognizers.clear();
+
         final List<InlineSpan> textSpans = [];
         for (var v in verses) {
           final verseNumber = v['verse_number'] as int;
           final arabicNum = _toArabicNumeral(verseNumber);
           
-          // 🌟 تم إصلاح النقر هنا (لم نعد ندمر الـ Recognizer)
           final recognizer = TapGestureRecognizer()
             ..onTap = () => widget.onVerseTap(surahName, verseNumber, v['text_ar'] as String);
-            
+          _recognizers.add(recognizer);
+          
           final isHighlighted = verseNumber == widget.highlightedVerse;
 
           textSpans.add(TextSpan(
@@ -388,13 +391,11 @@ class _MushafSurahPageState extends State<_MushafSurahPage> {
             builder: (context, constraints) {
               return SingleChildScrollView(
                 controller: _scrollController,
-                // مساحة علوية للأزرار العائمة
                 padding: const EdgeInsets.only(top: 80, left: 20, right: 20, bottom: 40),
                 child: ConstrainedBox(
-                  // 🌟 نجبر النص أن يتوسط الشاشة عمودياً إذا كانت السورة قصيرة
                   constraints: BoxConstraints(minHeight: constraints.maxHeight - 120),
                   child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center, // توسيط المحتوى
+                    mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       Padding(
                         padding: const EdgeInsets.only(bottom: 24),
