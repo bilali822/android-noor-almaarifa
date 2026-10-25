@@ -52,7 +52,8 @@ class _HomeScreenState extends State<HomeScreen> {
     await NotificationService.instance.init();
     await NotificationService.instance.showWelcomeNotification();
     await NotificationService.instance.scheduleDailyNotification();
-    await NotificationService.instance.showPersistentPrayerNotification('العصر', '3:30 م', _hijriDate);
+    // 🌟 حساب الصلوات حسب موقع المستخدم (GPS)
+    await NotificationService.instance.updatePrayerTimesByLocation();
   }
 
   @override
