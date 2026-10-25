@@ -42,12 +42,11 @@ class _MushafScreenState extends State<MushafScreen> {
     _currentSurah = widget.initialSurahId;
     _pageController = PageController(initialPage: _currentSurah - 1);
     _loadSurahName(_currentSurah);
-    _loadSavedData(); // 🌟 تحميل العلامات المحفوظة
+    _loadSavedData();
     
     SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
   }
 
-  // 🌟 دالة جلب العلامات من الذاكرة
   Future<void> _loadSavedData() async {
     final prefs = await SharedPreferences.getInstance();
     if (mounted) {
@@ -244,27 +243,31 @@ class _MushafScreenState extends State<MushafScreen> {
     );
   }
 
+  // 🌟 دالة الحفظ (تحديث فوري)
   Future<void> _saveVerse(int surahId, int verseNumber) async {
-    final prefs = await SharedPreferences.getInstance();
-    final saved = prefs.getStringList('bookmarks') ?? [];
     final key = '$surahId:$verseNumber';
-    
-    if (saved.contains(key)) {
-      _showSnack('الآية محفوظة مسبقاً في المفضلة');
+    if (_bookmarks.contains(key)) {
+      setState(() => _bookmarks.remove(key));
+      _showSnack('تم إزالة الآية من المفضلة');
     } else {
-      saved.add(key);
-      await prefs.setStringList('bookmarks', saved);
+      setState(() => _bookmarks.add(key));
       _showSnack('✅ تم حفظ الآية في المفضلة');
-      _loadSavedData(); // 🌟 تحديث الشاشة لتظهر أيقونة الحفظ
     }
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setStringList('bookmarks', _bookmarks.toList());
   }
 
+  // 🌟 دالة التعليم (تحديث فوري)
   Future<void> _setLastRead(int surahId, int verseNumber) async {
+    setState(() {
+      _lastReadSurah = surahId;
+      _lastReadVerse = verseNumber;
+    });
+    if (mounted) _showSnack('📍 تم تعيين علامة القراءة (تعليم) هنا');
+    
     final prefs = await SharedPreferences.getInstance();
     await prefs.setInt('last_read_surah', surahId);
     await prefs.setInt('last_read_verse', verseNumber);
-    if (mounted) _showSnack('📍 تم تعيين علامة القراءة (تعليم) هنا');
-    _loadSavedData(); // 🌟 تحديث الشاشة لتظهر علامة التعليم وزر المتابعة
   }
 
   void _showSnack(String msg) {
@@ -348,7 +351,6 @@ class _MushafScreenState extends State<MushafScreen> {
   }
 }
 
-// 🌟 صفحة السورة (مع إضافة أيقونات التعليم والحفظ)
 class _MushafSurahPage extends StatefulWidget {
   final int surahId;
   final int? highlightedVerse;
@@ -434,23 +436,17 @@ class _MushafSurahPageState extends State<_MushafSurahPage> {
                 ), 
                 recognizer: recognizer
               ),
-              // 🌟 أيقونة التعليم (تظهر بجانب الآية)
+              // 🌟 أيقونة التعليم (إيموجي يظهر فوراً)
               if (isLastRead)
-                WidgetSpan(
-                  alignment: PlaceholderAlignment.middle,
-                  child: Padding(
-                    padding: const EdgeInsets.only(left: 4, right: 4),
-                    child: Icon(Icons.push_pin, color: Colors.redAccent, size: 18),
-                  ),
+                const TextSpan(
+                  text: '📍 ',
+                  style: TextStyle(fontSize: 20),
                 ),
-              // 🌟 أيقونة الحفظ (تظهر بجانب الآية)
+              // 🌟 أيقونة الحفظ (إيموجي يظهر فوراً)
               if (isBookmarked)
-                WidgetSpan(
-                  alignment: PlaceholderAlignment.middle,
-                  child: Padding(
-                    padding: const EdgeInsets.only(left: 4, right: 4),
-                    child: Icon(Icons.bookmark, color: Colors.purple, size: 18),
-                  ),
+                const TextSpan(
+                  text: '🔖 ',
+                  style: TextStyle(fontSize: 20),
                 ),
             ],
           ));
@@ -502,4 +498,21 @@ class _MushafSurahPageState extends State<_MushafSurahPage> {
     for (int i = 0; i < english.length; i++) { result = result.replaceAll(english[i], arabic[i]); }
     return result;
   }
+}
+
+
+class _RibbonTailPainter extends CustomPainter {
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()..color = Colors.goldAccent..style = PaintingStyle.fill;
+    final path = Path();
+    path.moveTo(0, 0);
+    path.lineTo(size.width, 0);
+    path.lineTo(size.width / 2, size.height);
+    path.close();
+    canvas.drawPath(path, paint);
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }
