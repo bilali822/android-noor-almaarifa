@@ -149,7 +149,6 @@ class _MushafScreenState extends State<MushafScreen> {
       isScrollControlled: true,
       builder: (context) {
         return Container(
-          // 🌟 وضع حد أقصى لارتفاع النافذة (70% من الشاشة)
           constraints: BoxConstraints(
             maxHeight: MediaQuery.of(context).size.height * 0.7,
           ),
@@ -158,7 +157,7 @@ class _MushafScreenState extends State<MushafScreen> {
             borderRadius: BorderRadius.vertical(top: Radius.circular(30)),
           ),
           child: SafeArea(
-            child: SingleChildScrollView( // 🌟 يسمح بالتمرير إذا كانت الشاشة قصيرة
+            child: SingleChildScrollView(
               child: Padding(
                 padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
                 child: Column(
@@ -166,23 +165,23 @@ class _MushafScreenState extends State<MushafScreen> {
                   children: [
                     Container(width: 40, height: 4, decoration: BoxDecoration(color: Colors.grey[300], borderRadius: BorderRadius.circular(2))),
                     const SizedBox(height: 16),
-                    // 🌟 الشريط العلوي (زر الرجوع + اسم الآية)
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         IconButton(
-                          icon: const Icon(Icons.close, color: Colors.redAccent, size: 32), // زر أحمر وواضح
+                          icon: const Icon(Icons.close, color: Colors.redAccent, size: 32),
                           onPressed: () => Navigator.pop(context),
                           tooltip: 'رجوع',
                         ),
                         Text('سورة $surahName - آية $verseNumber', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18, color: AppColors.primary)),
-                        const SizedBox(width: 48), // للتوازن البصري
+                        const SizedBox(width: 48),
                       ],
                     ),
                     const SizedBox(height: 24),
-                    // 🌟 أزرار الخيارات
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    Wrap(
+                      alignment: WrapAlignment.center,
+                      spacing: 16,
+                      runSpacing: 16,
                       children: [
                         _buildOptionButton(Icons.copy, 'نسخ', Colors.blue, () {
                           Clipboard.setData(ClipboardData(text: verseText));
@@ -193,13 +192,21 @@ class _MushafScreenState extends State<MushafScreen> {
                           Navigator.pop(context);
                           _openTafsir(surahId, surahName, verseNumber, verseText);
                         }),
+                        _buildOptionButton(Icons.bookmark_add, 'حفظ', Colors.orange, () {
+                          Navigator.pop(context);
+                          _saveVerse(surahId, verseNumber);
+                        }),
+                        _buildOptionButton(Icons.push_pin, 'تعليم', Colors.redAccent, () {
+                          Navigator.pop(context);
+                          _setLastRead(surahId, verseNumber);
+                        }),
                         _buildOptionButton(Icons.share, 'مشاركة', Colors.purple, () {
                           Navigator.pop(context);
                           _shareVerse(surahName, verseNumber, verseText);
                         }),
                       ],
                     ),
-                    const SizedBox(height: 32), // مساحة سفلية مريحة
+                    const SizedBox(height: 32),
                   ],
                 ),
               ),
