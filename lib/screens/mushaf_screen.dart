@@ -21,10 +21,11 @@ class MushafScreen extends StatefulWidget {
 
 class _MushafScreenState extends State<MushafScreen> {
   late PageController _pageController;
-  int _currentPage = 1; // 🌟 نبدأ من الصفحة 1 بدلاً من السورة
+  int _currentSurah = 1;
   String _currentSurahName = 'الفاتحة';
   int? _highlightedVerse;
 
+  // 🌟 متغيرات لحفظ العلامات (تعليم ومفضلة)
   int? _lastReadSurah;
   int? _lastReadVerse;
   Set<String> _bookmarks = {};
@@ -38,17 +39,10 @@ class _MushafScreenState extends State<MushafScreen> {
   @override
   void initState() {
     super.initState();
-    _pageController = PageController(initialPage: 0);
-    _loadSavedData();
-    _updateSurahNameForPage(1);
-  }
-
-  Future<void> _updateSurahNameForPage(int page) async {
-    // جلب الآية الأولى في الصفحة لمعرفة اسم السورة
-    final verses = await DatabaseHelper.instance.getVersesByPage(page);
-    if (verses.isNotEmpty && mounted) {
-      setState(() => _currentSurahName = verses.first['surah_name'] as String);
-    }
+    _currentSurah = widget.initialSurahId;
+    _pageController = PageController(initialPage: _currentSurah - 1);
+    _loadSurahName(_currentSurah);
+    _loadSavedData(); 
   }
 
   Future<void> _loadSavedData() async {
@@ -59,6 +53,13 @@ class _MushafScreenState extends State<MushafScreen> {
         _lastReadVerse = prefs.getInt('last_read_verse');
         _bookmarks = (prefs.getStringList('bookmarks') ?? []).toSet();
       });
+    }
+  }
+
+  Future<void> _loadSurahName(int surahId) async {
+    final s = await DatabaseHelper.instance.getSurah(surahId);
+    if (s.isNotEmpty && mounted) {
+      setState(() => _currentSurahName = s.first['name_ar'] as String);
     }
   }
 
@@ -74,29 +75,27 @@ class _MushafScreenState extends State<MushafScreen> {
       backgroundColor: bgColor,
       body: Stack(
         children: [
-          // 🌟 604 صفحة بدلاً من 114 سورة
           PageView.builder(
             controller: _pageController,
-            itemCount: 604,
+            itemCount: 114,
             onPageChanged: (index) {
-              setState(() => _currentPage = index + 1);
-              _updateSurahNameForPage(_currentPage);
+              setState(() => _currentSurah = index + 1);
+              _loadSurahName(_currentSurah);
             },
             itemBuilder: (context, index) {
-              final pageNumber = index + 1;
-              return _MushafPage(
-                pageNumber: pageNumber,
+              final surahId = index + 1;
+              return _MushafSurahPage(
+                surahId: surahId,
                 highlightedVerse: _highlightedVerse,
-                lastReadVerse: (_lastReadSurah == _currentPage) ? _lastReadVerse : null, // ملاحظة: هذا يحتاج تعديل ليعتمد على الصفحة وليس السورة
+                lastReadVerse: (_lastReadSurah == surahId) ? _lastReadVerse : null,
                 bookmarks: _bookmarks,
-                onVerseTap: (surahName, verseNumber, verseText, surahId) {
+                onVerseTap: (surahName, verseNumber, verseText) {
                   _showVerseOptions(surahId, surahName, verseNumber, verseText);
                 },
               );
             },
           ),
           
-          // الشريط العلوي العائم
           Positioned(
             top: MediaQuery.of(context).padding.top + 10,
             left: 16,
@@ -110,9 +109,8 @@ class _MushafScreenState extends State<MushafScreen> {
                       _buildFloatingButton(
                         icon: Icons.bookmark,
                         iconColor: Colors.orange,
-                        onPressed: () async {
-                          final startPage = await DatabaseHelper.instance.getSurahStartPage(_lastReadSurah!);
-                          _pageController.jumpToPage(startPage - 1);
+                        onPressed: () {
+                          _pageController.jumpToPage(_lastReadSurah! - 1);
                           setState(() => _highlightedVerse = _lastReadVerse);
                         },
                       ),
@@ -160,9 +158,8 @@ class _MushafScreenState extends State<MushafScreen> {
     );
     if (result != null && mounted) {
       final targetSurah = result['surahId'] as int;
-      final startPage = await DatabaseHelper.instance.getSurahStartPage(targetSurah);
       setState(() => _highlightedVerse = result['verseNumber'] as int);
-      _pageController.jumpToPage(startPage - 1);
+      _pageController.jumpToPage(targetSurah - 1);
       Future.delayed(const Duration(seconds: 3), () { if (mounted) setState(() => _highlightedVerse = null); });
     }
   }
@@ -242,28 +239,26 @@ class _MushafScreenState extends State<MushafScreen> {
   }
 
   Future<void> _saveVerse(int surahId, int verseNumber) async {
-    final key = '$surahId:$verseNumber';
-    if (_bookmarks.contains(key)) {
-      setState(() => _bookmarks.remove(key));
-      _showSnack('تم إزالة الآية من المفضلة');
-    } else {
-      setState(() => _bookmarks.add(key));
-      _showSnack('✅ تم حفظ الآية في المفضلة');
-    }
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setStringList('bookmarks', _bookmarks.toList());
+    final saved = prefs.getStringList('bookmarks') ?? [];
+    final key = '$surahId:$verseNumber';
+    
+    if (saved.contains(key)) {
+      _showSnack('الآية محفوظة مسبقاً في المفضلة');
+    } else {
+      saved.add(key);
+      await prefs.setStringList('bookmarks', saved);
+      _showSnack('✅ تم حفظ الآية في المفضلة');
+      _loadSavedData(); 
+    }
   }
 
   Future<void> _setLastRead(int surahId, int verseNumber) async {
-    setState(() {
-      _lastReadSurah = surahId;
-      _lastReadVerse = verseNumber;
-    });
-    if (mounted) _showSnack('📍 تم تعيين علامة القراءة (تعليم) هنا');
-    
     final prefs = await SharedPreferences.getInstance();
     await prefs.setInt('last_read_surah', surahId);
     await prefs.setInt('last_read_verse', verseNumber);
+    if (mounted) _showSnack('📍 تم تعيين علامة القراءة (تعليم) هنا');
+    _loadSavedData(); 
   }
 
   void _showSnack(String msg) {
@@ -331,11 +326,7 @@ class _MushafScreenState extends State<MushafScreen> {
                           return ListTile(
                             title: Text('سورة ${s['name_ar']}', style: const TextStyle(fontFamily: 'UthmanicHafs', fontSize: 22, color: AppColors.primary)),
                             trailing: Text('${s['verses_count']} آية', style: const TextStyle(color: Colors.black54)),
-                            onTap: () async { 
-                              Navigator.pop(context); 
-                              final startPage = await DatabaseHelper.instance.getSurahStartPage(s['id'] as int);
-                              _pageController.jumpToPage(startPage - 1); 
-                            },
+                            onTap: () { Navigator.pop(context); _pageController.jumpToPage((s['id'] as int) - 1); },
                           );
                         },
                       ),
@@ -351,16 +342,15 @@ class _MushafScreenState extends State<MushafScreen> {
   }
 }
 
-// 🌟 صفحة المصحف (تعرض مجموعة آيات تنتمي لرقم صفحة معين)
-class _MushafPage extends StatefulWidget {
-  final int pageNumber;
+class _MushafSurahPage extends StatefulWidget {
+  final int surahId;
   final int? highlightedVerse;
   final int? lastReadVerse;
   final Set<String> bookmarks;
-  final Function(String, int, String, int) onVerseTap;
+  final Function(String, int, String) onVerseTap;
 
-  const _MushafPage({
-    required this.pageNumber, 
+  const _MushafSurahPage({
+    required this.surahId, 
     this.highlightedVerse, 
     this.lastReadVerse,
     required this.bookmarks,
@@ -368,10 +358,10 @@ class _MushafPage extends StatefulWidget {
   });
 
   @override
-  State<_MushafPage> createState() => _MushafPageState();
+  State<_MushafSurahPage> createState() => _MushafSurahPageState();
 }
 
-class _MushafPageState extends State<_MushafPage> {
+class _MushafSurahPageState extends State<_MushafSurahPage> {
   final ScrollController _scrollController = ScrollController();
   final List<TapGestureRecognizer> _recognizers = [];
   final Color frameColor = const Color(0xFF155E35);
@@ -387,63 +377,38 @@ class _MushafPageState extends State<_MushafPage> {
   @override
   Widget build(BuildContext context) {
     return FutureBuilder(
-      future: DatabaseHelper.instance.getVersesByPage(widget.pageNumber),
+      future: Future.wait([
+        DatabaseHelper.instance.getVerses(widget.surahId),
+        DatabaseHelper.instance.getSurah(widget.surahId),
+      ]),
       builder: (context, snapshot) {
         if (!snapshot.hasData) return const Center(child: CircularProgressIndicator(color: AppColors.primary));
 
-        final verses = snapshot.data!;
+        final verses = snapshot.data![0];
+        final surahInfo = snapshot.data![1];
 
+        if (surahInfo.isEmpty) return const Center(child: Text('جاري التحميل...'));
         if (verses.isEmpty) {
-          return Center(child: Padding(padding: const EdgeInsets.all(20), child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [const Icon(Icons.info_outline, size: 60, color: AppColors.primary), const SizedBox(height: 16), const Text('هذه الصفحة غير متاحة في نسخة الويب.', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppColors.text), textAlign: TextAlign.center), const SizedBox(height: 8), const Text('لتجربة المصحف كاملاً، قم بتثبيت تطبيق الأندرويد.', style: TextStyle(color: AppColors.textMuted, fontSize: 14), textAlign: TextAlign.center)])));
+          return Center(child: Padding(padding: const EdgeInsets.all(20), child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [const Icon(Icons.info_outline, size: 60, color: AppColors.primary), const SizedBox(height: 16), const Text('هذه السورة غير متاحة في نسخة الويب.', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppColors.text), textAlign: TextAlign.center), const SizedBox(height: 8), const Text('لتجربة المصحف كاملاً، قم بتثبيت تطبيق الأندرويد.', style: TextStyle(color: AppColors.textMuted, fontSize: 14), textAlign: TextAlign.center)])));
         }
+
+        final surahName = surahInfo.first['name_ar'] as String;
 
         for (var r in _recognizers) { r.dispose(); }
         _recognizers.clear();
 
         final List<InlineSpan> textSpans = [];
-        
         for (var v in verses) {
           final verseNumber = v['verse_number'] as int;
-          final surahId = v['surah_id'] as int;
-          final surahName = v['surah_name'] as String;
           final arabicNum = _toArabicNumeral(verseNumber);
           
           final recognizer = TapGestureRecognizer()
-            ..onTap = () => widget.onVerseTap(surahName, verseNumber, v['text_ar'] as String, surahId);
+            ..onTap = () => widget.onVerseTap(surahName, verseNumber, v['text_ar'] as String);
           _recognizers.add(recognizer);
           
           final isHighlighted = verseNumber == widget.highlightedVerse;
           final isLastRead = verseNumber == widget.lastReadVerse;
-
-          // 🌟 عرض اسم السورة والزخرفة إذا كانت الآية هي الأولى في السورة
-          if (verseNumber == 1) {
-            // إضافة اسم السورة كعنوان
-            textSpans.add(WidgetSpan(
-              alignment: PlaceholderAlignment.middle,
-              child: Container(
-                width: double.infinity,
-                margin: const EdgeInsets.symmetric(vertical: 16),
-                padding: const EdgeInsets.symmetric(vertical: 8),
-                decoration: BoxDecoration(
-                  color: frameColor.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: frameColor.withOpacity(0.3)),
-                ),
-                child: Text('سورة $surahName', textAlign: TextAlign.center, style: TextStyle(fontFamily: 'UthmanicHafs', fontSize: 24, fontWeight: FontWeight.bold, color: frameColor)),
-              ),
-            ));
-            
-            // إضافة البسملة (ما عدا التوبة والفاتحة)
-            if (surahId != 1 && surahId != 9) {
-              textSpans.add(WidgetSpan(
-                alignment: PlaceholderAlignment.middle,
-                child: Padding(
-                  padding: const EdgeInsets.only(bottom: 16),
-                  child: Text('بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ', style: TextStyle(fontFamily: 'UthmanicHafs', fontSize: 24, color: frameColor, fontWeight: FontWeight.bold)),
-                ),
-              ));
-            }
-          }
+          final isBookmarked = widget.bookmarks.contains('${widget.surahId}:$verseNumber');
 
           textSpans.add(TextSpan(
             children: [
@@ -452,44 +417,61 @@ class _MushafPageState extends State<_MushafPage> {
                 recognizer: recognizer, 
                 style: TextStyle(backgroundColor: isHighlighted ? const Color(0xFFF1E5C9) : null)
               ),
-              // رقم الآية (مع الختم الذهبي الفاخر للتعليم)
+              TextSpan(
+                text: '﴿$arabicNum﴾ ', 
+                style: TextStyle(
+                  color: frameColor, 
+                  fontSize: 22, 
+                  backgroundColor: isHighlighted ? const Color(0xFFF1E5C9) : null
+                ), 
+                recognizer: recognizer
+              ),
               if (isLastRead)
                 WidgetSpan(
                   alignment: PlaceholderAlignment.middle,
-                  child: GestureDetector(
-                    onTap: () => widget.onVerseTap(surahName, verseNumber, v['text_ar'] as String, surahId),
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                      margin: const EdgeInsets.symmetric(horizontal: 4),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFD4AF37).withOpacity(0.15),
-                        borderRadius: BorderRadius.circular(10),
-                        border: Border.all(color: const Color(0xFFD4AF37), width: 1.5),
-                      ),
-                      child: Text('﴿$arabicNum﴾', style: TextStyle(color: frameColor, fontSize: 20, fontWeight: FontWeight.bold, fontFamily: 'UthmanicHafs', height: 1.4)),
-                    ),
+                  child: Padding(
+                    padding: const EdgeInsets.only(left: 4, right: 4),
+                    child: Icon(Icons.push_pin, color: Colors.redAccent, size: 18),
                   ),
-                )
-              else
-                TextSpan(
-                  text: '﴿$arabicNum﴾ ', 
-                  style: TextStyle(color: frameColor, fontSize: 22, backgroundColor: isHighlighted ? const Color(0xFFF1E5C9) : null), 
-                  recognizer: recognizer
+                ),
+              if (isBookmarked)
+                WidgetSpan(
+                  alignment: PlaceholderAlignment.middle,
+                  child: Padding(
+                    padding: const EdgeInsets.only(left: 4, right: 4),
+                    child: Icon(Icons.bookmark, color: Colors.purple, size: 18),
+                  ),
                 ),
             ],
           ));
         }
 
-        return SafeArea(
-          child: LayoutBuilder(
+        return LayoutBuilder(
             builder: (context, constraints) {
               return SingleChildScrollView(
                 controller: _scrollController,
-                padding: const EdgeInsets.only(top: 80, left: 20, right: 20, bottom: 40),
+                padding: EdgeInsets.only(top: MediaQuery.of(context).padding.top + 80, left: 20, right: 20, bottom: 40),
                 child: ConstrainedBox(
                   constraints: BoxConstraints(minHeight: constraints.maxHeight - 120),
                   child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
                     children: [
+                      Padding(
+                        padding: const EdgeInsets.only(bottom: 24),
+                        child: Text('سورة $surahName', style: TextStyle(fontFamily: 'UthmanicHafs', fontSize: 28, fontWeight: FontWeight.bold, color: frameColor)),
+                      ),
+                      // 🌟 البسملة في المنتصف وبمسافة واضحة
+                      if (widget.surahId != 1 && widget.surahId != 9) 
+                        Padding(
+                          padding: const EdgeInsets.only(bottom: 32), 
+                          child: Center( 
+                            child: Text(
+                              'بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ', 
+                              textAlign: TextAlign.center,
+                              style: TextStyle(fontFamily: 'UthmanicHafs', fontSize: 26, color: frameColor, fontWeight: FontWeight.bold)
+                            )
+                          )
+                        ),
                       RichText(
                         textDirection: TextDirection.rtl, 
                         textAlign: TextAlign.justify, 
@@ -497,11 +479,6 @@ class _MushafPageState extends State<_MushafPage> {
                           style: TextStyle(fontFamily: 'UthmanicHafs', fontSize: 28, height: 2.6, color: textColor), 
                           children: textSpans
                         ),
-                      ),
-                      // 🌟 رقم الصفحة في الأسفل
-                      Padding(
-                        padding: const EdgeInsets.only(top: 32),
-                        child: Text('صفحة ${_toArabicNumeral(widget.pageNumber)}', style: const TextStyle(color: Colors.grey, fontSize: 14, fontWeight: FontWeight.bold)),
                       ),
                     ],
                   ),

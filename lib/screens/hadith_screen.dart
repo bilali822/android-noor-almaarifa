@@ -1,8 +1,4 @@
-import 'dart:io';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
-import 'package:screenshot/screenshot.dart';
-import 'package:share_plus/share_plus.dart';
 import '../db/database_helper.dart';
 import '../theme/app_colors.dart';
 import '../widgets/support_card.dart';
@@ -12,34 +8,30 @@ class HadithScreen extends StatefulWidget {
   @override State<HadithScreen> createState() => _HadithScreenState();
 }
 
-class _HadithScreenState extends State<HadithScreen> with AutomaticKeepAliveClientMixin {
+class _HadithScreenState extends State<HadithScreen> {
   final _searchCtrl = TextEditingController();
   final _scrollCtrl = ScrollController();
-  final _screenshotController = ScreenshotController();
 
   List<Map<String, Object?>> _hadiths = [];
   List<String> _books = ['الكل'];
   String _selectedBook = 'الكل';
-  String _selectedGrade = 'الكل';
   
   bool _loading = true;
   bool _isLoadingMore = false;
   bool _hasMore = true;
   int _offset = 0;
-  final int _limit = 20;
-
-  @override
-  bool get wantKeepAlive => true;
+  final int _limit = 20; // 🌟 جلب 20 حديث في كل مرة
 
   @override
   void initState() {
     super.initState();
-    SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
     _loadBooks();
     _resetAndLoad();
     
+    // مستمع التمرير لجلب المزيد
     _scrollCtrl.addListener(() {
-      if (_scrollCtrl.position.pixels >= _scrollCtrl.position.maxScrollExtent - 200 && !_isLoadingMore && _hasMore) {
+      if (_scrollCtrl.position.pixels >= _scrollCtrl.position.maxScrollExtent - 200 && 
+          !_isLoadingMore && _hasMore) {
         _loadMore();
       }
     });
@@ -92,50 +84,11 @@ class _HadithScreenState extends State<HadithScreen> with AutomaticKeepAliveClie
     return Colors.grey;
   }
 
-  Future<void> _shareHadithImage(Map<String, Object?> h) async {
-    try {
-      final image = await _screenshotController.captureFromWidget(
-        Material(
-          color: Colors.transparent,
-          child: Container(
-            padding: const EdgeInsets.all(32), width: 400,
-            decoration: BoxDecoration(color: const Color(0xFFF8F4EC), borderRadius: BorderRadius.circular(24), border: Border.all(color: AppColors.primary, width: 2)),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text('${h['book']} • حديث ${h['hadith_number']}', style: const TextStyle(color: AppColors.primary, fontWeight: FontWeight.bold, fontSize: 14)),
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                      decoration: BoxDecoration(color: _getGradeColor(h['grade'] as String?).withOpacity(0.2), borderRadius: BorderRadius.circular(8)),
-                      child: Text(h['grade'] as String? ?? '', style: TextStyle(color: _getGradeColor(h['grade'] as String?), fontWeight: FontWeight.bold, fontSize: 12)),
-                    )
-                  ],
-                ),
-                const SizedBox(height: 24),
-                Text('« ${h['arabic_text']} »', textDirection: TextDirection.rtl, textAlign: TextAlign.center, style: const TextStyle(color: AppColors.text, fontSize: 24, height: 2.0, fontFamily: 'UthmanicHafs')),
-                const SizedBox(height: 24),
-                Text('الراوي: ${h['narrator'] ?? 'غير معروف'}', style: const TextStyle(color: AppColors.textMuted, fontSize: 14)),
-                const SizedBox(height: 16),
-                const Text('تطبيق نور المعرفة', style: TextStyle(color: AppColors.primary, fontSize: 12, fontWeight: FontWeight.bold)),
-              ],
-            ),
-          ),
-        ),
-      );
-      final xFile = XFile.fromData(image, mimeType: 'image/png', name: 'hadith.png');
-      await Share.shareXFiles([xFile], text: 'حديث نبوي شريف');
-    } catch (e) {
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('تعذر مشاركة الصورة.')));
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
-    super.build(context);
     return Scaffold(
+      extendBodyBehindAppBar: true,
+      extendBody: true,
       backgroundColor: const Color(0xFFF8F4EC),
       appBar: AppBar(
         backgroundColor: Colors.transparent, elevation: 0,
@@ -153,7 +106,7 @@ class _HadithScreenState extends State<HadithScreen> with AutomaticKeepAliveClie
                 decoration: InputDecoration(
                   hintText: 'ابحث بكلمة، رقم حديث، أو راوٍ...', hintStyle: const TextStyle(color: Colors.grey),
                   prefixIcon: const Icon(Icons.search, color: AppColors.primary), border: InputBorder.none, contentPadding: const EdgeInsets.symmetric(vertical: 16),
-                  suffixIcon: IconButton(icon: const Icon(Icons.tune, color: AppColors.primary), onPressed: _showFilterBottomSheet),
+                  suffixIcon: IconButton(icon: const Icon(Icons.clear, color: AppColors.primary), onPressed: () { _searchCtrl.clear(); _resetAndLoad(); }),
                 ),
               ),
             ),
@@ -233,8 +186,7 @@ class _HadithScreenState extends State<HadithScreen> with AutomaticKeepAliveClie
                 ]),
                 Row(children: [
                   IconButton(icon: const Icon(Icons.copy, size: 20, color: AppColors.textMuted), onPressed: () {}),
-                  IconButton(icon: const Icon(Icons.share, size: 20, color: AppColors.primary), onPressed: () => _shareHadithImage(h)),
-                  IconButton(icon: const Icon(Icons.bookmark_border, size: 20, color: AppColors.textMuted), onPressed: () {}),
+                  IconButton(icon: const Icon(Icons.share, size: 20, color: AppColors.primary), onPressed: () {}),
                 ])
               ],
             ),
@@ -253,48 +205,15 @@ class _HadithScreenState extends State<HadithScreen> with AutomaticKeepAliveClie
             Icon(Icons.menu_book_outlined, size: 80, color: AppColors.primary.withOpacity(0.3)),
             const SizedBox(height: 16),
             const Text('لم نجد أي أحاديث تطابق بحثك', style: TextStyle(color: AppColors.text, fontSize: 18, fontWeight: FontWeight.bold)),
-            const SizedBox(height: 8),
-            const Text('جرب تغيير كلمات البحث أو مسح الفلاتر', style: TextStyle(color: AppColors.textMuted, fontSize: 14)),
             const SizedBox(height: 24),
             ElevatedButton.icon(
-              onPressed: () { _searchCtrl.clear(); setState(() { _selectedBook = 'الكل'; _selectedGrade = 'الكل'; }); _resetAndLoad(); },
-              icon: const Icon(Icons.refresh), label: const Text('مسح الفلاتر والبحث'),
+              onPressed: () { _searchCtrl.clear(); setState(() => _selectedBook = 'الكل'); _resetAndLoad(); },
+              icon: const Icon(Icons.refresh), label: const Text('مسح البحث'),
               style: ElevatedButton.styleFrom(backgroundColor: AppColors.primary, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))),
             ),
-            const SizedBox(height: 32),
-            const Padding(padding: EdgeInsets.symmetric(horizontal: 16), child: SupportCard())
           ],
         ),
       ),
-    );
-  }
-
-  void _showFilterBottomSheet() {
-    showModalBottomSheet(
-      context: context, shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
-      builder: (context) {
-        return Padding(
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Text('تصفية حسب التصنيف', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppColors.primary)),
-              const SizedBox(height: 16),
-              Wrap(
-                spacing: 8,
-                children: ['الكل', 'صحيح', 'حسن', 'ضعيف'].map((grade) {
-                  final isSel = _selectedGrade == grade;
-                  return ChoiceChip(
-                    label: Text(grade), selected: isSel, selectedColor: AppColors.primary, labelStyle: TextStyle(color: isSel ? Colors.white : AppColors.text),
-                    onSelected: (v) { setState(() => _selectedGrade = grade); Navigator.pop(context); _resetAndLoad(); },
-                  );
-                }).toList(),
-              ),
-              const SizedBox(height: 24),
-            ],
-          ),
-        );
-      },
     );
   }
 }

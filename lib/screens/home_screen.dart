@@ -88,9 +88,7 @@ class _HomeScreenState extends State<HomeScreen> {
         child: Center(
           child: ConstrainedBox(
             constraints: const BoxConstraints(maxWidth: 500),
-            child: SafeArea(
-              bottom: false,
-              child: Column(
+            child: Column(
                 children: [
                   // 🌟 الهيدر الجديد بتصميم أفقي في الأعلى
                   Padding(

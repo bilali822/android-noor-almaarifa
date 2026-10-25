@@ -138,6 +138,8 @@ class _AIChatScreenState extends State<AIChatScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      extendBodyBehindAppBar: true,
+      extendBody: true,
       backgroundColor: bgColor,
       appBar: AppBar(
         backgroundColor: bgColor, elevation: 0,
