@@ -31,29 +31,26 @@ class NotificationService {
     }
   }
 
-  // 🌟 جلب الموقع وحساب الصلاة القادمة وتحديث الإشعار الدائم
+  // 🌟 جلب الموقع وحساب الصلوات وتصميم الإشعار الاحترافي
   Future<void> updatePrayerTimesByLocation() async {
     try {
-      // 1. طلب صلاحية الموقع
       LocationPermission permission = await Geolocator.checkPermission();
       if (permission == LocationPermission.denied) {
         permission = await Geolocator.requestPermission();
         if (permission == LocationPermission.denied) return;
       }
 
-      // 2. جلب الإحداثيات
       Position position = await Geolocator.getCurrentPosition(
-        desiredAccuracy: LocationAccuracy.low, // دقة منخفضة أسرع وتكفي للصلاة
+        desiredAccuracy: LocationAccuracy.low,
       );
 
-      // 3. حساب مواقيت الصلاة باستخدام مكتبة Adhan
       final coordinates = Coordinates(position.latitude, position.longitude);
-      final params = CalculationMethod.umm_al_qura.getParameters(); // افتراضي مكة، ويمكن تغييره
+      final params = CalculationMethod.umm_al_qura.getParameters();
       params.madhab = Madhab.shafi;
       final date = DateComponents.from(DateTime.now());
       final prayerTimes = PrayerTimes(coordinates, date, params);
 
-      // 4. تحديد الصلاة القادمة
+      // 1. تحديد الصلاة القادمة
       final nextPrayer = prayerTimes.nextPrayer();
       String nextName = 'الصلاة القادمة';
       DateTime nextTime = DateTime.now();
@@ -65,18 +62,32 @@ class NotificationService {
       else if (nextPrayer == Prayer.maghrib) { nextName = 'المغرب'; nextTime = prayerTimes.maghrib; }
       else if (nextPrayer == Prayer.isha) { nextName = 'العشاء'; nextTime = prayerTimes.isha; }
 
-      final timeString = DateFormat('hh:mm a', 'ar').format(nextTime);
+      final timeFormat = DateFormat('hh:mm a', 'ar');
+      
+      // 2. تنسيق التاريخ الهجري
       final hijri = HijriCalendar.fromDate(DateTime.now());
       final hijriDate = '${hijri.hDay} ${hijri.longMonthName} ${hijri.hYear} هـ';
 
-      // 5. عرض الإشعار الدائم
-      await showPersistentPrayerNotification(nextName, timeString, hijriDate);
+      // 3. بناء جدول الصلوات (يظهر عند سحب الإشعار)
+      final schedule = """
+━━━━━━━━━━━━━━━━━
+🕌 مواقيت الصلوات اليوم
+━━━━━━━━━━━━━━━━━
+🌅 الفجر:    ${timeFormat.format(prayerTimes.fajr)}
+🌞 الظهر:    ${timeFormat.format(prayerTimes.dhuhr)}
+🌤️ العصر:    ${timeFormat.format(prayerTimes.asr)}
+🌇 المغرب:  ${timeFormat.format(prayerTimes.maghrib)}
+🌙 العشاء:   ${timeFormat.format(prayerTimes.isha)}
+━━━━━━━━━━━━━━━━━
+""";
+
+      // 4. عرض الإشعار الدائم
+      await showPersistentPrayerNotification(nextName, timeFormat.format(nextTime), hijriDate, schedule);
 
     } catch (e) {
       debugPrint('Error calculating prayer times: $e');
-      // في حال رفض المستخدم للموقع، نعرض إشعار افتراضي
       final hijri = HijriCalendar.fromDate(DateTime.now());
-      await showPersistentPrayerNotification('صلاتك', '--:--', '${hijri.hDay} ${hijri.longMonthName} ${hijri.hYear} هـ');
+      await showPersistentPrayerNotification('صلاتك', '--:--', '${hijri.hDay} ${hijri.longMonthName} ${hijri.hYear} هـ', 'يرجى تفعيل خدمة الموقع (GPS) لحساب المواقيت بدقة.');
     }
   }
 
@@ -86,27 +97,41 @@ class NotificationService {
       channelDescription: 'إشعار عند فتح التطبيق',
       importance: Importance.high,
       priority: Priority.high,
+      color: Color(0xFF155E35), // لون التطبيق الأخضر
     );
     await flutterLocalNotificationsPlugin.show(
       0, 'أهلاً بك في نور المعرفة 🌙', 'نسأل الله أن ينفعك بما تقرأ وتتعلم.', const NotificationDetails(android: androidDetails),
     );
   }
 
-  Future<void> showPersistentPrayerNotification(String nextPrayer, String time, String hijriDate) async {
-    const AndroidNotificationDetails androidDetails = AndroidNotificationDetails(
+  Future<void> showPersistentPrayerNotification(String nextPrayer, String time, String hijriDate, String schedule) async {
+    // 🌟 تصميم الإشعار الاحترافي
+    final AndroidNotificationDetails androidDetails = AndroidNotificationDetails(
       'prayer_channel', 'مواقيت الصلاة',
-      channelDescription: 'إشعار دائم بمواقيت الصلاة',
-      importance: Importance.low,
+      channelDescription: 'إشعار دائم بمواقيت الصلاة والتاريخ الهجري',
+      importance: Importance.low, // منخفض لكي لا يزعج المستخدم برنة
       priority: Priority.low,
-      ongoing: true, // يجعله دائم لا يمسح
+      ongoing: true, // يجعله دائم لا يمكن مسحه
       autoCancel: false,
       showWhen: false,
       onlyAlertOnce: true,
+      color: const Color(0xFF155E35), // لون الأيقونة أخضر
       icon: '@mipmap/ic_launcher',
+      // إعدادات النص الكبير (عند سحب الإشعار)
+      styleInformation: BigTextStyleInformation(
+        schedule, // النص الكبير الذي يظهر عند السحب
+        contentTitle: '$hijriDate\n🕌 $nextPrayer ($time)', // العنوان الرئيسي
+        summaryText: 'تطبيق نور المعرفة', // النص الصغير
+      ),
+      // إعدادات النص العادي (قبل السحب)
+      ticker: 'تحديث مواقيت الصلاة',
     );
     
     await flutterLocalNotificationsPlugin.show(
-      1, 'الصلاة القادمة: $nextPrayer ($time)', hijriDate, const NotificationDetails(android: androidDetails),
+      1, 
+      '$hijriDate\n🕌 $nextPrayer ($time)', 
+      'اسحب للأسفل لعرض جميع المواقيت ⬇️', 
+      NotificationDetails(android: androidDetails),
     );
   }
 
@@ -116,10 +141,11 @@ class NotificationService {
       channelDescription: 'إشعار يومي بآية أو حديث',
       importance: Importance.defaultImportance,
       priority: Priority.defaultPriority,
+      color: Color(0xFF155E35),
     );
     await flutterLocalNotificationsPlugin.cancel(2);
     await flutterLocalNotificationsPlugin.zonedSchedule(
-      2, 'آية اليوم 📖', '﴿ وَقُل رَّبِّ زِدْنِي عِلْمًا ﴾', _nextInstanceOfTime(8, 0),
+      2, '📖 آية اليوم | نور المعرفة', '﴿ وَقُل رَّبِّ زِدْنِي عِلْمًا ﴾', _nextInstanceOfTime(8, 0),
       const NotificationDetails(android: androidDetails),
       androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
       uiLocalNotificationDateInterpretation: UILocalNotificationDateInterpretation.absoluteTime,
