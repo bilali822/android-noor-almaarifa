@@ -26,12 +26,11 @@ class _MushafScreenState extends State<MushafScreen> {
   String _currentSurahName = 'الفاتحة';
   int? _highlightedVerse;
 
-  final Color bgColor = const Color(0xFFF8F4EC);
+  final Color bgColor = const Color(0xFFFDFBF7); // لون ورق أنقى
   final Color frameColor = const Color(0xFF155E35);
   final Color goldColor = const Color(0xFFD4AF37);
   final Color textColor = const Color(0xFF1A1A1A);
 
-  final List<TapGestureRecognizer> _recognizers = [];
   final ScreenshotController _screenshotController = ScreenshotController();
 
   @override
@@ -40,7 +39,6 @@ class _MushafScreenState extends State<MushafScreen> {
     _currentSurah = widget.initialSurahId;
     _pageController = PageController(initialPage: _currentSurah - 1);
     _loadSurahName(_currentSurah);
-    _checkLastRead();
   }
 
   Future<void> _loadSurahName(int surahId) async {
@@ -50,64 +48,9 @@ class _MushafScreenState extends State<MushafScreen> {
     }
   }
 
-  Future<void> _checkLastRead() async {
-    final prefs = await SharedPreferences.getInstance();
-    final savedSurah = prefs.getInt('last_read_surah');
-    final savedVerse = prefs.getInt('last_read_verse');
-    
-    if (savedSurah != null && mounted) {
-      if (savedSurah != _currentSurah) {
-        Future.delayed(const Duration(milliseconds: 500), () {
-          if (!mounted) return;
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('لديك علامة محفوظة في سورة رقم $savedSurah${savedVerse != null ? ' آية $savedVerse' : ''}'),
-              action: SnackBarAction(
-                label: 'الذهاب',
-                onPressed: () {
-                  _pageController.jumpToPage(savedSurah - 1);
-                  if (savedVerse != null) setState(() => _highlightedVerse = savedVerse);
-                },
-              ),
-            ),
-          );
-        });
-      } else if (savedVerse != null) {
-        setState(() => _highlightedVerse = savedVerse);
-      }
-    }
-  }
-
-  Future<void> _saveLastRead(int surahId, int? verse) async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setInt('last_read_surah', surahId);
-    if (verse != null) await prefs.setInt('last_read_verse', verse);
-    if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('✅ تم حفظ العلامة')));
-  }
-
-  void _openSearch() async {
-    final result = await Navigator.push<Map<String, dynamic>>(
-      context,
-      MaterialPageRoute(builder: (_) => const MushafSearchScreen()),
-    );
-    if (result != null && mounted) {
-      final targetSurah = result['surahId'] as int;
-      final targetVerse = result['verseNumber'] as int;
-      
-      setState(() => _highlightedVerse = targetVerse);
-      _pageController.jumpToPage(targetSurah - 1);
-      
-      // مسح التظليل بعد 3 ثواني
-      Future.delayed(const Duration(seconds: 3), () {
-        if (mounted) setState(() => _highlightedVerse = null);
-      });
-    }
-  }
-
   @override
   void dispose() {
     _pageController.dispose();
-    for (var r in _recognizers) { r.dispose(); }
     super.dispose();
   }
 
@@ -156,6 +99,21 @@ class _MushafScreenState extends State<MushafScreen> {
     );
   }
 
+  void _openSearch() async {
+    final result = await Navigator.push<Map<String, dynamic>>(
+      context,
+      MaterialPageRoute(builder: (_) => const MushafSearchScreen()),
+    );
+    if (result != null && mounted) {
+      final targetSurah = result['surahId'] as int;
+      setState(() => _highlightedVerse = result['verseNumber'] as int);
+      _pageController.jumpToPage(targetSurah - 1);
+      Future.delayed(const Duration(seconds: 3), () {
+        if (mounted) setState(() => _highlightedVerse = null);
+      });
+    }
+  }
+
   void _showVerseOptions(int surahId, String surahName, int verseNumber, String verseText) {
     showModalBottomSheet(
       context: context, backgroundColor: Colors.transparent,
@@ -180,10 +138,6 @@ class _MushafScreenState extends State<MushafScreen> {
                 _buildOptionButton(Icons.menu_book, 'تفسير', Colors.green, () {
                   Navigator.pop(context);
                   _openTafsir(surahId, surahName, verseNumber, verseText);
-                }),
-                _buildOptionButton(Icons.bookmark_add, 'علامة', Colors.orange, () {
-                  Navigator.pop(context);
-                  _saveLastRead(surahId, verseNumber);
                 }),
                 _buildOptionButton(Icons.share, 'مشاركة', Colors.purple, () {
                   Navigator.pop(context);
@@ -216,15 +170,9 @@ class _MushafScreenState extends State<MushafScreen> {
   }
 
   void _openTafsir(int surahId, String surahName, int verseNumber, String verseText) async {
-    // 🌟 نجيب بس الكتب اللي عندها تفسير للآية دي
     final books = await DatabaseHelper.instance.getTafsirBooksForVerse(surahId, verseNumber);
     if (!mounted) return;
-
-    if (books.isEmpty) {
-      _showSnack('لا يوجد تفسير متاح لهذه الآية');
-      return;
-    }
-
+    if (books.isEmpty) { _showSnack('لا يوجد تفسير متاح لهذه الآية'); return; }
     final selected = await showModalBottomSheet<List<String>>(
       context: context, isScrollControlled: true, backgroundColor: Colors.transparent,
       builder: (_) => TafsirSheet(surahName: surahName, surahId: surahId, verseNumber: verseNumber, verseText: verseText, books: books),
@@ -295,7 +243,7 @@ class _MushafScreenState extends State<MushafScreen> {
   }
 }
 
-// 🌟 صفحة السورة (StatefulWidget عشان تدير التمرير والتظليل)
+// 🌟 صفحة السورة (التحسينات الجديدة)
 class _MushafSurahPage extends StatefulWidget {
   final int surahId;
   final int? highlightedVerse;
@@ -310,29 +258,10 @@ class _MushafSurahPage extends StatefulWidget {
 class _MushafSurahPageState extends State<_MushafSurahPage> {
   final ScrollController _scrollController = ScrollController();
   final List<TapGestureRecognizer> _recognizers = [];
-  final Color bgColor = const Color(0xFFF8F4EC);
+  final Color bgColor = const Color(0xFFFDFBF7); // لون ورق أنقى
   final Color frameColor = const Color(0xFF155E35);
   final Color goldColor = const Color(0xFFD4AF37);
   final Color textColor = const Color(0xFF1A1A1A);
-
-  @override
-  void didUpdateWidget(covariant _MushafSurahPage oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    if (widget.highlightedVerse != null && widget.highlightedVerse != oldWidget.highlightedVerse) {
-      _scrollToVerse(widget.highlightedVerse!);
-    }
-  }
-
-  void _scrollToVerse(int verseNumber) {
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (_scrollController.hasClients) {
-        final totalVerses = 7; // تقريبياً، أو نمرره من البيانات
-        final maxExtent = _scrollController.position.maxScrollExtent;
-        final offset = (verseNumber / 10) * maxExtent; // تقدير تقريبي
-        _scrollController.animateTo(offset.clamp(0.0, maxExtent), duration: const Duration(milliseconds: 500), curve: Curves.easeInOut);
-      }
-    });
-  }
 
   @override
   void dispose() {
@@ -350,13 +279,13 @@ class _MushafSurahPageState extends State<_MushafSurahPage> {
       ]),
       builder: (context, snapshot) {
         if (!snapshot.hasData) return const Center(child: CircularProgressIndicator(color: AppColors.primary));
-        
+
         final verses = snapshot.data![0];
         final surahInfo = snapshot.data![1];
-        
+
         if (surahInfo.isEmpty) return const Center(child: Text('جاري التحميل...'));
         if (verses.isEmpty) {
-          return Center(child: Padding(padding: const EdgeInsets.all(20), child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [const Icon(Icons.info_outline, size: 60, color: AppColors.primary), const SizedBox(height: 16), const Text('هذه السورة غير متاحة في نسخة الويب.', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppColors.text), textAlign: TextAlign.center), const SizedBox(height: 8), const Text('لتجربة المصحف كاملاً، قم بتثبيت تطبيق الأندرويد.', style: TextStyle(color: AppColors.textMuted, fontSize: 14), textAlign: TextAlign.center)]))); 
+          return Center(child: Padding(padding: const EdgeInsets.all(20), child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [const Icon(Icons.info_outline, size: 60, color: AppColors.primary), const SizedBox(height: 16), const Text('هذه السورة غير متاحة في نسخة الويب.', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppColors.text), textAlign: TextAlign.center), const SizedBox(height: 8), const Text('لتجربة المصحف كاملاً، قم بتثبيت تطبيق الأندرويد.', style: TextStyle(color: AppColors.textMuted, fontSize: 14), textAlign: TextAlign.center)])));
         }
 
         final surahName = surahInfo.first['name_ar'] as String;
@@ -370,7 +299,7 @@ class _MushafSurahPageState extends State<_MushafSurahPage> {
         for (var v in verses) {
           final verseNumber = v['verse_number'] as int;
           final arabicNum = _toArabicNumeral(verseNumber);
-          
+
           final recognizer = TapGestureRecognizer()..onTap = () => widget.onVerseTap(surahName, verseNumber, v['text_ar'] as String);
           _recognizers.add(recognizer);
 
@@ -379,13 +308,14 @@ class _MushafSurahPageState extends State<_MushafSurahPage> {
           textSpans.add(TextSpan(
             children: [
               TextSpan(
-                text: '${v['text_ar']} ', 
+                text: '${v['text_ar']} ',
                 recognizer: recognizer,
-                style: TextStyle(backgroundColor: isHighlighted ? goldColor.withOpacity(0.3) : null),
+                // لون تظليل أنعم وأجمل
+                style: TextStyle(backgroundColor: isHighlighted ? const Color(0xFFF1E5C9) : null),
               ),
               TextSpan(
-                text: '﴿$arabicNum﴾ ', 
-                style: TextStyle(color: frameColor, fontSize: 22, backgroundColor: isHighlighted ? goldColor.withOpacity(0.3) : null), 
+                text: '﴿$arabicNum﴾ ',
+                style: TextStyle(color: frameColor, fontSize: 22, backgroundColor: isHighlighted ? const Color(0xFFF1E5C9) : null),
                 recognizer: recognizer,
               ),
             ],
@@ -395,26 +325,66 @@ class _MushafSurahPageState extends State<_MushafSurahPage> {
         return Container(
           margin: const EdgeInsets.all(16),
           padding: const EdgeInsets.all(4),
-          decoration: BoxDecoration(border: Border.all(color: goldColor, width: 3), borderRadius: BorderRadius.circular(12), boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.1), blurRadius: 10, offset: const Offset(0, 5))]),
+          decoration: BoxDecoration(
+            border: Border.all(color: goldColor, width: 3),
+            borderRadius: BorderRadius.circular(12),
+            boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.08), blurRadius: 15, offset: const Offset(0, 5))],
+          ),
           child: Container(
             padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(border: Border.all(color: frameColor, width: 1.5), borderRadius: BorderRadius.circular(8), gradient: LinearGradient(colors: [bgColor, bgColor.withOpacity(0.8)], begin: Alignment.topCenter, end: Alignment.bottomCenter)),
+            decoration: BoxDecoration(
+              border: Border.all(color: frameColor.withOpacity(0.4), width: 1.5),
+              borderRadius: BorderRadius.circular(8),
+              gradient: LinearGradient(colors: [bgColor, bgColor.withOpacity(0.9)], begin: Alignment.topCenter, end: Alignment.bottomCenter),
+            ),
             child: Column(
               children: [
-                Container(width: double.infinity, padding: const EdgeInsets.symmetric(vertical: 10), decoration: BoxDecoration(gradient: LinearGradient(colors: [frameColor, frameColor.withOpacity(0.8)]), borderRadius: BorderRadius.circular(8), boxShadow: [BoxShadow(color: frameColor.withOpacity(0.3), blurRadius: 5)]), child: Text('سورة $surahName', textAlign: TextAlign.center, style: const TextStyle(fontFamily: 'UthmanicHafs', fontSize: 26, fontWeight: FontWeight.bold, color: Colors.white))),
+                // شريط علوي
+                Container(
+                  width: double.infinity, padding: const EdgeInsets.symmetric(vertical: 10),
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(colors: [frameColor, frameColor.withOpacity(0.85)]),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Text('سورة $surahName', textAlign: TextAlign.center, style: const TextStyle(fontFamily: 'UthmanicHafs', fontSize: 24, fontWeight: FontWeight.bold, color: Colors.white)),
+                ),
+                
+                // 🌟 الحل لمشكلة الفراغ: توسيع مساحة النص وتوسيطه
                 Expanded(
-                  child: SingleChildScrollView(
-                    controller: _scrollController,
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
-                    child: Column(
-                      children: [
-                        if (widget.surahId != 1 && widget.surahId != 9) Padding(padding: const EdgeInsets.only(bottom: 20), child: Text('بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ', style: TextStyle(fontFamily: 'UthmanicHafs', fontSize: 24, color: frameColor, fontWeight: FontWeight.bold))),
-                        RichText(textDirection: TextDirection.rtl, textAlign: TextAlign.justify, text: TextSpan(style: TextStyle(fontFamily: 'UthmanicHafs', fontSize: 28, height: 2.4, color: textColor), children: textSpans)),
-                      ],
+                  child: Center( // <--- توسيط النص عمودياً
+                    child: SingleChildScrollView(
+                      controller: _scrollController,
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 32), // زيادة المساحة
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          if (widget.surahId != 1 && widget.surahId != 9) 
+                            Padding(
+                              padding: const EdgeInsets.only(bottom: 24), 
+                              child: Text('بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ', style: TextStyle(fontFamily: 'UthmanicHafs', fontSize: 24, color: frameColor, fontWeight: FontWeight.bold))
+                            ),
+                          RichText(
+                            textDirection: TextDirection.rtl, 
+                            textAlign: TextAlign.justify, 
+                            // 🌟 زيادة المسافة بين السطور إلى 2.8 وتكبير الخط قليلاً
+                            text: TextSpan(style: TextStyle(fontFamily: 'UthmanicHafs', fontSize: 28, height: 2.8, color: textColor), children: textSpans)
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                 ),
-                Container(width: double.infinity, padding: const EdgeInsets.symmetric(vertical: 8), decoration: BoxDecoration(color: goldColor.withOpacity(0.1), border: Border(top: BorderSide(color: goldColor, width: 1))), child: Text('سورة رقم $surahNum • $versesCount آية', textAlign: TextAlign.center, style: TextStyle(fontFamily: 'UthmanicHafs', fontSize: 14, color: frameColor, fontWeight: FontWeight.bold))),
+                
+                // شريط سفلي
+                Container(
+                  width: double.infinity, padding: const EdgeInsets.symmetric(vertical: 8),
+                  decoration: BoxDecoration(
+                    color: goldColor.withOpacity(0.1),
+                    border: Border(top: BorderSide(color: goldColor, width: 1)),
+                    borderRadius: const BorderRadius.vertical(bottom: Radius.circular(8)),
+                  ),
+                  child: Text('سورة رقم $surahNum • $versesCount آية', textAlign: TextAlign.center, style: TextStyle(fontFamily: 'UthmanicHafs', fontSize: 14, color: frameColor, fontWeight: FontWeight.bold)),
+                ),
               ],
             ),
           ),
