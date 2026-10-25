@@ -25,6 +25,11 @@ class _MushafScreenState extends State<MushafScreen> {
   String _currentSurahName = 'الفاتحة';
   int? _highlightedVerse;
 
+  // 🌟 متغيرات لحفظ العلامات (تعليم ومفضلة)
+  int? _lastReadSurah;
+  int? _lastReadVerse;
+  Set<String> _bookmarks = {};
+
   final Color bgColor = const Color(0xFFFDFBF7); 
   final Color frameColor = const Color(0xFF155E35);
   final Color textColor = const Color(0xFF1A1A1A);
@@ -37,8 +42,21 @@ class _MushafScreenState extends State<MushafScreen> {
     _currentSurah = widget.initialSurahId;
     _pageController = PageController(initialPage: _currentSurah - 1);
     _loadSurahName(_currentSurah);
+    _loadSavedData(); // 🌟 تحميل العلامات المحفوظة
     
     SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
+  }
+
+  // 🌟 دالة جلب العلامات من الذاكرة
+  Future<void> _loadSavedData() async {
+    final prefs = await SharedPreferences.getInstance();
+    if (mounted) {
+      setState(() {
+        _lastReadSurah = prefs.getInt('last_read_surah');
+        _lastReadVerse = prefs.getInt('last_read_verse');
+        _bookmarks = (prefs.getStringList('bookmarks') ?? []).toSet();
+      });
+    }
   }
 
   Future<void> _loadSurahName(int surahId) async {
@@ -73,12 +91,16 @@ class _MushafScreenState extends State<MushafScreen> {
               return _MushafSurahPage(
                 surahId: surahId,
                 highlightedVerse: _highlightedVerse,
+                lastReadVerse: (_lastReadSurah == surahId) ? _lastReadVerse : null,
+                bookmarks: _bookmarks,
                 onVerseTap: (surahName, verseNumber, verseText) {
                   _showVerseOptions(surahId, surahName, verseNumber, verseText);
                 },
               );
             },
           ),
+          
+          // الشريط العلوي العائم
           Positioned(
             top: MediaQuery.of(context).padding.top + 10,
             left: 16,
@@ -88,6 +110,18 @@ class _MushafScreenState extends State<MushafScreen> {
               children: [
                 Row(
                   children: [
+                    // 🌟 زر متابعة القراءة (يظهر فقط إذا كان هناك تعليم)
+                    if (_lastReadSurah != null) ...[
+                      _buildFloatingButton(
+                        icon: Icons.bookmark,
+                        iconColor: Colors.orange,
+                        onPressed: () {
+                          _pageController.jumpToPage(_lastReadSurah! - 1);
+                          setState(() => _highlightedVerse = _lastReadVerse);
+                        },
+                      ),
+                      const SizedBox(width: 8),
+                    ],
                     _buildFloatingButton(icon: Icons.search, onPressed: _openSearch),
                     const SizedBox(width: 8),
                     _buildFloatingButton(icon: Icons.format_list_bulleted, onPressed: _showSurahSelection),
@@ -112,7 +146,7 @@ class _MushafScreenState extends State<MushafScreen> {
     );
   }
 
-  Widget _buildFloatingButton({required IconData icon, required VoidCallback onPressed}) {
+  Widget _buildFloatingButton({required IconData icon, Color iconColor = const Color(0xFF155E35), required VoidCallback onPressed}) {
     return Container(
       decoration: BoxDecoration(
         color: Colors.white.withOpacity(0.95),
@@ -120,7 +154,7 @@ class _MushafScreenState extends State<MushafScreen> {
         boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.08), blurRadius: 10, offset: const Offset(0, 4))],
         border: Border.all(color: frameColor.withOpacity(0.1), width: 1),
       ),
-      child: IconButton(icon: Icon(icon, color: frameColor, size: 22), onPressed: onPressed),
+      child: IconButton(icon: Icon(icon, color: iconColor, size: 22), onPressed: onPressed),
     );
   }
 
@@ -174,7 +208,7 @@ class _MushafScreenState extends State<MushafScreen> {
                       Navigator.pop(context);
                       _openTafsir(surahId, surahName, verseNumber, verseText);
                     }),
-                    _buildOptionButton(Icons.bookmark_add, 'حفظ', Colors.orange, () {
+                    _buildOptionButton(Icons.bookmark_add, 'حفظ', Colors.purple, () {
                       Navigator.pop(context);
                       _saveVerse(surahId, verseNumber);
                     }),
@@ -182,7 +216,7 @@ class _MushafScreenState extends State<MushafScreen> {
                       Navigator.pop(context);
                       _setLastRead(surahId, verseNumber);
                     }),
-                    _buildOptionButton(Icons.share, 'مشاركة', Colors.purple, () {
+                    _buildOptionButton(Icons.share, 'مشاركة', Colors.orange, () {
                       Navigator.pop(context);
                       _shareVerse(surahName, verseNumber, verseText);
                     }),
@@ -216,11 +250,12 @@ class _MushafScreenState extends State<MushafScreen> {
     final key = '$surahId:$verseNumber';
     
     if (saved.contains(key)) {
-      _showSnack('الآية محفوظة مسبقاً');
+      _showSnack('الآية محفوظة مسبقاً في المفضلة');
     } else {
       saved.add(key);
       await prefs.setStringList('bookmarks', saved);
       _showSnack('✅ تم حفظ الآية في المفضلة');
+      _loadSavedData(); // 🌟 تحديث الشاشة لتظهر أيقونة الحفظ
     }
   }
 
@@ -229,6 +264,7 @@ class _MushafScreenState extends State<MushafScreen> {
     await prefs.setInt('last_read_surah', surahId);
     await prefs.setInt('last_read_verse', verseNumber);
     if (mounted) _showSnack('📍 تم تعيين علامة القراءة (تعليم) هنا');
+    _loadSavedData(); // 🌟 تحديث الشاشة لتظهر علامة التعليم وزر المتابعة
   }
 
   void _showSnack(String msg) {
@@ -312,12 +348,21 @@ class _MushafScreenState extends State<MushafScreen> {
   }
 }
 
+// 🌟 صفحة السورة (مع إضافة أيقونات التعليم والحفظ)
 class _MushafSurahPage extends StatefulWidget {
   final int surahId;
   final int? highlightedVerse;
+  final int? lastReadVerse;
+  final Set<String> bookmarks;
   final Function(String, int, String) onVerseTap;
 
-  const _MushafSurahPage({required this.surahId, this.highlightedVerse, required this.onVerseTap});
+  const _MushafSurahPage({
+    required this.surahId, 
+    this.highlightedVerse, 
+    this.lastReadVerse,
+    required this.bookmarks,
+    required this.onVerseTap
+  });
 
   @override
   State<_MushafSurahPage> createState() => _MushafSurahPageState();
@@ -369,6 +414,8 @@ class _MushafSurahPageState extends State<_MushafSurahPage> {
           _recognizers.add(recognizer);
           
           final isHighlighted = verseNumber == widget.highlightedVerse;
+          final isLastRead = verseNumber == widget.lastReadVerse;
+          final isBookmarked = widget.bookmarks.contains('${widget.surahId}:$verseNumber');
 
           textSpans.add(TextSpan(
             children: [
@@ -377,11 +424,34 @@ class _MushafSurahPageState extends State<_MushafSurahPage> {
                 recognizer: recognizer, 
                 style: TextStyle(backgroundColor: isHighlighted ? const Color(0xFFF1E5C9) : null)
               ),
+              // رقم الآية
               TextSpan(
                 text: '﴿$arabicNum﴾ ', 
-                style: TextStyle(color: frameColor, fontSize: 22, backgroundColor: isHighlighted ? const Color(0xFFF1E5C9) : null), 
+                style: TextStyle(
+                  color: frameColor, 
+                  fontSize: 22, 
+                  backgroundColor: isHighlighted ? const Color(0xFFF1E5C9) : null
+                ), 
                 recognizer: recognizer
               ),
+              // 🌟 أيقونة التعليم (تظهر بجانب الآية)
+              if (isLastRead)
+                WidgetSpan(
+                  alignment: PlaceholderAlignment.middle,
+                  child: Padding(
+                    padding: const EdgeInsets.only(left: 4, right: 4),
+                    child: Icon(Icons.push_pin, color: Colors.redAccent, size: 18),
+                  ),
+                ),
+              // 🌟 أيقونة الحفظ (تظهر بجانب الآية)
+              if (isBookmarked)
+                WidgetSpan(
+                  alignment: PlaceholderAlignment.middle,
+                  child: Padding(
+                    padding: const EdgeInsets.only(left: 4, right: 4),
+                    child: Icon(Icons.bookmark, color: Colors.purple, size: 18),
+                  ),
+                ),
             ],
           ));
         }
