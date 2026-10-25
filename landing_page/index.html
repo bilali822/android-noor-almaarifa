@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>نور المعرفة | مساعدك الإسلامي الذكي</title>
+    <!-- استخدام خط Cairo من جوجل -->
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;900&display=swap" rel="stylesheet">
+    <!-- استخدام Tailwind CSS للتصميم السريع -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#155E35',
+                        gold: '#D4AF37',
+                        dark: '#0B101E',
+                        beige: '#F8F4EC',
+                    },
+                    fontFamily: {
+                        sans: ['Cairo', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body { font-family: 'Cairo', sans-serif; }
+        .glass { background: rgba(255, 255, 255, 0.9); backdrop-filter: blur(10px); }
+        .hero-bg {
+            background: radial-gradient(circle at top right, rgba(212, 175, 55, 0.15), transparent 40%),
+                        radial-gradient(circle at bottom left, rgba(21, 94, 53, 0.1), transparent 40%),
+                        #F8F4EC;
+        }
+        .islamic-pattern {
+            background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23155E35' fill-opacity='0.03'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+        }
+    </style>
+</head>
+<body class="bg-beige text-gray-800 antialiased overflow-x-hidden">
+
+    <!-- شريط التنقل -->
+    <nav class="fixed w-full z-50 glass shadow-sm border-b border-primary/10">
+        <div class="max-w-6xl mx-auto px-4 py-4 flex justify-between items-center">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-full bg-primary flex items-center justify-center text-gold text-xl font-bold">ن</div>
+                <span class="text-2xl font-bold text-primary">نور المعرفة</span>
+            </div>
+            <a href="#download" class="bg-primary text-white px-6 py-2 rounded-full font-bold hover:bg-primary/90 transition shadow-lg shadow-primary/30">تحميل التطبيق</a>
+        </div>
+    </nav>
+
+    <!-- القسم الرئيسي (Hero) -->
+    <section class="hero-bg islamic-pattern pt-32 pb-20 px-4">
+        <div class="max-w-4xl mx-auto text-center">
+            <div class="inline-block p-2 rounded-full bg-gold/10 border border-gold/30 mb-6 px-4">
+                <span class="text-gold font-bold text-sm">✨ الإصدار الأول متاح الآن</span>
+            </div>
+            <h1 class="text-4xl md:text-6xl font-black text-primary mb-6 leading-tight">
+                رفيقك الذكي في <br>
+                <span class="text-gold">رحلة المعرفة الإسلامية</span>
+            </h1>
+            <p class="text-lg md:text-xl text-gray-600 mb-10 max-w-2xl mx-auto leading-relaxed">
+                تطبيق "نور المعرفة" يجمع لك المصحف الشريف، 41 ألف حديث نبوي، التفاسير الكاملة، ومساعد ذكاء اصطناعي إسلامي في مكان واحد. تصميم فخم وتجربة استخدام لا مثيل لها.
+            </p>
+            
+            <div class="flex flex-col sm:flex-row justify-center items-center gap-4">
+                <!-- 🌟 رابط التحميل من MediaFire - استبدل الرابط هنا -->
+                <a href="https://www.mediafire.com/file/YOUR_LINK_HERE/app-release.apk/file" target="_blank" class="flex items-center gap-3 bg-primary text-white text-xl font-bold px-10 py-4 rounded-2xl hover:bg-primary/90 transition shadow-xl shadow-primary/30 w-full sm:w-auto justify-center">
+                    <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+                    تحميل التطبيق (APK)
+                </a>
+                <span class="text-sm text-gray-500 font-semibold">متوفر لأجهزة الأندرويد</span>
+            </div>
+        </div>
+    </section>
+
+    <!-- قسم المميزات -->
+    <section class="py-20 px-4 bg-white">
+        <div class="max-w-6xl mx-auto">
+            <div class="text-center mb-16">
+                <h2 class="text-3xl font-bold text-primary mb-4">لماذا نور المعرفة؟</h2>
+                <p class="text-gray-500">صُمم التطبيق ليكون رفيقك اليومي، بأعلى معايير الجودة والاحترافية.</p>
+            </div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+                <!-- ميزة 1 -->
+                <div class="bg-beige p-8 rounded-3xl border border-primary/5 hover:shadow-lg transition group">
+                    <div class="w-14 h-14 bg-primary/10 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition">
+                        <svg class="w-8 h-8 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path></svg>
+                    </div>
+                    <h3 class="text-xl font-bold text-gray-800 mb-3">المصحف الشريف</h3>
+                    <p class="text-gray-600 text-sm leading-relaxed">قراءة سلسة بخط عثماني حفص، مع إمكانية التفسير، الحفظ، والتعليم.</p>
+                </div>
+                <!-- ميزة 2 -->
+                <div class="bg-beige p-8 rounded-3xl border border-primary/5 hover:shadow-lg transition group">
+                    <div class="w-14 h-14 bg-primary/10 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition">
+                        <svg class="w-8 h-8 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg>
+                    </div>
+                    <h3 class="text-xl font-bold text-gray-800 mb-3">مكتبة الحديث</h3>
+                    <p class="text-gray-600 text-sm leading-relaxed">أكثر من 41 ألف حديث نبوي من 12 كتاباً، مع بحث ذكي وتصنيف دقيق.</p>
+                </div>
+                <!-- ميزة 3 -->
+                <div class="bg-beige p-8 rounded-3xl border border-primary/5 hover:shadow-lg transition group">
+                    <div class="w-14 h-14 bg-primary/10 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition">
+                        <svg class="w-8 h-8 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"></path></svg>
+                    </div>
+                    <h3 class="text-xl font-bold text-gray-800 mb-3">الذكاء الاصطناعي</h3>
+                    <p class="text-gray-600 text-sm leading-relaxed">مساعد "نور" الذكي للإجابة على أسئلتك الدينية وتوضيح المفاهيم بذكاء.</p>
+                </div>
+                <!-- ميزة 4 -->
+                <div class="bg-beige p-8 rounded-3xl border border-primary/5 hover:shadow-lg transition group">
+                    <div class="w-14 h-14 bg-primary/10 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition">
+                        <svg class="w-8 h-8 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path></svg>
+                    </div>
+                    <h3 class="text-xl font-bold text-gray-800 mb-3">مواقيت الصلاة</h3>
+                    <p class="text-gray-600 text-sm leading-relaxed">إشعارات دائمة بمواقيت الصلاة والتاريخ الهجري حسب موقعك بدقة.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- قسم التحميل السفلي -->
+    <section id="download" class="py-24 px-4 bg-dark relative overflow-hidden">
+        <div class="absolute inset-0 opacity-10" style="background-image: radial-gradient(#D4AF37 2px, transparent 2px); background-size: 30px 30px;"></div>
+        <div class="max-w-3xl mx-auto text-center relative z-10">
+            <h2 class="text-3xl md:text-5xl font-bold text-white mb-6">ابدأ رحلتك الإيمانية الآن</h2>
+            <p class="text-gray-400 mb-10 text-lg">حمل التطبيق الآن وانضم لآلاف المستخدمين الذين يثقون بنور المعرفة.</p>
+            
+            <!-- 🌟 رابط التحميل من MediaFire - استبدل الرابط هنا أيضاً -->
+            <a href="https://www.mediafire.com/file/YOUR_LINK_HERE/app-release.apk/file" target="_blank" class="inline-flex items-center gap-3 bg-gold text-dark text-xl font-bold px-12 py-4 rounded-2xl hover:bg-white transition shadow-[0_0_20px_rgba(212,175,55,0.4)]">
+                <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+                تحميل التطبيق الآن (مجاناً)
+            </a>
+        </div>
+    </section>
+
+    <!-- التذييل (Footer) -->
+    <footer class="bg-white py-12 border-t border-gray-100">
+        <div class="max-w-6xl mx-auto px-4 flex flex-col md:flex-row justify-between items-center gap-6">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-full bg-primary flex items-center justify-center text-gold text-xl font-bold">ن</div>
+                <span class="text-xl font-bold text-primary">نور المعرفة</span>
+            </div>
+            
+            <div class="flex gap-6 text-sm font-bold text-gray-500">
+                <!-- معلومات الدعم الفني -->
+                <a href="tel:+96181274729" class="hover:text-primary transition flex items-center gap-2">
+                    <span>📞</span> +961 81 27 47 29
+                </a>
+                <a href="mailto:minasatalma3rifa@gmail.com" class="hover:text-primary transition flex items-center gap-2">
+                    <span>✉️</span> الدعم الفني
+                </a>
+            </div>
+            
+            <p class="text-gray-400 text-sm">© 2026 نور المعرفة. جميع الحقوق محفوظة.</p>
+        </div>
+    </footer>
+
+</body>
+</html>

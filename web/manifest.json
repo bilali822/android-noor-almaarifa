@@ -3,10 +3,33 @@
     "short_name": "نور المعرفة",
     "start_url": ".",
     "display": "standalone",
-    "background_color": "#0B101E",
-    "theme_color": "#C5A880",
+    "background_color": "#0b101e",
+    "theme_color": "#155e35",
     "description": "منصة إسلامية للقرآن الكريم والتفاسير",
     "orientation": "portrait-primary",
     "prefer_related_applications": false,
-    "icons": []
+    "icons": [
+        {
+            "src": "icons/Icon-192.png",
+            "sizes": "192x192",
+            "type": "image/png"
+        },
+        {
+            "src": "icons/Icon-512.png",
+            "sizes": "512x512",
+            "type": "image/png"
+        },
+        {
+            "src": "icons/Icon-maskable-192.png",
+            "sizes": "192x192",
+            "type": "image/png",
+            "purpose": "maskable"
+        },
+        {
+            "src": "icons/Icon-maskable-512.png",
+            "sizes": "512x512",
+            "type": "image/png",
+            "purpose": "maskable"
+        }
+    ]
 }

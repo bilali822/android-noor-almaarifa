@@ -25,3 +25,5 @@ Thumbs.db
 # مهم: نُبقي assets/noor_quran.db مرفوعاً لأن GitHub Actions يحتاجه
 !assets/noor_quran.db
 assets/noor_quran.db
+keystore-base64.txt
+keystore-base64.txt
