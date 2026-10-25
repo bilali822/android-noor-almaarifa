@@ -7,11 +7,7 @@ class DatabaseHelper {
   Future<void> init() async {}
 
   Future<List<Map<String, Object?>>> getSurahs() async {
-    return [
-      {'id':1,'name_ar':'الفاتحة','verses_count':7}, {'id':2,'name_ar':'البقرة','verses_count':286},
-      {'id':112,'name_ar':'الإخلاص','verses_count':4}, {'id':113,'name_ar':'الفلق','verses_count':5},
-      {'id':114,'name_ar':'الناس','verses_count':6},
-    ];
+    return [{'id':1,'name_ar':'الفاتحة','verses_count':7}, {'id':2,'name_ar':'البقرة','verses_count':286}];
   }
 
   Future<List<Map<String, Object?>>> getSurah(int id) async {
@@ -19,8 +15,8 @@ class DatabaseHelper {
     return all.where((e) => e['id'] == id).toList();
   }
 
-  Future<List<Map<String, Object?>>> getVerses(int surahId) async {
-    if (surahId == 1) {
+  Future<List<Map<String, Object?>>> getVersesByPage(int pageNumber) async {
+    if (pageNumber == 1) {
       return [
         {'surah_id': 1, 'surah_name': 'الفاتحة', 'verse_number': 1, 'text_ar': 'بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ'},
         {'surah_id': 1, 'surah_name': 'الفاتحة', 'verse_number': 2, 'text_ar': 'الْحَمْدُ لِلَّهِ رَبِّ الْعَالَمِينَ'},
@@ -31,15 +27,24 @@ class DatabaseHelper {
         {'surah_id': 1, 'surah_name': 'الفاتحة', 'verse_number': 7, 'text_ar': 'صِرَاطَ الَّذِينَ أَنْعَمْتَ عَلَيْهِمْ غَيْرِ الْمَغْضُوبِ عَلَيْهِمْ وَلَا الضَّالِّينَ'},
       ];
     }
-    if (surahId == 112) {
+    if (pageNumber == 2) {
       return [
-        {'surah_id': 112, 'surah_name': 'الإخلاص', 'verse_number': 1, 'text_ar': 'قُلْ هُوَ اللَّهُ أَحَدٌ'},
-        {'surah_id': 112, 'surah_name': 'الإخلاص', 'verse_number': 2, 'text_ar': 'اللَّهُ الصَّمَدُ'},
-        {'surah_id': 112, 'surah_name': 'الإخلاص', 'verse_number': 3, 'text_ar': 'لَمْ يَلِدْ وَلَمْ يُولَدْ'},
-        {'surah_id': 112, 'surah_name': 'الإخلاص', 'verse_number': 4, 'text_ar': 'وَلَمْ يَكُن لَّهُ كُفُوًا أَحَدٌ'},
+        {'surah_id': 2, 'surah_name': 'البقرة', 'verse_number': 1, 'text_ar': 'الم'},
+        {'surah_id': 2, 'surah_name': 'البقرة', 'verse_number': 2, 'text_ar': 'ذَٰلِكَ الْكِتَابُ لَا رَيْبَ ۛ فِيهِ ۛ هُدًى لِّلْمُتَّقِينَ'},
       ];
     }
-    return [];
+    return []; 
+  }
+
+  Future<int> getSurahStartPage(int surahId) async {
+    if (surahId == 1) return 1;
+    if (surahId == 2) return 2;
+    return 1;
+  }
+
+  Future<List<Map<String, Object?>>> getVerses(int surahId) async {
+    final all = await getVersesByPage(1);
+    return all.where((v) => v['surah_id'] == surahId).toList();
   }
 
   Future<List<Map<String, Object?>>> getVerse(int surahId, int verseNumber) async {
@@ -63,11 +68,8 @@ class DatabaseHelper {
     return allBooks.where((b) => available.contains(b['key'])).toList();
   }
 
-  // 🌟 دالة البحث الذكية للويب (تتجاهل الحركات)
   Future<List<Map<String, Object?>>> searchVerses(String query, {int limit = 100}) async {
-    final normalizedQuery = ArabicNormalizer.normalize(query);
-    final all = await getVerses(1) + await getVerses(2) + await getVerses(112);
-    return all.where((v) => ArabicNormalizer.normalize(v['text_ar'] as String).contains(normalizedQuery)).take(limit).toList();
+    return [];
   }
 
   Future<List<Map<String, Object?>>> getHadiths() async => [];
