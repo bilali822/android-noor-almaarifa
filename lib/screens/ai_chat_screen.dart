@@ -5,7 +5,6 @@ import 'package:google_generative_ai/google_generative_ai.dart';
 import '../models/chat_history.dart';
 import '../services/chat_history_service.dart';
 import 'chat_history_screen.dart';
-import '../widgets/support_card.dart';
 
 const Color bgColor = Color(0xFF0B101E);
 const Color aiBubbleColor = Color(0xFF1E293B);
@@ -45,8 +44,9 @@ class _AIChatScreenState extends State<AIChatScreen> {
   void _initSession() {
     if (_apiKey.isNotEmpty) {
       try {
+        // استخدام الموديل الأحدث والمستقر
         final model = GenerativeModel(
-          model: 'gemini-flash-lite-latest',
+          model: 'gemini-1.5-flash',
           apiKey: _apiKey,
           generationConfig: GenerationConfig(maxOutputTokens: 2048),
           systemInstruction: Content.system('أنت "مساعد نور المعرفة"، مساعد ذكي مخصص لتطبيق إسلامي. أجب على سؤال المستخدم مباشرة.'),
@@ -92,16 +92,26 @@ class _AIChatScreenState extends State<AIChatScreen> {
     final text = _inputCtrl.text.trim();
     if (text.isEmpty) return;
 
+    // التحقق من المفتاح
     if (_apiKey.isEmpty) {
-      _showSupportDialog(); return;
+      setState(() {
+        _messages.add(AIMessage(text: text, isUser: true));
+        _messages.add(AIMessage(text: '❌ خطأ: مفتاح API (GEMINI_API_KEY) غير موجود. يرجى التأكد من إضافته في إعدادات GitHub Secrets.', isUser: false));
+      });
+      _inputCtrl.clear();
+      _scrollToBottom();
+      return;
     }
     
+    if (_chatSession == null) _initSession();
     if (_chatSession == null) {
-      _initSession();
-      if (_chatSession == null) {
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('تعذر تهيئة الذكاء الاصطناعي. يرجى إعادة تشغيل التطبيق.'), backgroundColor: Colors.red));
-        return;
-      }
+      setState(() {
+        _messages.add(AIMessage(text: text, isUser: true));
+        _messages.add(AIMessage(text: '❌ خطأ: تعذر الاتصال بالذكاء الاصطناعي. يرجى المحاولة لاحقاً.', isUser: false));
+      });
+      _inputCtrl.clear();
+      _scrollToBottom();
+      return;
     }
 
     _inputCtrl.clear();
@@ -125,24 +135,24 @@ class _AIChatScreenState extends State<AIChatScreen> {
       await _saveCurrentConversation();
     } catch (e) {
       if (mounted) {
-        setState(() { _isWaiting = false; _messages.add(AIMessage(text: 'عذراً، حدث خطأ في الاتصال. يرجى التواصل مع الدعم الفني.', isUser: false)); });
-        _scrollToBottom(); _showSupportDialog();
+        setState(() {
+          _isWaiting = false;
+          // عرض الخطأ الحقيقي داخل الشات لكي نعرف السبب إذا تكرر
+          _messages.add(AIMessage(text: '❌ عذراً، حدث خطأ في الاتصال:\n$e', isUser: false));
+        });
+        _scrollToBottom();
       }
     }
-  }
-
-  void _showSupportDialog() {
-    showDialog(context: context, builder: (context) => const Dialog(backgroundColor: Colors.transparent, insetPadding: EdgeInsets.all(20), child: SupportCard()));
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: bgColor,
       extendBodyBehindAppBar: true,
       extendBody: true,
-      backgroundColor: bgColor,
       appBar: AppBar(
-        backgroundColor: bgColor, elevation: 0,
+        backgroundColor: Colors.transparent, elevation: 0,
         title: const Row(mainAxisAlignment: MainAxisAlignment.center, children: [Icon(Icons.auto_awesome, color: goldAccent), SizedBox(width: 8), Text('مساعد نور الذكي', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 18)), SizedBox(width: 40)]),
         leading: IconButton(icon: const Icon(Icons.arrow_back_ios_new, color: Colors.white, size: 20), onPressed: () => Navigator.pop(context)),
         actions: [
@@ -160,7 +170,7 @@ class _AIChatScreenState extends State<AIChatScreen> {
             child: _messages.isEmpty && !_isWaiting
                 ? _buildEmptyState()
                 : ListView.builder(
-                    controller: _scrollCtrl, padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
+                    controller: _scrollCtrl, padding: EdgeInsets.only(top: MediaQuery.of(context).padding.top + 60, left: 16, right: 16, bottom: 20),
                     itemCount: _messages.length + (_isWaiting ? 1 : 0),
                     itemBuilder: (context, i) {
                       if (i == _messages.length && _isWaiting) return const _BouncingDots();
