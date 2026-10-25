@@ -4,7 +4,7 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter/services.dart';
 import 'package:screenshot/screenshot.dart';
 import 'package:share_plus/share_plus.dart';
-import 'package:path_provider/path_provider.dart';
+
 import '../db/database_helper.dart';
 import '../theme/app_colors.dart';
 import '../widgets/tafsir_sheet.dart';
@@ -149,11 +149,14 @@ class _MushafScreenState extends State<MushafScreen> {
 
   void _showVerseOptions(int surahId, String surahName, int verseNumber, String verseText) {
     showModalBottomSheet(
-      context: context, backgroundColor: Colors.transparent,
-      builder: (context) => Container(
-        decoration: const BoxDecoration(color: Colors.white, borderRadius: BorderRadius.vertical(top: Radius.circular(30))),
-        padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 16),
-        child: Column(
+      context: context, 
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true, // 🌟 يسمح للنافذة بالتمدد
+      builder: (context) => SafeArea( // 🌟 يمنع قص الأزرار في أسفل الشاشة
+        child: Container(
+          decoration: const BoxDecoration(color: Colors.white, borderRadius: BorderRadius.vertical(top: Radius.circular(30))),
+          padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
+          child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             Container(width: 40, height: 4, decoration: BoxDecoration(color: Colors.grey[300], borderRadius: BorderRadius.circular(2))),
@@ -186,6 +189,7 @@ class _MushafScreenState extends State<MushafScreen> {
           ],
         ),
       ),
+      ), // إغلاق SafeArea
     );
   }
 
@@ -233,10 +237,13 @@ class _MushafScreenState extends State<MushafScreen> {
       final image = await _screenshotController.captureFromWidget(
         Material(color: Colors.transparent, child: Container(padding: const EdgeInsets.all(32), decoration: BoxDecoration(color: const Color(0xFFF4EAE0), borderRadius: BorderRadius.circular(24), border: Border.all(color: AppColors.primary, width: 2)), child: Column(mainAxisSize: MainAxisSize.min, children: [Text('﴿ $verseText ﴾', textDirection: TextDirection.rtl, textAlign: TextAlign.center, style: const TextStyle(color: AppColors.text, fontSize: 28, height: 2.2, fontFamily: 'UthmanicHafs')), const SizedBox(height: 16), Text('سورة $surahName - الآية $verseNumber', style: const TextStyle(color: AppColors.primary, fontWeight: FontWeight.bold, fontSize: 14)), const SizedBox(height: 16), const Text('تطبيق نور المعرفة', style: TextStyle(color: AppColors.textMuted, fontSize: 10))]))), delay: const Duration(milliseconds: 10),
       );
-      final tempDir = await getTemporaryDirectory();
-      final file = await File('${tempDir.path}/ayah_share.png').create();
-      await file.writeAsBytes(image);
-      await Share.shareXFiles([XFile(file.path)], text: 'آية من القرآن الكريم');
+      // 🌟 مشاركة البيانات مباشرة (يعمل على الويب والموبايل بكفاءة)
+      final xFile = XFile.fromData(
+        image,
+        mimeType: 'image/png',
+        name: 'ayah_${surahName}_$verseNumber.png',
+      );
+      await Share.shareXFiles([xFile], text: 'آية من القرآن الكريم');
     } catch (e) { _showSnack('تعذر مشاركة الصورة.'); }
   }
 
