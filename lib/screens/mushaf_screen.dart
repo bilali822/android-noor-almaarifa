@@ -289,7 +289,7 @@ class _MushafScreenState extends State<MushafScreen> {
   }
 }
 
-// 🌟 صفحة السورة (بدون إطارات - شاشة كاملة)
+// 🌟 صفحة السورة (بدون إطارات - شاشة كاملة ومتوسطة)
 class _MushafSurahPage extends StatefulWidget {
   final int surahId;
   final int? highlightedVerse;
@@ -303,14 +303,12 @@ class _MushafSurahPage extends StatefulWidget {
 
 class _MushafSurahPageState extends State<_MushafSurahPage> {
   final ScrollController _scrollController = ScrollController();
-  final List<TapGestureRecognizer> _recognizers = [];
   final Color frameColor = const Color(0xFF155E35);
   final Color textColor = const Color(0xFF1A1A1A);
 
   @override
   void dispose() {
     _scrollController.dispose();
-    for (var r in _recognizers) { r.dispose(); }
     super.dispose();
   }
 
@@ -334,45 +332,68 @@ class _MushafSurahPageState extends State<_MushafSurahPage> {
 
         final surahName = surahInfo.first['name_ar'] as String;
 
-        for (var r in _recognizers) { r.dispose(); }
-        _recognizers.clear();
-
         final List<InlineSpan> textSpans = [];
         for (var v in verses) {
           final verseNumber = v['verse_number'] as int;
           final arabicNum = _toArabicNumeral(verseNumber);
-          final recognizer = TapGestureRecognizer()..onTap = () => widget.onVerseTap(surahName, verseNumber, v['text_ar'] as String);
-          _recognizers.add(recognizer);
+          
+          // 🌟 تم إصلاح النقر هنا (لم نعد ندمر الـ Recognizer)
+          final recognizer = TapGestureRecognizer()
+            ..onTap = () => widget.onVerseTap(surahName, verseNumber, v['text_ar'] as String);
+            
           final isHighlighted = verseNumber == widget.highlightedVerse;
 
           textSpans.add(TextSpan(
             children: [
-              TextSpan(text: '${v['text_ar']} ', recognizer: recognizer, style: TextStyle(backgroundColor: isHighlighted ? const Color(0xFFF1E5C9) : null)),
-              TextSpan(text: '﴿$arabicNum﴾ ', style: TextStyle(color: frameColor, fontSize: 22, backgroundColor: isHighlighted ? const Color(0xFFF1E5C9) : null), recognizer: recognizer),
+              TextSpan(
+                text: '${v['text_ar']} ', 
+                recognizer: recognizer, 
+                style: TextStyle(backgroundColor: isHighlighted ? const Color(0xFFF1E5C9) : null)
+              ),
+              TextSpan(
+                text: '﴿$arabicNum﴾ ', 
+                style: TextStyle(color: frameColor, fontSize: 22, backgroundColor: isHighlighted ? const Color(0xFFF1E5C9) : null), 
+                recognizer: recognizer
+              ),
             ],
           ));
         }
 
-        // الشاشة الكاملة بدون حواف
         return SafeArea(
-          child: SingleChildScrollView(
-            controller: _scrollController,
-            padding: const EdgeInsets.only(top: 80, left: 20, right: 20, bottom: 40), // مساحة للأزرار العلوية
-            child: Column(
-              children: [
-                Padding(
-                  padding: const EdgeInsets.only(bottom: 24),
-                  child: Text('سورة $surahName', style: TextStyle(fontFamily: 'UthmanicHafs', fontSize: 28, fontWeight: FontWeight.bold, color: frameColor)),
+          child: LayoutBuilder(
+            builder: (context, constraints) {
+              return SingleChildScrollView(
+                controller: _scrollController,
+                // مساحة علوية للأزرار العائمة
+                padding: const EdgeInsets.only(top: 80, left: 20, right: 20, bottom: 40),
+                child: ConstrainedBox(
+                  // 🌟 نجبر النص أن يتوسط الشاشة عمودياً إذا كانت السورة قصيرة
+                  constraints: BoxConstraints(minHeight: constraints.maxHeight - 120),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center, // توسيط المحتوى
+                    children: [
+                      Padding(
+                        padding: const EdgeInsets.only(bottom: 24),
+                        child: Text('سورة $surahName', style: TextStyle(fontFamily: 'UthmanicHafs', fontSize: 28, fontWeight: FontWeight.bold, color: frameColor)),
+                      ),
+                      if (widget.surahId != 1 && widget.surahId != 9) 
+                        Padding(
+                          padding: const EdgeInsets.only(bottom: 24), 
+                          child: Text('بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ', style: TextStyle(fontFamily: 'UthmanicHafs', fontSize: 24, color: frameColor, fontWeight: FontWeight.bold))
+                        ),
+                      RichText(
+                        textDirection: TextDirection.rtl, 
+                        textAlign: TextAlign.justify, 
+                        text: TextSpan(
+                          style: TextStyle(fontFamily: 'UthmanicHafs', fontSize: 28, height: 2.6, color: textColor), 
+                          children: textSpans
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
-                if (widget.surahId != 1 && widget.surahId != 9) 
-                  Padding(padding: const EdgeInsets.only(bottom: 24), child: Text('بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ', style: TextStyle(fontFamily: 'UthmanicHafs', fontSize: 24, color: frameColor, fontWeight: FontWeight.bold))),
-                RichText(
-                  textDirection: TextDirection.rtl, 
-                  textAlign: TextAlign.justify, 
-                  text: TextSpan(style: TextStyle(fontFamily: 'UthmanicHafs', fontSize: 28, height: 2.6, color: textColor), children: textSpans),
-                ),
-              ],
-            ),
+              );
+            }
           ),
         );
       },
