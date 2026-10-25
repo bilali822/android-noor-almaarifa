@@ -34,7 +34,6 @@ class _HomeScreenState extends State<HomeScreen> {
     _updateTime();
     _timer = Timer.periodic(const Duration(seconds: 1), (Timer t) => _updateTime());
     
-    // تأجيل طلب الإشعارات والموقع لكي لا يتجمد التطبيق
     WidgetsBinding.instance.addPostFrameCallback((_) {
       Future.delayed(const Duration(seconds: 2), () {
         _initNotifications();
@@ -47,7 +46,6 @@ class _HomeScreenState extends State<HomeScreen> {
     await NotificationService.instance.showWelcomeNotification();
     await NotificationService.instance.scheduleDailyNotification();
     
-    // تحديث مواقيت الصلاة ثم تحديث الشاشة
     await NotificationService.instance.updatePrayerTimesByLocation();
     if (mounted) setState(() {});
   }
@@ -94,67 +92,70 @@ class _HomeScreenState extends State<HomeScreen> {
               bottom: false,
               child: Column(
                 children: [
-                  // الهيدر
+                  // 🌟 الهيدر (تم إصلاحه باستخدام Expanded)
                   Padding(
-                    padding: const EdgeInsets.fromLTRB(24, 20, 24, 16),
+                    padding: EdgeInsets.fromLTRB(24, MediaQuery.of(context).padding.top + 40, 24, 16),
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            const Text('السلام عليكم', style: TextStyle(color: AppColors.text, fontSize: 24, fontWeight: FontWeight.w900)),
-                            const SizedBox(height: 4),
-                            Text('$_name، نتمنى لك يوماً مباركاً', style: const TextStyle(color: AppColors.textMuted, fontSize: 13)),
-                            const SizedBox(height: 12),
-                            // 🌟 البطاقة الزمنية ومواقيت الصلاة
-                            Wrap(
-                              spacing: 8,
-                              runSpacing: 8,
-                              children: [
-                                Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                                  decoration: BoxDecoration(
-                                    color: Colors.white,
-                                    borderRadius: BorderRadius.circular(20),
-                                    boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 10, offset: const Offset(0, 4))],
-                                    border: Border.all(color: AppColors.primary.withOpacity(0.1)),
+                        Expanded( // 🌟 هذا هو الحل لمنع خروج النص
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const Text('السلام عليكم', style: TextStyle(color: AppColors.text, fontSize: 22, fontWeight: FontWeight.w900)),
+                              const SizedBox(height: 4),
+                              Text('$_name، نتمنى لك يوماً مباركاً', style: const TextStyle(color: AppColors.textMuted, fontSize: 13)),
+                              const SizedBox(height: 12),
+                              // 🌟 البطاقات الزمنية
+                              Wrap(
+                                spacing: 8,
+                                runSpacing: 8,
+                                children: [
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                                    decoration: BoxDecoration(
+                                      color: Colors.white,
+                                      borderRadius: BorderRadius.circular(20),
+                                      boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 10, offset: const Offset(0, 4))],
+                                      border: Border.all(color: AppColors.primary.withOpacity(0.1)),
+                                    ),
+                                    child: Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        const Icon(Icons.access_time_filled, color: AppColors.primary, size: 14),
+                                        const SizedBox(width: 4),
+                                        Text(_timeString, style: const TextStyle(color: AppColors.primary, fontSize: 12, fontWeight: FontWeight.bold, fontFamily: 'Cairo')),
+                                        const SizedBox(width: 8),
+                                        Container(width: 1, height: 12, color: Colors.grey.shade300),
+                                        const SizedBox(width: 8),
+                                        const Icon(Icons.calendar_month, color: AppColors.primary, size: 14),
+                                        const SizedBox(width: 4),
+                                        Text(_hijriDate, style: const TextStyle(color: AppColors.textMuted, fontSize: 12, fontWeight: FontWeight.bold, fontFamily: 'Cairo')),
+                                      ],
+                                    ),
                                   ),
-                                  child: Row(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      const Icon(Icons.access_time_filled, color: AppColors.primary, size: 14),
-                                      const SizedBox(width: 4),
-                                      Text(_timeString, style: const TextStyle(color: AppColors.primary, fontSize: 12, fontWeight: FontWeight.bold, fontFamily: 'Cairo')),
-                                      const SizedBox(width: 8),
-                                      Container(width: 1, height: 12, color: Colors.grey.shade300),
-                                      const SizedBox(width: 8),
-                                      const Icon(Icons.calendar_month, color: AppColors.primary, size: 14),
-                                      const SizedBox(width: 4),
-                                      Text(_hijriDate, style: const TextStyle(color: AppColors.textMuted, fontSize: 12, fontWeight: FontWeight.bold, fontFamily: 'Cairo')),
-                                    ],
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                                    decoration: BoxDecoration(
+                                      color: Colors.white,
+                                      borderRadius: BorderRadius.circular(20),
+                                      boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 10, offset: const Offset(0, 4))],
+                                      border: Border.all(color: AppColors.primary.withOpacity(0.1)),
+                                    ),
+                                    child: Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        const Icon(Icons.mosque, color: AppColors.primary, size: 14),
+                                        const SizedBox(width: 4),
+                                        Text('${NotificationService.instance.nextPrayerName}: ${NotificationService.instance.nextPrayerTime}', style: const TextStyle(color: AppColors.primary, fontSize: 12, fontWeight: FontWeight.bold, fontFamily: 'Cairo')),
+                                      ],
+                                    ),
                                   ),
-                                ),
-                                Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                                  decoration: BoxDecoration(
-                                    color: Colors.white,
-                                    borderRadius: BorderRadius.circular(20),
-                                    boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 10, offset: const Offset(0, 4))],
-                                    border: Border.all(color: AppColors.primary.withOpacity(0.1)),
-                                  ),
-                                  child: Row(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      const Icon(Icons.mosque, color: AppColors.primary, size: 14),
-                                      const SizedBox(width: 4),
-                                      Text('${NotificationService.instance.nextPrayerName}: ${NotificationService.instance.nextPrayerTime}', style: const TextStyle(color: AppColors.primary, fontSize: 12, fontWeight: FontWeight.bold, fontFamily: 'Cairo')),
-                                    ],
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ],
+                                ],
+                              ),
+                            ],
+                          ),
                         ),
                         Row(
                           children: [
@@ -182,7 +183,6 @@ class _HomeScreenState extends State<HomeScreen> {
                       padding: const EdgeInsets.symmetric(horizontal: 24),
                       child: Column(
                         children: [
-                          // كارت الآية (الرئيسي)
                           BouncyTap(
                             onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const MushafScreen())),
                             child: Container(
@@ -206,7 +206,6 @@ class _HomeScreenState extends State<HomeScreen> {
                           ),
                           const SizedBox(height: 24),
 
-                          // الكروت الستة (شبكة 2x3)
                           GridView.count(
                             crossAxisCount: 2,
                             shrinkWrap: true,
@@ -215,24 +214,12 @@ class _HomeScreenState extends State<HomeScreen> {
                             mainAxisSpacing: 16,
                             childAspectRatio: 1.05,
                             children: [
-                              _buildFeatureCard('المصحف', Icons.auto_stories, () {
-                                Navigator.push(context, MaterialPageRoute(builder: (_) => const MushafScreen()));
-                              }),
-                              _buildFeatureCard('تفسير القرآن', Icons.import_contacts, () {
-                                Navigator.push(context, MaterialPageRoute(builder: (_) => const ChatScreen()));
-                              }),
-                              _buildFeatureCard('الذكاء الاصطناعي', Icons.psychology, () {
-                                Navigator.push(context, MaterialPageRoute(builder: (_) => const AIChatScreen()));
-                              }),
-                              _buildFeatureCard('الحديث', Icons.menu_book, () {
-                                Navigator.push(context, MaterialPageRoute(builder: (_) => const HadithScreen()));
-                              }),
-                              _buildFeatureCard('الإعدادات', Icons.settings, () {
-                                Navigator.push(context, MaterialPageRoute(builder: (_) => const SettingsScreen()));
-                              }),
-                              _buildFeatureCard('المحفوظات', Icons.bookmark, () {
-                                Navigator.push(context, MaterialPageRoute(builder: (_) => const BookmarksScreen()));
-                              }),
+                              _buildFeatureCard('المصحف', Icons.auto_stories, () { Navigator.push(context, MaterialPageRoute(builder: (_) => const MushafScreen())); }),
+                              _buildFeatureCard('تفسير القرآن', Icons.import_contacts, () { Navigator.push(context, MaterialPageRoute(builder: (_) => const ChatScreen())); }),
+                              _buildFeatureCard('الذكاء الاصطناعي', Icons.psychology, () { Navigator.push(context, MaterialPageRoute(builder: (_) => const AIChatScreen())); }),
+                              _buildFeatureCard('الحديث', Icons.menu_book, () { Navigator.push(context, MaterialPageRoute(builder: (_) => const HadithScreen())); }),
+                              _buildFeatureCard('الإعدادات', Icons.settings, () { Navigator.push(context, MaterialPageRoute(builder: (_) => const SettingsScreen())); }),
+                              _buildFeatureCard('المحفوظات', Icons.bookmark, () { Navigator.push(context, MaterialPageRoute(builder: (_) => const BookmarksScreen())); }),
                             ],
                           ),
                           const SizedBox(height: 100),
@@ -246,7 +233,6 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
         ),
       ),
-      // شريط التنقل السفلي
       bottomNavigationBar: Center(
         heightFactor: 1,
         child: ConstrainedBox(
