@@ -1,8 +1,8 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:screenshot/screenshot.dart';
 import 'package:share_plus/share_plus.dart';
-import 'package:path_provider/path_provider.dart';
 import '../db/database_helper.dart';
 import '../theme/app_colors.dart';
 import '../widgets/support_card.dart';
@@ -12,7 +12,7 @@ class HadithScreen extends StatefulWidget {
   @override State<HadithScreen> createState() => _HadithScreenState();
 }
 
-class _HadithScreenState extends State<HadithScreen> {
+class _HadithScreenState extends State<HadithScreen> with AutomaticKeepAliveClientMixin {
   final _searchCtrl = TextEditingController();
   final _scrollCtrl = ScrollController();
   final _screenshotController = ScreenshotController();
@@ -29,15 +29,18 @@ class _HadithScreenState extends State<HadithScreen> {
   final int _limit = 20;
 
   @override
+  bool get wantKeepAlive => true; // 🌟 يحفظ الشاشة في الذاكرة
+
+  @override
   void initState() {
     super.initState();
+    SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky); // 🌟 شاشة كاملة
     _loadBooks();
     _resetAndLoad();
     
-    // 🌟 مستمع التمرير لجلب المزيد من الأحاديث
     _scrollCtrl.addListener(() {
       if (_scrollCtrl.position.pixels >= _scrollCtrl.position.maxScrollExtent - 200 && 
-          !_isLoadingMore && _hasMore && _searchCtrl.text.isEmpty && _selectedBook == 'الكل') {
+          !_isLoadingMore && _hasMore) {
         _loadMore();
       }
     });
@@ -50,7 +53,6 @@ class _HadithScreenState extends State<HadithScreen> {
     }
   }
 
-  // إعادة ضبط القائمة والبحث من البداية
   Future<void> _resetAndLoad() async {
     setState(() {
       _loading = true;
@@ -59,32 +61,31 @@ class _HadithScreenState extends State<HadithScreen> {
       _hadiths.clear();
     });
 
-    if (_searchCtrl.text.isNotEmpty || _selectedBook != 'الكل' || _selectedGrade != 'الكل') {
-      // بحث أو فلترة: نجلب كل النتائج المطابقة (لأنها لن تكون 41 ألف)
-      List<Map<String, Object?>> results = [];
-      if (_searchCtrl.text.isNotEmpty) {
-        results = await DatabaseHelper.instance.searchHadiths(_searchCtrl.text);
-      } else if (_selectedBook != 'الكل') {
-        results = await DatabaseHelper.instance.getHadithsByBook(_selectedBook);
-      }
-      
-      if (_selectedGrade != 'الكل') {
-        results = results.where((h) => h['grade'] == _selectedGrade).toList();
-      }
-      
+    if (_searchCtrl.text.isNotEmpty) {
+      final results = await DatabaseHelper.instance.searchHadiths(_searchCtrl.text);
       if (mounted) {
         setState(() {
           _hadiths = results;
           _loading = false;
-          _hasMore = false; // لا يوجد المزيد في وضع البحث
+          _hasMore = false;
         });
       }
-    } else {
-      // تصفح عادي: استخدام التمرير (Pagination) لجلب أول 20
-      final results = await DatabaseHelper.instance.getHadithsPaginated(_limit);
+    } else if (_selectedBook != 'الكل') {
+      final results = await DatabaseHelper.instance.getHadithsByBookPaginated(_selectedBook, _limit, 0);
       if (mounted) {
         setState(() {
           _hadiths = results;
+          _offset = results.length;
+          _hasMore = results.length == _limit;
+          _loading = false;
+        });
+      }
+    } else {
+      final results = await DatabaseHelper.instance.getHadithsPaginated(_limit, 0);
+      if (mounted) {
+        setState(() {
+          _hadiths = results;
+          _offset = results.length;
           _hasMore = results.length == _limit;
           _loading = false;
         });
@@ -92,52 +93,20 @@ class _HadithScreenState extends State<HadithScreen> {
     }
   }
 
-  // دالة مساعدة لفلترة النتائج (تُستخدم عند البحث أو اختيار كتاب)
-  Future<void> _loadFilteredOrSearchedData() async {
-    if (_searchCtrl.text.isNotEmpty || _selectedBook != 'الكل') {
-      List<Map<String, Object?>> results = [];
-      if (_searchCtrl.text.isNotEmpty) {
-        results = await DatabaseHelper.instance.searchHadiths(_searchCtrl.text);
-      } else if (_selectedBook != 'الكل') {
-        // 🌟 استخدام الدالة الجديدة السريعة لجلب الكتاب
-        results = await DatabaseHelper.instance.getHadithsByBookPaginated(_selectedBook, _limit);
-      }
-
-      if (_selectedGrade != 'الكل') {
-        results = results.where((h) => h['grade'] == _selectedGrade).toList();
-      }
-
-      if (mounted) {
-        setState(() {
-          _hadiths = results;
-          _loading = false;
-          _hasMore = _searchCtrl.text.isEmpty && _selectedBook != 'الكل' && results.length == _limit;
-        });
-      }
-    }
-  }
-
-  // جلب المزيد عند التمرير
   Future<void> _loadMore() async {
     setState(() => _isLoadingMore = true);
-    
-    int? lastId;
-    if (_hadiths.isNotEmpty) {
-      lastId = _hadiths.last['id'] as int;
+    List<Map<String, Object?>> results = [];
+
+    if (_selectedBook != 'الكل' && _searchCtrl.text.isEmpty) {
+      results = await DatabaseHelper.instance.getHadithsByBookPaginated(_selectedBook, _limit, _offset);
+    } else if (_searchCtrl.text.isEmpty) {
+      results = await DatabaseHelper.instance.getHadithsPaginated(_limit, _offset);
     }
 
-    List<Map<String, Object?>> results = [];
-    if (_selectedBook != 'الكل' && _searchCtrl.text.isEmpty) {
-      // 🌟 التحميل من كتاب محدد
-      results = await DatabaseHelper.instance.getHadithsByBookPaginated(_selectedBook, _limit, lastId: lastId);
-    } else {
-      // التحميل من كل الكتب
-      results = await DatabaseHelper.instance.getHadithsPaginated(_limit, lastId: lastId);
-    }
-    
     if (mounted) {
       setState(() {
         _hadiths.addAll(results);
+        _offset += results.length;
         _hasMore = results.length == _limit;
         _isLoadingMore = false;
       });
@@ -151,21 +120,14 @@ class _HadithScreenState extends State<HadithScreen> {
     return Colors.grey;
   }
 
-  // 📸 مشاركة الحديث كصورة
   Future<void> _shareHadithImage(Map<String, Object?> h) async {
     try {
       final image = await _screenshotController.captureFromWidget(
         Material(
           color: Colors.transparent,
           child: Container(
-            padding: const EdgeInsets.all(32),
-            width: 400, // عرض ثابت للصورة
-            decoration: BoxDecoration(
-              color: const Color(0xFFF8F4EC),
-              borderRadius: BorderRadius.circular(24),
-              border: Border.all(color: AppColors.primary, width: 2),
-              boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.1), blurRadius: 20, offset: const Offset(0, 10))],
-            ),
+            padding: const EdgeInsets.all(32), width: 400,
+            decoration: BoxDecoration(color: const Color(0xFFF8F4EC), borderRadius: BorderRadius.circular(24), border: Border.all(color: AppColors.primary, width: 2)),
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
@@ -190,65 +152,44 @@ class _HadithScreenState extends State<HadithScreen> {
             ),
           ),
         ),
-        delay: const Duration(milliseconds: 10),
       );
-
-      final tempDir = await getTemporaryDirectory();
-      final file = await File('${tempDir.path}/hadith_share.png').create();
-      await file.writeAsBytes(image);
-      await Share.shareXFiles([XFile(file.path)], text: 'حديث نبوي شريف');
+      final xFile = XFile.fromData(image, mimeType: 'image/png', name: 'hadith.png');
+      await Share.shareXFiles([xFile], text: 'حديث نبوي شريف');
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('تعذر مشاركة الصورة.')));
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('تعذر مشاركة الصورة.')));
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    super.build(context); // 🌟 مطلوب لـ KeepAlive
     return Scaffold(
       backgroundColor: const Color(0xFFF8F4EC),
       appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
+        backgroundColor: Colors.transparent, elevation: 0,
         title: const Text('الأحاديث النبوية', style: TextStyle(color: AppColors.primary, fontWeight: FontWeight.bold)),
-        centerTitle: true,
-        iconTheme: const IconThemeData(color: AppColors.primary),
+        centerTitle: true, iconTheme: const IconThemeData(color: AppColors.primary),
       ),
       body: Column(
         children: [
-          // شريط البحث
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
             child: Container(
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(16),
-                boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10, offset: const Offset(0, 4))],
-              ),
+              decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16), boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10, offset: const Offset(0, 4))]),
               child: TextField(
-                controller: _searchCtrl,
-                onSubmitted: (_) => _resetAndLoad(),
-                textDirection: TextDirection.rtl,
+                controller: _searchCtrl, onSubmitted: (_) => _resetAndLoad(), textDirection: TextDirection.rtl,
                 decoration: InputDecoration(
-                  hintText: 'ابحث بكلمة، رقم حديث، أو راوٍ...',
-                  hintStyle: const TextStyle(color: Colors.grey),
-                  prefixIcon: const Icon(Icons.search, color: AppColors.primary),
-                  border: InputBorder.none,
-                  contentPadding: const EdgeInsets.symmetric(vertical: 16),
-                  suffixIcon: IconButton(
-                    icon: const Icon(Icons.tune, color: AppColors.primary),
-                    onPressed: _showFilterBottomSheet,
-                  ),
+                  hintText: 'ابحث بكلمة، رقم حديث، أو راوٍ...', hintStyle: const TextStyle(color: Colors.grey),
+                  prefixIcon: const Icon(Icons.search, color: AppColors.primary), border: InputBorder.none, contentPadding: const EdgeInsets.symmetric(vertical: 16),
+                  suffixIcon: IconButton(icon: const Icon(Icons.tune, color: AppColors.primary), onPressed: _showFilterBottomSheet),
                 ),
               ),
             ),
           ),
-
-          // اختيار الكتاب
           SizedBox(
             height: 50,
             child: ListView.builder(
-              scrollDirection: Axis.horizontal,
-              padding: const EdgeInsets.symmetric(horizontal: 16),
+              scrollDirection: Axis.horizontal, padding: const EdgeInsets.symmetric(horizontal: 16),
               itemCount: _books.length,
               itemBuilder: (context, i) {
                 final book = _books[i];
@@ -257,13 +198,8 @@ class _HadithScreenState extends State<HadithScreen> {
                   padding: const EdgeInsets.only(left: 8),
                   child: ChoiceChip(
                     label: Text(book, style: TextStyle(color: isSelected ? Colors.white : AppColors.text, fontFamily: 'Cairo', fontSize: 13)),
-                    selected: isSelected,
-                    selectedColor: AppColors.primary,
-                    backgroundColor: Colors.white,
-                    onSelected: (val) {
-                      setState(() => _selectedBook = book);
-                      _resetAndLoad();
-                    },
+                    selected: isSelected, selectedColor: AppColors.primary, backgroundColor: Colors.white,
+                    onSelected: (val) { setState(() => _selectedBook = book); _resetAndLoad(); },
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
                     side: BorderSide(color: isSelected ? AppColors.primary : Colors.grey.shade300),
                   ),
@@ -271,21 +207,16 @@ class _HadithScreenState extends State<HadithScreen> {
               },
             ),
           ),
-
-          // قائمة الأحاديث
           Expanded(
             child: _loading
                 ? const Center(child: CircularProgressIndicator(color: AppColors.primary))
                 : _hadiths.isEmpty
                     ? _buildEmptyState()
                     : ListView.builder(
-                        controller: _scrollCtrl,
-                        padding: const EdgeInsets.all(16),
+                        controller: _scrollCtrl, padding: const EdgeInsets.all(16),
                         itemCount: _hadiths.length + (_isLoadingMore ? 1 : 0),
                         itemBuilder: (context, i) {
-                          if (i == _hadiths.length) {
-                            return const Padding(padding: EdgeInsets.all(16), child: Center(child: CircularProgressIndicator(color: AppColors.primary)));
-                          }
+                          if (i == _hadiths.length) return const Padding(padding: EdgeInsets.all(16), child: Center(child: CircularProgressIndicator(color: AppColors.primary)));
                           return _buildHadithCard(_hadiths[i]);
                         },
                       ),
@@ -298,96 +229,43 @@ class _HadithScreenState extends State<HadithScreen> {
   Widget _buildHadithCard(Map<String, Object?> h) {
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 15, offset: const Offset(0, 5))],
-        border: Border.all(color: AppColors.primary.withOpacity(0.1)),
-      ),
+      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(20), boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 15, offset: const Offset(0, 5))], border: Border.all(color: AppColors.primary.withOpacity(0.1))),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          // رأس الكارت
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-            decoration: BoxDecoration(
-              color: AppColors.primary.withOpacity(0.05),
-              borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
-            ),
+            decoration: BoxDecoration(color: AppColors.primary.withOpacity(0.05), borderRadius: const BorderRadius.vertical(top: Radius.circular(20))),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Expanded(
-                  child: Text(
-                    '${h['book']} • حديث ${h['hadith_number']}',
-                    style: const TextStyle(color: AppColors.primary, fontWeight: FontWeight.bold, fontSize: 13),
-                  ),
-                ),
+                Expanded(child: Text('${h['book']} • حديث ${h['hadith_number']}', style: const TextStyle(color: AppColors.primary, fontWeight: FontWeight.bold, fontSize: 13))),
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: _getGradeColor(h['grade'] as String?).withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: _getGradeColor(h['grade'] as String?)),
-                  ),
-                  child: Text(
-                    h['grade'] as String? ?? 'غير محدد',
-                    style: TextStyle(color: _getGradeColor(h['grade'] as String?), fontSize: 11, fontWeight: FontWeight.bold),
-                  ),
+                  decoration: BoxDecoration(color: _getGradeColor(h['grade'] as String?).withOpacity(0.1), borderRadius: BorderRadius.circular(12), border: Border.all(color: _getGradeColor(h['grade'] as String?))),
+                  child: Text(h['grade'] as String? ?? 'غير محدد', style: TextStyle(color: _getGradeColor(h['grade'] as String?), fontSize: 11, fontWeight: FontWeight.bold)),
                 ),
               ],
             ),
           ),
-          
-          // نص الحديث
-          Padding(
-            padding: const EdgeInsets.all(20),
-            child: Text(
-              '« ${h['arabic_text']} »',
-              textDirection: TextDirection.rtl,
-              style: const TextStyle(color: AppColors.text, fontSize: 20, height: 1.8, fontFamily: 'UthmanicHafs'),
-            ),
-          ),
-
-          // الراوي وأزرار التفاعل
+          Padding(padding: const EdgeInsets.all(20), child: Text('« ${h['arabic_text']} »', textDirection: TextDirection.rtl, style: const TextStyle(color: AppColors.text, fontSize: 20, height: 1.8, fontFamily: 'UthmanicHafs'))),
           Padding(
             padding: const EdgeInsets.only(right: 16, left: 16, bottom: 12),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                // 🌟 إضافة أيقونة للراوي
                 Row(
                   children: [
-                    CircleAvatar(
-                      radius: 14,
-                      backgroundColor: AppColors.primary.withOpacity(0.1),
-                      child: const Icon(Icons.person, size: 16, color: AppColors.primary),
-                    ),
+                    CircleAvatar(radius: 14, backgroundColor: AppColors.primary.withOpacity(0.1), child: const Icon(Icons.person, size: 16, color: AppColors.primary)),
                     const SizedBox(width: 8),
-                    Text(
-                      'الراوي: ${h['narrator'] ?? 'غير معروف'}',
-                      style: const TextStyle(color: AppColors.textMuted, fontSize: 13, fontWeight: FontWeight.w600),
-                    ),
+                    Text('الراوي: ${h['narrator'] ?? 'غير معروف'}', style: const TextStyle(color: AppColors.textMuted, fontSize: 13, fontWeight: FontWeight.w600)),
                   ],
                 ),
-                // أزرار التفاعل
                 Row(
                   children: [
-                    IconButton(
-                      icon: const Icon(Icons.copy, size: 20, color: AppColors.textMuted), 
-                      onPressed: () {
-                        // نسخ الحديث
-                        // (تحتاج لاستيراد flutter/services.dart لو لم يكن مستورداً)
-                      }
-                    ),
-                    IconButton(
-                      icon: const Icon(Icons.share, size: 20, color: AppColors.primary), 
-                      onPressed: () => _shareHadithImage(h), // 🌟 استدعاء دالة المشاركة كصورة
-                    ),
-                    IconButton(
-                      icon: const Icon(Icons.bookmark_border, size: 20, color: AppColors.textMuted), 
-                      onPressed: () {}
-                    ),
+                    IconButton(icon: const Icon(Icons.copy, size: 20, color: AppColors.textMuted), onPressed: () {}),
+                    IconButton(icon: const Icon(Icons.share, size: 20, color: AppColors.primary), onPressed: () => _shareHadithImage(h)),
+                    IconButton(icon: const Icon(Icons.bookmark_border, size: 20, color: AppColors.textMuted), onPressed: () {}),
                   ],
                 )
               ],
@@ -400,45 +278,37 @@ class _HadithScreenState extends State<HadithScreen> {
 
   Widget _buildEmptyState() {
     return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(Icons.menu_book_outlined, size: 80, color: AppColors.primary.withOpacity(0.3)),
-          const SizedBox(height: 16),
-          const Text('لم نجد أي أحاديث تطابق بحثك', style: TextStyle(color: AppColors.text, fontSize: 18, fontWeight: FontWeight.bold)),
-          const SizedBox(height: 8),
-          const Text('جرب تغيير كلمات البحث أو مسح الفلاتر', style: TextStyle(color: AppColors.textMuted, fontSize: 14)),
-          const SizedBox(height: 24),
-          ElevatedButton.icon(
-            onPressed: () {
-              _searchCtrl.clear();
-              setState(() { _selectedBook = 'الكل'; _selectedGrade = 'الكل'; });
-              _resetAndLoad();
-            },
-            icon: const Icon(Icons.refresh),
-            label: const Text('مسح الفلاتر والبحث'),
-            style: ElevatedButton.styleFrom(backgroundColor: AppColors.primary, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))),
-          ),
-          const SizedBox(height: 32),
-          const Padding(
-            padding: EdgeInsets.symmetric(horizontal: 16),
-            child: SupportCard(), // 🌟 بطاقة الدعم الفني تظهر هنا
-          )
-        ],
+      child: SingleChildScrollView(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.menu_book_outlined, size: 80, color: AppColors.primary.withOpacity(0.3)),
+            const SizedBox(height: 16),
+            const Text('لم نجد أي أحاديث تطابق بحثك', style: TextStyle(color: AppColors.text, fontSize: 18, fontWeight: FontWeight.bold)),
+            const SizedBox(height: 8),
+            const Text('جرب تغيير كلمات البحث أو مسح الفلاتر', style: TextStyle(color: AppColors.textMuted, fontSize: 14)),
+            const SizedBox(height: 24),
+            ElevatedButton.icon(
+              onPressed: () { _searchCtrl.clear(); setState(() { _selectedBook = 'الكل'; _selectedGrade = 'الكل'; }); _resetAndLoad(); },
+              icon: const Icon(Icons.refresh), label: const Text('مسح الفلاتر والبحث'),
+              style: ElevatedButton.styleFrom(backgroundColor: AppColors.primary, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))),
+            ),
+            const SizedBox(height: 32),
+            const Padding(padding: EdgeInsets.symmetric(horizontal: 16), child: SupportCard())
+          ],
+        ),
       ),
     );
   }
 
   void _showFilterBottomSheet() {
     showModalBottomSheet(
-      context: context,
-      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
+      context: context, shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
       builder: (context) {
         return Padding(
           padding: const EdgeInsets.all(24),
           child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               const Text('تصفية حسب التصنيف', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppColors.primary)),
               const SizedBox(height: 16),
@@ -447,15 +317,8 @@ class _HadithScreenState extends State<HadithScreen> {
                 children: ['الكل', 'صحيح', 'حسن', 'ضعيف'].map((grade) {
                   final isSel = _selectedGrade == grade;
                   return ChoiceChip(
-                    label: Text(grade),
-                    selected: isSel,
-                    selectedColor: AppColors.primary,
-                    labelStyle: TextStyle(color: isSel ? Colors.white : AppColors.text),
-                    onSelected: (v) {
-                      setState(() => _selectedGrade = grade);
-                      Navigator.pop(context);
-                      _resetAndLoad();
-                    },
+                    label: Text(grade), selected: isSel, selectedColor: AppColors.primary, labelStyle: TextStyle(color: isSel ? Colors.white : AppColors.text),
+                    onSelected: (v) { setState(() => _selectedGrade = grade); Navigator.pop(context); _resetAndLoad(); },
                   );
                 }).toList(),
               ),
