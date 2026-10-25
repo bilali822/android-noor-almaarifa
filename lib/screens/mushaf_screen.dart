@@ -25,7 +25,6 @@ class _MushafScreenState extends State<MushafScreen> {
   String _currentSurahName = 'الفاتحة';
   int? _highlightedVerse;
 
-  // 🌟 متغيرات لحفظ العلامات (تعليم ومفضلة)
   int? _lastReadSurah;
   int? _lastReadVerse;
   Set<String> _bookmarks = {};
@@ -73,6 +72,8 @@ class _MushafScreenState extends State<MushafScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: bgColor,
+      extendBodyBehindAppBar: true,
+      extendBody: true,
       body: Stack(
         children: [
           PageView.builder(
@@ -447,45 +448,44 @@ class _MushafSurahPageState extends State<_MushafSurahPage> {
         }
 
         return LayoutBuilder(
-            builder: (context, constraints) {
-              return SingleChildScrollView(
-                controller: _scrollController,
-                padding: EdgeInsets.only(top: MediaQuery.of(context).padding.top + 80, left: 20, right: 20, bottom: 40),
-                child: ConstrainedBox(
-                  constraints: BoxConstraints(minHeight: constraints.maxHeight - 120),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
+          builder: (context, constraints) {
+            return SingleChildScrollView(
+              controller: _scrollController,
+              // مسافة علوية لتجنب الأزرار العائمة والكاميرا
+              padding: EdgeInsets.only(top: MediaQuery.of(context).padding.top + 80, left: 20, right: 20, bottom: 40),
+              child: ConstrainedBox(
+                constraints: BoxConstraints(minHeight: constraints.maxHeight - 120),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 24),
+                      child: Text('سورة $surahName', style: TextStyle(fontFamily: 'UthmanicHafs', fontSize: 28, fontWeight: FontWeight.bold, color: frameColor)),
+                    ),
+                    if (widget.surahId != 1 && widget.surahId != 9) 
                       Padding(
-                        padding: const EdgeInsets.only(bottom: 24),
-                        child: Text('سورة $surahName', style: TextStyle(fontFamily: 'UthmanicHafs', fontSize: 28, fontWeight: FontWeight.bold, color: frameColor)),
-                      ),
-                      // 🌟 البسملة في المنتصف وبمسافة واضحة
-                      if (widget.surahId != 1 && widget.surahId != 9) 
-                        Padding(
-                          padding: const EdgeInsets.only(bottom: 32), 
-                          child: Center( 
-                            child: Text(
-                              'بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ', 
-                              textAlign: TextAlign.center,
-                              style: TextStyle(fontFamily: 'UthmanicHafs', fontSize: 26, color: frameColor, fontWeight: FontWeight.bold)
-                            )
+                        padding: const EdgeInsets.only(bottom: 32), 
+                        child: Center( 
+                          child: Text(
+                            'بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ', 
+                            textAlign: TextAlign.center,
+                            style: TextStyle(fontFamily: 'UthmanicHafs', fontSize: 26, color: frameColor, fontWeight: FontWeight.bold)
                           )
-                        ),
-                      RichText(
-                        textDirection: TextDirection.rtl, 
-                        textAlign: TextAlign.justify, 
-                        text: TextSpan(
-                          style: TextStyle(fontFamily: 'UthmanicHafs', fontSize: 28, height: 2.6, color: textColor), 
-                          children: textSpans
-                        ),
+                        )
                       ),
-                    ],
-                  ),
+                    RichText(
+                      textDirection: TextDirection.rtl, 
+                      textAlign: TextAlign.justify, 
+                      text: TextSpan(
+                        style: TextStyle(fontFamily: 'UthmanicHafs', fontSize: 28, height: 2.6, color: textColor), 
+                        children: textSpans
+                      ),
+                    ),
+                  ],
                 ),
-              );
-            }
-          ),
+              ),
+            );
+          }
         );
       },
     );

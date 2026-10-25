@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'dart:async';
 import 'package:intl/intl.dart' hide TextDirection;
 import 'package:intl/date_symbol_data_local.dart';
@@ -7,13 +8,13 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../theme/app_colors.dart';
 import '../widgets/bouncy_tap.dart';
 import '../widgets/quranic_background.dart';
-import '../services/notification_service.dart';
 import 'chat_screen.dart';
+import 'hadith_screen.dart';
 import 'ai_chat_screen.dart';
 import 'mushaf_screen.dart';
 import 'bookmarks_screen.dart';
 import 'settings_screen.dart';
-import 'hadith_screen.dart';
+import '../services/notification_service.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -29,33 +30,30 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   void initState() {
     super.initState();
+    SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
+    SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
+      statusBarColor: Colors.transparent,
+      statusBarIconBrightness: Brightness.dark,
+    ));
+
     SharedPreferences.getInstance().then((p) => setState(() => _name = p.getString('user_name') ?? 'زائر'));
     
     _updateTime();
     _timer = Timer.periodic(const Duration(seconds: 1), (Timer t) => _updateTime());
-    
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      Future.delayed(const Duration(seconds: 2), () {
-        _initNotifications();
-      });
-    });
+    _initNotifications();
   }
 
   Future<void> _initNotifications() async {
     await NotificationService.instance.init();
     await NotificationService.instance.showWelcomeNotification();
     await NotificationService.instance.scheduleDailyNotification();
-    
     await NotificationService.instance.updatePrayerTimesByLocation();
-    if (mounted) setState(() {});
   }
 
   String _toArabicNumbers(String input) {
     const english = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9'];
     const arabic = ['٠', '١', '٢', '٣', '٤', '٥', '٦', '٧', '٨', '٩'];
-    for (int i = 0; i < english.length; i++) {
-      input = input.replaceAll(english[i], arabic[i]);
-    }
+    for (int i = 0; i < english.length; i++) { input = input.replaceAll(english[i], arabic[i]); }
     return input;
   }
 
@@ -82,160 +80,142 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final topPadding = MediaQuery.of(context).padding.top;
+
     return Scaffold(
       backgroundColor: AppColors.bgDeep,
+      extendBodyBehindAppBar: true,
+      extendBody: true,
       body: QuranicBackground(
         child: Center(
           child: ConstrainedBox(
             constraints: const BoxConstraints(maxWidth: 500),
             child: Column(
-                children: [
-                  // 🌟 الهيدر الجديد بتصميم أفقي في الأعلى
-                  Padding(
-                    // تقليل المساحة العلوية لأننا سنضع البطاقات فوق
-                    padding: EdgeInsets.fromLTRB(20, MediaQuery.of(context).padding.top + 10, 20, 10),
+              children: [
+                // الهيدر (تم إضافة مسافة علوية لتجنب الكاميرا)
+                Padding(
+                  padding: EdgeInsets.fromLTRB(24, topPadding + 10, 24, 16),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text('السلام عليكم', style: TextStyle(color: AppColors.text, fontSize: 24, fontWeight: FontWeight.w900)),
+                          const SizedBox(height: 4),
+                          Text('$_name، نتمنى لك يوماً مباركاً', style: const TextStyle(color: AppColors.textMuted, fontSize: 13)),
+                          const SizedBox(height: 12),
+                          // البطاقة الزمنية
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(20),
+                              boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 10, offset: const Offset(0, 4))],
+                              border: Border.all(color: AppColors.primary.withOpacity(0.1)),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                const Icon(Icons.access_time_filled, color: AppColors.primary, size: 16),
+                                const SizedBox(width: 6),
+                                Text(_timeString, style: const TextStyle(color: AppColors.primary, fontSize: 14, fontWeight: FontWeight.bold, fontFamily: 'Cairo')),
+                                const SizedBox(width: 12),
+                                Container(width: 1, height: 14, color: Colors.grey.shade300),
+                                const SizedBox(width: 12),
+                                const Icon(Icons.calendar_month, color: AppColors.primary, size: 16),
+                                const SizedBox(width: 6),
+                                Text(_hijriDate, style: const TextStyle(color: AppColors.textMuted, fontSize: 13, fontWeight: FontWeight.bold, fontFamily: 'Cairo')),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                      Row(
+                        children: [
+                          Stack(
+                            children: [
+                              Container(padding: const EdgeInsets.all(10), decoration: BoxDecoration(color: Colors.white, shape: BoxShape.circle, boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.03), blurRadius: 10)]), child: const Icon(Icons.notifications_none, color: AppColors.primary, size: 24)),
+                              Positioned(top: 8, right: 8, child: Container(width: 8, height: 8, decoration: const BoxDecoration(color: AppColors.redDot, shape: BoxShape.circle)))
+                            ],
+                          ),
+                          const SizedBox(width: 12),
+                          GestureDetector(
+                            onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const SettingsScreen())),
+                            child: Container(width: 44, height: 44, decoration: BoxDecoration(color: const Color(0xFFD3E2D3), shape: BoxShape.circle, border: Border.all(color: Colors.white, width: 2)), child: const Icon(Icons.person, color: AppColors.primary, size: 28)),
+                          )
+                        ],
+                      )
+                    ],
+                  ),
+                ),
+
+                // المحتوى
+                Expanded(
+                  child: SingleChildScrollView(
+                    physics: const BouncingScrollPhysics(),
+                    padding: const EdgeInsets.symmetric(horizontal: 24),
                     child: Column(
                       children: [
-                        // 1. الصف العلوي (الوقت، التاريخ، الصلاة)
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            // بطاقة الوقت والتاريخ
-                            Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                              decoration: BoxDecoration(
-                                color: Colors.white,
-                                borderRadius: BorderRadius.circular(20),
-                                boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 10, offset: const Offset(0, 4))],
-                                border: Border.all(color: AppColors.primary.withOpacity(0.1)),
-                              ),
-                              child: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  const Icon(Icons.access_time_filled, color: AppColors.primary, size: 14),
-                                  const SizedBox(width: 4),
-                                  Text(_timeString, style: const TextStyle(color: AppColors.primary, fontSize: 11, fontWeight: FontWeight.bold, fontFamily: 'Cairo')),
-                                  const SizedBox(width: 6),
-                                  Container(width: 1, height: 12, color: Colors.grey.shade300),
-                                  const SizedBox(width: 6),
-                                  const Icon(Icons.calendar_month, color: AppColors.primary, size: 14),
-                                  const SizedBox(width: 4),
-                                  Text(_hijriDate, style: const TextStyle(color: AppColors.textMuted, fontSize: 11, fontWeight: FontWeight.bold, fontFamily: 'Cairo')),
-                                ],
-                              ),
-                            ),
-                            // بطاقة الصلاة القادمة
-                            Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                              decoration: BoxDecoration(
-                                color: Colors.white,
-                                borderRadius: BorderRadius.circular(20),
-                                boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 10, offset: const Offset(0, 4))],
-                                border: Border.all(color: AppColors.primary.withOpacity(0.1)),
-                              ),
-                              child: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  const Icon(Icons.mosque, color: AppColors.primary, size: 14),
-                                  const SizedBox(width: 4),
-                                  Text('${NotificationService.instance.nextPrayerName}: ${NotificationService.instance.nextPrayerTime}', style: const TextStyle(color: AppColors.primary, fontSize: 11, fontWeight: FontWeight.bold, fontFamily: 'Cairo')),
-                                ],
-                              ),
-                            ),
-                          ],
-                        ),
-                        
-                        const SizedBox(height: 16), // مسافة بين البطاقات والترحيب
-
-                        // 2. الصف السفلي (الترحيب والأيقونات)
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  const Text('السلام عليكم', style: TextStyle(color: AppColors.text, fontSize: 22, fontWeight: FontWeight.w900)),
-                                  const SizedBox(height: 4),
-                                  Text('$_name، نتمنى لك يوماً مباركاً', style: const TextStyle(color: AppColors.textMuted, fontSize: 13)),
-                                ],
-                              ),
-                            ),
-                            Row(
+                        // كارت الآية (الرئيسي)
+                        BouncyTap(
+                          onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const MushafScreen())),
+                          child: Container(
+                            width: double.infinity,
+                            padding: const EdgeInsets.symmetric(vertical: 36, horizontal: 20),
+                            decoration: BoxDecoration(color: AppColors.bgCardBeige, borderRadius: BorderRadius.circular(24), border: Border.all(color: AppColors.border, width: 1)),
+                            child: Column(
                               children: [
-                                Stack(
-                                  children: [
-                                    Container(padding: const EdgeInsets.all(10), decoration: BoxDecoration(color: Colors.white, shape: BoxShape.circle, boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.03), blurRadius: 10)]), child: const Icon(Icons.notifications_none, color: AppColors.primary, size: 24)),
-                                    Positioned(top: 8, right: 8, child: Container(width: 8, height: 8, decoration: const BoxDecoration(color: AppColors.redDot, shape: BoxShape.circle)))
-                                  ],
-                                ),
-                                const SizedBox(width: 12),
-                                GestureDetector(
-                                  onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const SettingsScreen())),
-                                  child: Container(width: 44, height: 44, decoration: BoxDecoration(color: const Color(0xFFD3E2D3), shape: BoxShape.circle, border: Border.all(color: Colors.white, width: 2)), child: const Icon(Icons.person, color: AppColors.primary, size: 28)),
+                                const Text('﴿ وَقُل رَّبِّ زِدْنِي عِلْمًا ﴾', textDirection: TextDirection.rtl, textAlign: TextAlign.center, style: TextStyle(fontSize: 32, height: 1.6, color: AppColors.primary, fontFamily: 'UthmanicHafs', fontWeight: FontWeight.bold)),
+                                const SizedBox(height: 12),
+                                const Text('سورة طه • الآية ١١٤', style: TextStyle(color: AppColors.textMuted, fontSize: 12)),
+                                const SizedBox(height: 24),
+                                ElevatedButton(
+                                  onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const MushafScreen())),
+                                  style: ElevatedButton.styleFrom(backgroundColor: AppColors.primary, foregroundColor: Colors.white, padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 14), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)), elevation: 0),
+                                  child: const Text('إقرأ كلامُ الله', style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold)),
                                 )
                               ],
-                            )
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 24),
+
+                        // الكروت الستة
+                        GridView.count(
+                          crossAxisCount: 2,
+                          shrinkWrap: true,
+                          physics: const NeverScrollableScrollPhysics(),
+                          crossAxisSpacing: 16,
+                          mainAxisSpacing: 16,
+                          childAspectRatio: 1.05,
+                          children: [
+                            _buildFeatureCard('المصحف', Icons.auto_stories, () {
+                              Navigator.push(context, MaterialPageRoute(builder: (_) => const MushafScreen()));
+                            }),
+                            _buildFeatureCard('تفسير القرآن', Icons.import_contacts, () {
+                              Navigator.push(context, MaterialPageRoute(builder: (_) => const ChatScreen()));
+                            }),
+                            _buildFeatureCard('الذكاء الاصطناعي', Icons.psychology, () {
+                              Navigator.push(context, MaterialPageRoute(builder: (_) => const AIChatScreen()));
+                            }),
+                            _buildFeatureCard('الحديث', Icons.menu_book, () {
+                              Navigator.push(context, MaterialPageRoute(builder: (_) => const HadithScreen()));
+                            }),
+                            _buildFeatureCard('الإعدادات', Icons.settings, () {
+                              Navigator.push(context, MaterialPageRoute(builder: (_) => const SettingsScreen()));
+                            }),
+                            _buildFeatureCard('المحفوظات', Icons.bookmark, () {
+                              Navigator.push(context, MaterialPageRoute(builder: (_) => const BookmarksScreen()));
+                            }),
                           ],
                         ),
+                        const SizedBox(height: 100),
                       ],
                     ),
                   ),
-
-                  // المحتوى (بدون تغيير)
-                  Expanded(
-                    child: SingleChildScrollView(
-                      physics: const BouncingScrollPhysics(),
-                      padding: const EdgeInsets.symmetric(horizontal: 24),
-                      child: Column(
-                        children: [
-                          BouncyTap(
-                            onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const MushafScreen())),
-                            child: Container(
-                              width: double.infinity,
-                              padding: const EdgeInsets.symmetric(vertical: 36, horizontal: 20),
-                              decoration: BoxDecoration(color: AppColors.bgCardBeige, borderRadius: BorderRadius.circular(24), border: Border.all(color: AppColors.border, width: 1)),
-                              child: Column(
-                                children: [
-                                  const Text('﴿ وَقُل رَّبِّ زِدْنِي عِلْمًا ﴾', textDirection: TextDirection.rtl, textAlign: TextAlign.center, style: TextStyle(fontSize: 32, height: 1.6, color: AppColors.primary, fontFamily: 'UthmanicHafs', fontWeight: FontWeight.bold)),
-                                  const SizedBox(height: 12),
-                                  const Text('سورة طه • الآية ١١٤', style: TextStyle(color: AppColors.textMuted, fontSize: 12)),
-                                  const SizedBox(height: 24),
-                                  ElevatedButton(
-                                    onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const MushafScreen())),
-                                    style: ElevatedButton.styleFrom(backgroundColor: AppColors.primary, foregroundColor: Colors.white, padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 14), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)), elevation: 0),
-                                    child: const Text('إقرأ كلامَ الله', style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold)),
-                                  )
-                                ],
-                              ),
-                            ),
-                          ),
-                          const SizedBox(height: 24),
-
-                          GridView.count(
-                            crossAxisCount: 2,
-                            shrinkWrap: true,
-                            physics: const NeverScrollableScrollPhysics(),
-                            crossAxisSpacing: 16,
-                            mainAxisSpacing: 16,
-                            childAspectRatio: 1.05,
-                            children: [
-                              _buildFeatureCard('المصحف', Icons.auto_stories, () { Navigator.push(context, MaterialPageRoute(builder: (_) => const MushafScreen())); }),
-                              _buildFeatureCard('تفسير القرآن', Icons.import_contacts, () { Navigator.push(context, MaterialPageRoute(builder: (_) => const ChatScreen())); }),
-                              _buildFeatureCard('الذكاء الاصطناعي', Icons.psychology, () { Navigator.push(context, MaterialPageRoute(builder: (_) => const AIChatScreen())); }),
-                              _buildFeatureCard('الحديث', Icons.menu_book, () { Navigator.push(context, MaterialPageRoute(builder: (_) => const HadithScreen())); }),
-                              _buildFeatureCard('الإعدادات', Icons.settings, () { Navigator.push(context, MaterialPageRoute(builder: (_) => const SettingsScreen())); }),
-                              _buildFeatureCard('المحفوظات', Icons.bookmark, () { Navigator.push(context, MaterialPageRoute(builder: (_) => const BookmarksScreen())); }),
-                            ],
-                          ),
-                          const SizedBox(height: 100),
-                        ],
-                      ),
-                    ),
-                  ),
-                ],
-              ),
+                ),
+              ],
             ),
           ),
         ),
