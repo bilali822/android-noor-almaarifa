@@ -25,7 +25,7 @@ class _MushafScreenState extends State<MushafScreen> {
   String _currentSurahName = 'الفاتحة';
   int? _highlightedVerse;
 
-  // 🌟 متغيرات لحفظ العلامات (تعليم ومفضلة)
+  // متغيرات لحفظ العلامات (تعليم ومفضلة)
   int? _lastReadSurah;
   int? _lastReadVerse;
   Set<String> _bookmarks = {};
@@ -109,7 +109,7 @@ class _MushafScreenState extends State<MushafScreen> {
               children: [
                 Row(
                   children: [
-                    // 🌟 زر متابعة القراءة (يظهر فقط إذا كان هناك تعليم)
+                    // زر متابعة القراءة (يظهر فقط إذا كان هناك تعليم)
                     if (_lastReadSurah != null) ...[
                       _buildFloatingButton(
                         icon: Icons.bookmark,
@@ -243,7 +243,6 @@ class _MushafScreenState extends State<MushafScreen> {
     );
   }
 
-  // 🌟 دالة الحفظ (تحديث فوري)
   Future<void> _saveVerse(int surahId, int verseNumber) async {
     final key = '$surahId:$verseNumber';
     if (_bookmarks.contains(key)) {
@@ -257,7 +256,6 @@ class _MushafScreenState extends State<MushafScreen> {
     await prefs.setStringList('bookmarks', _bookmarks.toList());
   }
 
-  // 🌟 دالة التعليم (تحديث فوري)
   Future<void> _setLastRead(int surahId, int verseNumber) async {
     setState(() {
       _lastReadSurah = surahId;
@@ -417,7 +415,6 @@ class _MushafSurahPageState extends State<_MushafSurahPage> {
           
           final isHighlighted = verseNumber == widget.highlightedVerse;
           final isLastRead = verseNumber == widget.lastReadVerse;
-          final isBookmarked = widget.bookmarks.contains('${widget.surahId}:$verseNumber');
 
           textSpans.add(TextSpan(
             children: [
@@ -426,27 +423,45 @@ class _MushafSurahPageState extends State<_MushafSurahPage> {
                 recognizer: recognizer, 
                 style: TextStyle(backgroundColor: isHighlighted ? const Color(0xFFF1E5C9) : null)
               ),
-              // رقم الآية
-              TextSpan(
-                text: '﴿$arabicNum﴾ ', 
-                style: TextStyle(
-                  color: frameColor, 
-                  fontSize: 22, 
-                  backgroundColor: isHighlighted ? const Color(0xFFF1E5C9) : null
-                ), 
-                recognizer: recognizer
-              ),
-              // 🌟 أيقونة التعليم (إيموجي يظهر فوراً)
+              // رقم الآية (مع الختم الذهبي الفخم للتعليم)
               if (isLastRead)
-                const TextSpan(
-                  text: '📍 ',
-                  style: TextStyle(fontSize: 20),
-                ),
-              // 🌟 أيقونة الحفظ (إيموجي يظهر فوراً)
-              if (isBookmarked)
-                const TextSpan(
-                  text: '🔖 ',
-                  style: TextStyle(fontSize: 20),
+                WidgetSpan(
+                  alignment: PlaceholderAlignment.middle,
+                  child: GestureDetector(
+                    onTap: () => widget.onVerseTap(surahName, verseNumber, v['text_ar'] as String),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                      margin: const EdgeInsets.symmetric(horizontal: 4),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFD4AF37).withOpacity(0.15), // خلفية ذهبية شفافة
+                        borderRadius: BorderRadius.circular(10),
+                        border: Border.all(color: const Color(0xFFD4AF37), width: 1.5),
+                        boxShadow: [
+                          BoxShadow(color: const Color(0xFFD4AF37).withOpacity(0.3), blurRadius: 4, spreadRadius: 1)
+                        ]
+                      ),
+                      child: Text(
+                        '﴿$arabicNum﴾',
+                        style: TextStyle(
+                          color: frameColor, 
+                          fontSize: 20, 
+                          fontWeight: FontWeight.bold,
+                          fontFamily: 'UthmanicHafs',
+                          height: 1.4, 
+                        ),
+                      ),
+                    ),
+                  ),
+                )
+              else
+                TextSpan(
+                  text: '﴿$arabicNum﴾ ', 
+                  style: TextStyle(
+                    color: frameColor, 
+                    fontSize: 22, 
+                    backgroundColor: isHighlighted ? const Color(0xFFF1E5C9) : null
+                  ), 
+                  recognizer: recognizer
                 ),
             ],
           ));
@@ -498,21 +513,4 @@ class _MushafSurahPageState extends State<_MushafSurahPage> {
     for (int i = 0; i < english.length; i++) { result = result.replaceAll(english[i], arabic[i]); }
     return result;
   }
-}
-
-
-class _RibbonTailPainter extends CustomPainter {
-  @override
-  void paint(Canvas canvas, Size size) {
-    final paint = Paint()..color = Colors.goldAccent..style = PaintingStyle.fill;
-    final path = Path();
-    path.moveTo(0, 0);
-    path.lineTo(size.width, 0);
-    path.lineTo(size.width / 2, size.height);
-    path.close();
-    canvas.drawPath(path, paint);
-  }
-
-  @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }
