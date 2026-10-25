@@ -144,21 +144,27 @@ class _HomeScreenState extends State<HomeScreen> {
                       Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          // 🌟 الساعة والتاريخ
-                          Text(_timeString, style: const TextStyle(color: AppColors.primary, fontSize: 18, fontWeight: FontWeight.bold, fontFamily: 'Cairo')),
-                          const SizedBox(height: 2),
-                          Text(_hijriDate, style: const TextStyle(color: AppColors.textMuted, fontSize: 13, fontFamily: 'Cairo')),
-                          const SizedBox(height: 6),
-                          // 🌟 الصلاة القادمة
+                          // 🌟 الساعة والتاريخ والصلاة في سطر واحد
                           Row(
                             children: [
-                              const Icon(Icons.mosque, color: AppColors.primary, size: 14),
+                              const Icon(Icons.access_time_filled, color: AppColors.primary, size: 14),
                               const SizedBox(width: 4),
-                              Text('الصلاة القادمة: $_nextPrayerTime', style: const TextStyle(color: AppColors.primary, fontSize: 12, fontWeight: FontWeight.bold, fontFamily: 'Cairo')),
+                              Text(_timeString, style: const TextStyle(color: AppColors.primary, fontSize: 13, fontWeight: FontWeight.bold, fontFamily: 'Cairo')),
+                              const SizedBox(width: 8),
+                              Container(width: 1, height: 12, color: Colors.grey.shade300),
+                              const SizedBox(width: 8),
+                              const Icon(Icons.calendar_month, color: AppColors.primary, size: 14),
+                              const SizedBox(width: 4),
+                              Text(_hijriDate, style: const TextStyle(color: AppColors.textMuted, fontSize: 12, fontFamily: 'Cairo')),
+                              const SizedBox(width: 8),
+                              Container(width: 1, height: 12, color: Colors.grey.shade300),
+                              const SizedBox(width: 8),
+                              const Icon(Icons.mosque, color: AppColors.gold, size: 14),
+                              const SizedBox(width: 4),
+                              Text(_nextPrayerTime, style: const TextStyle(color: AppColors.primary, fontSize: 12, fontWeight: FontWeight.bold, fontFamily: 'Cairo')),
                             ],
                           ),
                           const SizedBox(height: 12),
-                          // 🌟 الترحيب
                           const Text('السلام عليكم', style: TextStyle(color: AppColors.text, fontSize: 24, fontWeight: FontWeight.w900)),
                           const SizedBox(height: 4),
                           Text('$_name، نتمنى لك يوماً مباركاً', style: const TextStyle(color: AppColors.textMuted, fontSize: 13)),

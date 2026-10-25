@@ -44,9 +44,9 @@ class _AIChatScreenState extends State<AIChatScreen> {
   void _initSession() {
     if (_apiKey.isNotEmpty) {
       try {
-        // استخدام الموديل الأحدث والمستقر
+        // 🌟 استخدام الموديل الأحدث والمستقر (لأن 1.5 تم إيقافه)
         final model = GenerativeModel(
-          model: 'gemini-1.5-flash',
+          model: 'gemini-3.8-flash', // أو 'gemini-flash-lite-latest'
           apiKey: _apiKey,
           generationConfig: GenerationConfig(maxOutputTokens: 2048),
           systemInstruction: Content.system('أنت "مساعد نور المعرفة"، مساعد ذكي مخصص لتطبيق إسلامي. أجب على سؤال المستخدم مباشرة.'),
@@ -96,7 +96,7 @@ class _AIChatScreenState extends State<AIChatScreen> {
     if (_apiKey.isEmpty) {
       setState(() {
         _messages.add(AIMessage(text: text, isUser: true));
-        _messages.add(AIMessage(text: '❌ خطأ: مفتاح API (GEMINI_API_KEY) غير موجود. يرجى التأكد من إضافته في إعدادات GitHub Secrets.', isUser: false));
+        _messages.add(AIMessage(text: '❌ خطأ: مفتاح API (GEMINI_API_KEY) غير موجود في إعدادات التطبيق.', isUser: false));
       });
       _inputCtrl.clear();
       _scrollToBottom();
@@ -107,7 +107,7 @@ class _AIChatScreenState extends State<AIChatScreen> {
     if (_chatSession == null) {
       setState(() {
         _messages.add(AIMessage(text: text, isUser: true));
-        _messages.add(AIMessage(text: '❌ خطأ: تعذر الاتصال بالذكاء الاصطناعي. يرجى المحاولة لاحقاً.', isUser: false));
+        _messages.add(AIMessage(text: '❌ خطأ: تعذر تهيئة الجلسة مع الذكاء الاصطناعي.', isUser: false));
       });
       _inputCtrl.clear();
       _scrollToBottom();
@@ -137,7 +137,7 @@ class _AIChatScreenState extends State<AIChatScreen> {
       if (mounted) {
         setState(() {
           _isWaiting = false;
-          // عرض الخطأ الحقيقي داخل الشات لكي نعرف السبب إذا تكرر
+          // 🌟 عرض الخطأ الحقيقي داخل الشات لكي نعرف السبب (حتى في APK)
           _messages.add(AIMessage(text: '❌ عذراً، حدث خطأ في الاتصال:\n$e', isUser: false));
         });
         _scrollToBottom();
