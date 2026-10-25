@@ -3,17 +3,17 @@ import 'dart:async';
 import 'package:intl/intl.dart' hide TextDirection;
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:hijri/hijri_calendar.dart';
-import '../services/notification_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../theme/app_colors.dart';
 import '../widgets/bouncy_tap.dart';
 import '../widgets/quranic_background.dart';
+import '../services/notification_service.dart';
 import 'chat_screen.dart';
-import 'hadith_screen.dart';
 import 'ai_chat_screen.dart';
 import 'mushaf_screen.dart';
 import 'bookmarks_screen.dart';
 import 'settings_screen.dart';
+import 'hadith_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -33,10 +33,25 @@ class _HomeScreenState extends State<HomeScreen> {
     
     _updateTime();
     _timer = Timer.periodic(const Duration(seconds: 1), (Timer t) => _updateTime());
-    _initNotifications();
+    
+    // تأجيل طلب الإشعارات والموقع لكي لا يتجمد التطبيق
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      Future.delayed(const Duration(seconds: 2), () {
+        _initNotifications();
+      });
+    });
   }
 
-  // دالة مساعدة لتحويل الأرقام الإنجليزية إلى عربية
+  Future<void> _initNotifications() async {
+    await NotificationService.instance.init();
+    await NotificationService.instance.showWelcomeNotification();
+    await NotificationService.instance.scheduleDailyNotification();
+    
+    // تحديث مواقيت الصلاة ثم تحديث الشاشة
+    await NotificationService.instance.updatePrayerTimesByLocation();
+    if (mounted) setState(() {});
+  }
+
   String _toArabicNumbers(String input) {
     const english = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9'];
     const arabic = ['٠', '١', '٢', '٣', '٤', '٥', '٦', '٧', '٨', '٩'];
@@ -48,29 +63,17 @@ class _HomeScreenState extends State<HomeScreen> {
 
   void _updateTime() {
     final now = DateTime.now();
-    
-    // تفعيل اللغة العربية للوقت
     initializeDateFormatting('ar', null);
     final format = DateFormat('hh:mm a', 'ar');
-    
-    // تفعيل اللغة العربية للتاريخ الهجري
     HijriCalendar.setLocal('ar');
     final hijri = HijriCalendar.fromDate(now);
     
     if (mounted) {
       setState(() {
-        _timeString = _toArabicNumbers(format.format(now)); // الوقت بالأرقام العربية
-        _hijriDate = _toArabicNumbers('${hijri.hDay} ${hijri.longMonthName} ${hijri.hYear} هـ'); // التاريخ بالعربي
+        _timeString = _toArabicNumbers(format.format(now));
+        _hijriDate = _toArabicNumbers('${hijri.hDay} ${hijri.longMonthName} ${hijri.hYear} هـ');
       });
     }
-  }
-
-  Future<void> _initNotifications() async {
-    await NotificationService.instance.init();
-    await NotificationService.instance.showWelcomeNotification();
-    await NotificationService.instance.scheduleDailyNotification();
-    // 🌟 حساب الصلوات حسب موقع المستخدم (GPS)
-    await NotificationService.instance.updatePrayerTimesByLocation();
   }
 
   @override
@@ -104,29 +107,52 @@ class _HomeScreenState extends State<HomeScreen> {
                             const SizedBox(height: 4),
                             Text('$_name، نتمنى لك يوماً مباركاً', style: const TextStyle(color: AppColors.textMuted, fontSize: 13)),
                             const SizedBox(height: 12),
-                            // 🌟 البطاقة الزمنية الاحترافية
-                            Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                              decoration: BoxDecoration(
-                                color: Colors.white,
-                                borderRadius: BorderRadius.circular(20),
-                                boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 10, offset: const Offset(0, 4))],
-                                border: Border.all(color: AppColors.primary.withOpacity(0.1)),
-                              ),
-                              child: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  const Icon(Icons.access_time_filled, color: AppColors.primary, size: 16),
-                                  const SizedBox(width: 6),
-                                  Text(_timeString, style: const TextStyle(color: AppColors.primary, fontSize: 14, fontWeight: FontWeight.bold, fontFamily: 'Cairo')),
-                                  const SizedBox(width: 12),
-                                  Container(width: 1, height: 14, color: Colors.grey.shade300), // فاصل
-                                  const SizedBox(width: 12),
-                                  const Icon(Icons.calendar_month, color: AppColors.primary, size: 16),
-                                  const SizedBox(width: 6),
-                                  Text(_hijriDate, style: const TextStyle(color: AppColors.textMuted, fontSize: 13, fontWeight: FontWeight.bold, fontFamily: 'Cairo')),
-                                ],
-                              ),
+                            // 🌟 البطاقة الزمنية ومواقيت الصلاة
+                            Wrap(
+                              spacing: 8,
+                              runSpacing: 8,
+                              children: [
+                                Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                                  decoration: BoxDecoration(
+                                    color: Colors.white,
+                                    borderRadius: BorderRadius.circular(20),
+                                    boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 10, offset: const Offset(0, 4))],
+                                    border: Border.all(color: AppColors.primary.withOpacity(0.1)),
+                                  ),
+                                  child: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      const Icon(Icons.access_time_filled, color: AppColors.primary, size: 14),
+                                      const SizedBox(width: 4),
+                                      Text(_timeString, style: const TextStyle(color: AppColors.primary, fontSize: 12, fontWeight: FontWeight.bold, fontFamily: 'Cairo')),
+                                      const SizedBox(width: 8),
+                                      Container(width: 1, height: 12, color: Colors.grey.shade300),
+                                      const SizedBox(width: 8),
+                                      const Icon(Icons.calendar_month, color: AppColors.primary, size: 14),
+                                      const SizedBox(width: 4),
+                                      Text(_hijriDate, style: const TextStyle(color: AppColors.textMuted, fontSize: 12, fontWeight: FontWeight.bold, fontFamily: 'Cairo')),
+                                    ],
+                                  ),
+                                ),
+                                Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                                  decoration: BoxDecoration(
+                                    color: Colors.white,
+                                    borderRadius: BorderRadius.circular(20),
+                                    boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 10, offset: const Offset(0, 4))],
+                                    border: Border.all(color: AppColors.primary.withOpacity(0.1)),
+                                  ),
+                                  child: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      const Icon(Icons.mosque, color: AppColors.primary, size: 14),
+                                      const SizedBox(width: 4),
+                                      Text('${NotificationService.instance.nextPrayerName}: ${NotificationService.instance.nextPrayerTime}', style: const TextStyle(color: AppColors.primary, fontSize: 12, fontWeight: FontWeight.bold, fontFamily: 'Cairo')),
+                                    ],
+                                  ),
+                                ),
+                              ],
                             ),
                           ],
                         ),
@@ -187,37 +213,20 @@ class _HomeScreenState extends State<HomeScreen> {
                             physics: const NeverScrollableScrollPhysics(),
                             crossAxisSpacing: 16,
                             mainAxisSpacing: 16,
-                            childAspectRatio: 1.05, 
+                            childAspectRatio: 1.05,
                             children: [
-                              // 🌟 الصف الأول: المصحف والتفسير
                               _buildFeatureCard('المصحف', Icons.auto_stories, () {
                                 Navigator.push(context, MaterialPageRoute(builder: (_) => const MushafScreen()));
                               }),
                               _buildFeatureCard('تفسير القرآن', Icons.import_contacts, () {
                                 Navigator.push(context, MaterialPageRoute(builder: (_) => const ChatScreen()));
                               }),
-                              
-                              // 🌟 الصف الثاني: الذكاء الاصطناعي والحديث
                               _buildFeatureCard('الذكاء الاصطناعي', Icons.psychology, () {
                                 Navigator.push(context, MaterialPageRoute(builder: (_) => const AIChatScreen()));
                               }),
                               _buildFeatureCard('الحديث', Icons.menu_book, () {
-                                Navigator.push(context, PageRouteBuilder(
-                                  pageBuilder: (_, __, ___) => const HadithScreen(),
-                                  transitionsBuilder: (_, animation, __, child) {
-                                    return FadeTransition(
-                                      opacity: animation,
-                                      child: SlideTransition(
-                                        position: Tween<Offset>(begin: const Offset(0, 0.05), end: Offset.zero).animate(animation),
-                                        child: child,
-                                      ),
-                                    );
-                                  },
-                                  transitionDuration: const Duration(milliseconds: 300),
-                                ));
+                                Navigator.push(context, MaterialPageRoute(builder: (_) => const HadithScreen()));
                               }),
-
-                              // 🌟 الصف الثالث: الإعدادات والمحفوظات
                               _buildFeatureCard('الإعدادات', Icons.settings, () {
                                 Navigator.push(context, MaterialPageRoute(builder: (_) => const SettingsScreen()));
                               }),
@@ -285,7 +294,7 @@ class _HomeScreenState extends State<HomeScreen> {
     return GestureDetector(
       onTap: onTap,
       child: Column(
-        mainAxisAlignment: MainAxisAlignment.center, 
+        mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Icon(icon, color: isSelected ? AppColors.primary : const Color(0xFF9E9E9E), size: 26),
           const SizedBox(height: 4),

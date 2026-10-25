@@ -4,7 +4,7 @@ import 'package:timezone/data/latest_all.dart' as tz;
 import 'package:timezone/timezone.dart' as tz;
 import 'package:geolocator/geolocator.dart';
 import 'package:adhan/adhan.dart';
-import 'package:intl/intl.dart' hide TextDirection;
+import 'package:intl/intl.dart';
 import 'package:hijri/hijri_calendar.dart';
 
 class NotificationService {
@@ -12,11 +12,14 @@ class NotificationService {
   NotificationService._();
 
   final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin = FlutterLocalNotificationsPlugin();
+  
+  String nextPrayerName = 'جاري التحديد...';
+  String nextPrayerTime = '--:--';
 
   Future<void> init() async {
     tz.initializeTimeZones();
     
-    const AndroidInitializationSettings initializationSettingsAndroid = AndroidInitializationSettings('@mipmap/launcher_icon');
+    const AndroidInitializationSettings initializationSettingsAndroid = AndroidInitializationSettings('@drawable/ic_notification');
     const InitializationSettings initializationSettings = InitializationSettings(android: initializationSettingsAndroid);
 
     await flutterLocalNotificationsPlugin.initialize(
@@ -31,45 +34,57 @@ class NotificationService {
     }
   }
 
-  // 🌟 جلب الموقع وحساب الصلوات وتصميم الإشعار الاحترافي
   Future<void> updatePrayerTimesByLocation() async {
+    double lat = 21.4225; // إحداثيات مكة المكرمة (خطة بديلة)
+    double lng = 39.8262;
+
     try {
       LocationPermission permission = await Geolocator.checkPermission();
       if (permission == LocationPermission.denied) {
         permission = await Geolocator.requestPermission();
-        if (permission == LocationPermission.denied) return;
       }
 
-      Position position = await Geolocator.getCurrentPosition(
-        desiredAccuracy: LocationAccuracy.low,
-      );
+      if (permission == LocationPermission.whileInUse || permission == LocationPermission.always) {
+        Position position = await Geolocator.getCurrentPosition(
+          desiredAccuracy: LocationAccuracy.low,
+          timeLimit: const Duration(seconds: 5),
+        ).catchError((e) {
+          return Future.value(Position(latitude: 21.4225, longitude: 39.8262, timestamp: DateTime.now(), accuracy: 0, altitude: 0, altitudeAccuracy: 0, heading: 0, headingAccuracy: 0, speed: 0, speedAccuracy: 0));
+        });
+        
+        lat = position.latitude;
+        lng = position.longitude;
+      }
+    } catch (e) {
+      debugPrint('Error getting location: $e');
+    }
 
-      final coordinates = Coordinates(position.latitude, position.longitude);
-      final params = CalculationMethod.umm_al_qura.getParameters();
-      params.madhab = Madhab.shafi;
-      final date = DateComponents.from(DateTime.now());
-      final prayerTimes = PrayerTimes(coordinates, date, params);
+    final coordinates = Coordinates(lat, lng);
+    final params = CalculationMethod.umm_al_qura.getParameters();
+    params.madhab = Madhab.shafi;
+    final date = DateComponents.from(DateTime.now());
+    final prayerTimes = PrayerTimes(coordinates, date, params);
 
-      // 1. تحديد الصلاة القادمة
-      final nextPrayer = prayerTimes.nextPrayer();
-      String nextName = 'الصلاة القادمة';
-      DateTime nextTime = DateTime.now();
+    final nextPrayer = prayerTimes.nextPrayer();
+    DateTime nextTime = DateTime.now();
+    String name = 'الصلاة القادمة';
 
-      if (nextPrayer == Prayer.fajr) { nextName = 'الفجر'; nextTime = prayerTimes.fajr; }
-      else if (nextPrayer == Prayer.sunrise) { nextName = 'الشروق'; nextTime = prayerTimes.sunrise; }
-      else if (nextPrayer == Prayer.dhuhr) { nextName = 'الظهر'; nextTime = prayerTimes.dhuhr; }
-      else if (nextPrayer == Prayer.asr) { nextName = 'العصر'; nextTime = prayerTimes.asr; }
-      else if (nextPrayer == Prayer.maghrib) { nextName = 'المغرب'; nextTime = prayerTimes.maghrib; }
-      else if (nextPrayer == Prayer.isha) { nextName = 'العشاء'; nextTime = prayerTimes.isha; }
+    if (nextPrayer == Prayer.fajr) { name = 'الفجر'; nextTime = prayerTimes.fajr; }
+    else if (nextPrayer == Prayer.sunrise) { name = 'الشروق'; nextTime = prayerTimes.sunrise; }
+    else if (nextPrayer == Prayer.dhuhr) { name = 'الظهر'; nextTime = prayerTimes.dhuhr; }
+    else if (nextPrayer == Prayer.asr) { name = 'العصر'; nextTime = prayerTimes.asr; }
+    else if (nextPrayer == Prayer.maghrib) { name = 'المغرب'; nextTime = prayerTimes.maghrib; }
+    else if (nextPrayer == Prayer.isha) { name = 'العشاء'; nextTime = prayerTimes.isha; }
 
-      final timeFormat = DateFormat('hh:mm a', 'ar');
-      
-      // 2. تنسيق التاريخ الهجري
-      final hijri = HijriCalendar.fromDate(DateTime.now());
-      final hijriDate = '${hijri.hDay} ${hijri.longMonthName} ${hijri.hYear} هـ';
+    final timeFormat = DateFormat('hh:mm a', 'ar');
+    
+    nextPrayerName = name;
+    nextPrayerTime = timeFormat.format(nextTime);
 
-      // 3. بناء جدول الصلوات (يظهر عند سحب الإشعار)
-      final schedule = """
+    final hijri = HijriCalendar.fromDate(DateTime.now());
+    final hijriDate = '${hijri.hDay} ${hijri.longMonthName} ${hijri.hYear} هـ';
+
+    final schedule = """
 ━━━━━━━━━━━━━━━━━
 🕌 مواقيت الصلوات اليوم
 ━━━━━━━━━━━━━━━━━
@@ -81,14 +96,7 @@ class NotificationService {
 ━━━━━━━━━━━━━━━━━
 """;
 
-      // 4. عرض الإشعار الدائم
-      await showPersistentPrayerNotification(nextName, timeFormat.format(nextTime), hijriDate, schedule);
-
-    } catch (e) {
-      debugPrint('Error calculating prayer times: $e');
-      final hijri = HijriCalendar.fromDate(DateTime.now());
-      await showPersistentPrayerNotification('صلاتك', '--:--', '${hijri.hDay} ${hijri.longMonthName} ${hijri.hYear} هـ', 'يرجى تفعيل خدمة الموقع (GPS) لحساب المواقيت بدقة.');
-    }
+    await showPersistentPrayerNotification(name, nextPrayerTime, hijriDate, schedule);
   }
 
   Future<void> showWelcomeNotification() async {
@@ -97,7 +105,8 @@ class NotificationService {
       channelDescription: 'إشعار عند فتح التطبيق',
       importance: Importance.high,
       priority: Priority.high,
-      color: Color(0xFF155E35), // لون التطبيق الأخضر
+      color: Color(0xFF155E35),
+      icon: '@drawable/ic_notification',
     );
     await flutterLocalNotificationsPlugin.show(
       0, 'أهلاً بك في نور المعرفة 🌙', 'نسأل الله أن ينفعك بما تقرأ وتتعلم.', const NotificationDetails(android: androidDetails),
@@ -105,26 +114,22 @@ class NotificationService {
   }
 
   Future<void> showPersistentPrayerNotification(String nextPrayer, String time, String hijriDate, String schedule) async {
-    // 🌟 تصميم الإشعار الاحترافي
     final AndroidNotificationDetails androidDetails = AndroidNotificationDetails(
       'prayer_channel', 'مواقيت الصلاة',
       channelDescription: 'إشعار دائم بمواقيت الصلاة والتاريخ الهجري',
-      importance: Importance.low, // منخفض لكي لا يزعج المستخدم برنة
+      importance: Importance.low,
       priority: Priority.low,
-      ongoing: true, // يجعله دائم لا يمكن مسحه
+      ongoing: true,
       autoCancel: false,
       showWhen: false,
       onlyAlertOnce: true,
-      color: const Color(0xFF155E35), // لون الأيقونة أخضر
-      icon: '@mipmap/launcher_icon',
-      // إعدادات النص الكبير (عند سحب الإشعار)
+      color: const Color(0xFF155E35),
+      icon: '@drawable/ic_notification',
       styleInformation: BigTextStyleInformation(
-        schedule, // النص الكبير الذي يظهر عند السحب
-        contentTitle: '$hijriDate\n🕌 $nextPrayer ($time)', // العنوان الرئيسي
-        summaryText: 'تطبيق نور المعرفة', // النص الصغير
+        schedule,
+        contentTitle: '$hijriDate\n🕌 $nextPrayer ($time)',
+        summaryText: 'تطبيق نور المعرفة',
       ),
-      // إعدادات النص العادي (قبل السحب)
-      ticker: 'تحديث مواقيت الصلاة',
     );
     
     await flutterLocalNotificationsPlugin.show(
@@ -142,6 +147,7 @@ class NotificationService {
       importance: Importance.defaultImportance,
       priority: Priority.defaultPriority,
       color: Color(0xFF155E35),
+      icon: '@drawable/ic_notification',
     );
     await flutterLocalNotificationsPlugin.cancel(2);
     await flutterLocalNotificationsPlugin.zonedSchedule(
