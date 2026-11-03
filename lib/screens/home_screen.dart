@@ -17,6 +17,7 @@ import 'mushaf_screen.dart';
 import 'bookmarks_screen.dart';
 import 'settings_screen.dart';
 import '../services/notification_service.dart';
+import '../services/device_profiler.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -41,6 +42,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
     SharedPreferences.getInstance().then((p) => setState(() => _name = p.getString('user_name') ?? 'زائر'));
     
+    DeviceProfiler.detectPerformance().then((_) => setState((){}));
     _updateTime();
     _timer = Timer.periodic(const Duration(seconds: 1), (Timer t) => _updateTime());
     
@@ -129,8 +131,8 @@ class _HomeScreenState extends State<HomeScreen> {
       backgroundColor: AppColors.bgDeep,
       extendBodyBehindAppBar: true,
       extendBody: true,
-      body: QuranicBackground(
-        child: Center(
+      body: DeviceProfiler.isLowEnd 
+          ? Container(color: AppColors.bgDeep, child: Center(
           child: ConstrainedBox(
             constraints: const BoxConstraints(maxWidth: 500),
             child: Column(
