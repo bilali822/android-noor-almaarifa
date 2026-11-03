@@ -17,6 +17,11 @@ import 'ai_chat_screen.dart';
 import 'mushaf_screen.dart';
 import 'bookmarks_screen.dart';
 import 'settings_screen.dart';
+import 'qibla_screen.dart';
+import 'tasbeeh_screen.dart';
+import 'adhkar_screen.dart';
+import 'asmaa_allah_screen.dart';
+import 'khatma_screen.dart';
 import '../services/notification_service.dart';
 import '../services/device_profiler.dart';
 
@@ -274,6 +279,21 @@ class _HomeScreenState extends State<HomeScreen> {
                         }),
                         _buildFeatureCard('الحديث', Icons.menu_book, () {
                           Navigator.push(context, MaterialPageRoute(builder: (_) => const HadithScreen()));
+                        }),
+                        _buildFeatureCard('بوصلة القبلة', Icons.explore, () {
+                          Navigator.push(context, MaterialPageRoute(builder: (_) => const QiblaScreen()));
+                        }),
+                        _buildFeatureCard('السبحة', Icons.radio_button_checked, () {
+                          Navigator.push(context, MaterialPageRoute(builder: (_) => const TasbeehScreen()));
+                        }),
+                        _buildFeatureCard('الأذكار', Icons.wb_sunny, () {
+                          Navigator.push(context, MaterialPageRoute(builder: (_) => const AdhkarScreen()));
+                        }),
+                        _buildFeatureCard('أسماء الله', Icons.stars, () {
+                          Navigator.push(context, MaterialPageRoute(builder: (_) => const AsmaaAllahScreen()));
+                        }),
+                        _buildFeatureCard('ختمة', Icons.menu_book_outlined, () {
+                          Navigator.push(context, MaterialPageRoute(builder: (_) => const KhatmaScreen()));
                         }),
                         _buildFeatureCard('الإعدادات', Icons.settings, () {
                           Navigator.push(context, MaterialPageRoute(builder: (_) => const SettingsScreen()));
