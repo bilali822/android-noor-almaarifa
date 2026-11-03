@@ -46,7 +46,7 @@ class _AIChatScreenState extends State<AIChatScreen> {
       try {
         // 🌟 استخدام الموديل المطلوب من جوجل
         final model = GenerativeModel(
-          model: 'gemini-2.5-flash',
+          model: 'gemini-3.8-flash',
           apiKey: _apiKey,
           generationConfig: GenerationConfig(maxOutputTokens: 2000),
           systemInstruction: Content.system('أنت "مساعد نور المعرفة". أجب على سؤال المستخدم بإيجاز شديد ومباشر. لا تكتب مقدمات ولا خواتيم طويلة. اجعل الرد في نقاط أو فقرة قصيرة جداً.'),
