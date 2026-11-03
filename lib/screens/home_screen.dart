@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'dart:ui';
 import 'dart:async';
 import 'package:intl/intl.dart' hide TextDirection;
 import 'package:intl/date_symbol_data_local.dart';
@@ -54,7 +55,7 @@ class _HomeScreenState extends State<HomeScreen> {
   Future<void> _initNotifications() async {
     await NotificationService.instance.init();
     await NotificationService.instance.showWelcomeNotification();
-    await NotificationService.instance.scheduleDailyNotification();
+    await NotificationService.instance.scheduleDailyNotifications();
   }
 
   Future<void> _fetchNextPrayer() async {
@@ -122,7 +123,6 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
-    // 🌟 حل مشكلة الكلام المقطوع: إضافة مسافة للكاميرا
     final topPadding = MediaQuery.of(context).padding.top;
 
     return Scaffold(
@@ -132,6 +132,34 @@ class _HomeScreenState extends State<HomeScreen> {
       body: DeviceProfiler.isLowEnd 
           ? Container(color: AppColors.bgDeep, child: _buildContent(topPadding))
           : QuranicBackground(child: _buildContent(topPadding)),
+      // 🌟 الشريط السفلي الزجاجي (Glassmorphism) للهواتف القوية
+      bottomNavigationBar: Center(
+        heightFactor: 1,
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 500),
+          child: SafeArea(
+            child: Container(
+              margin: const EdgeInsets.fromLTRB(24, 0, 24, 16),
+              height: 70,
+              decoration: BoxDecoration(
+                color: DeviceProfiler.isHighEnd ? Colors.white.withOpacity(0.8) : Colors.white,
+                borderRadius: BorderRadius.circular(24),
+                boxShadow: DeviceProfiler.isLowEnd ? [] : [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 20, offset: const Offset(0, 10))],
+                border: DeviceProfiler.isHighEnd ? Border.all(color: Colors.white.withOpacity(0.5), width: 1) : null,
+              ),
+              child: DeviceProfiler.isHighEnd
+                  ? ClipRRect(
+                      borderRadius: BorderRadius.circular(24),
+                      child: BackdropFilter(
+                        filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+                        child: _buildNavRow(),
+                      ),
+                    )
+                  : _buildNavRow(),
+            ),
+          ),
+        ),
+      ),
     );
   }
 
@@ -141,7 +169,6 @@ class _HomeScreenState extends State<HomeScreen> {
         constraints: const BoxConstraints(maxWidth: 500),
         child: Column(
           children: [
-            // الهيدر (مع مساحة آمنة للكاميرا)
             Padding(
               padding: EdgeInsets.fromLTRB(24, topPadding + 20, 24, 16),
               child: Row(
@@ -150,7 +177,6 @@ class _HomeScreenState extends State<HomeScreen> {
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // الساعة والتاريخ والصلاة في سطر واحد
                       Row(
                         children: [
                           const Icon(Icons.access_time_filled, color: AppColors.primary, size: 14),
@@ -208,7 +234,11 @@ class _HomeScreenState extends State<HomeScreen> {
                       child: Container(
                         width: double.infinity,
                         padding: const EdgeInsets.symmetric(vertical: 36, horizontal: 20),
-                        decoration: BoxDecoration(color: AppColors.bgCardBeige, borderRadius: BorderRadius.circular(24), border: Border.all(color: AppColors.border, width: 1)),
+                        decoration: BoxDecoration(
+                          color: AppColors.bgCardBeige, 
+                          borderRadius: BorderRadius.circular(24), 
+                          border: Border.all(color: AppColors.border, width: 1)
+                        ),
                         child: Column(
                           children: [
                             const Text('﴿ وَقُل رَّبِّ زِدْنِي عِلْمًا ﴾', textDirection: TextDirection.rtl, textAlign: TextAlign.center, style: TextStyle(fontSize: 32, height: 1.6, color: AppColors.primary, fontFamily: 'UthmanicHafs', fontWeight: FontWeight.bold)),
@@ -281,6 +311,33 @@ class _HomeScreenState extends State<HomeScreen> {
             Text(title, textAlign: TextAlign.center, style: const TextStyle(color: AppColors.text, fontSize: 14, fontWeight: FontWeight.bold)),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildNavRow() {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+      children: [
+        _navItem(Icons.home, 'الرئيسية', true, () {}),
+        _navItem(Icons.menu_book_outlined, 'القرآن', false, () => Navigator.push(context, MaterialPageRoute(builder: (_) => const MushafScreen()))),
+        _navItem(Icons.search, 'البحث', false, () => Navigator.push(context, MaterialPageRoute(builder: (_) => const ChatScreen()))),
+        _navItem(Icons.auto_awesome_outlined, 'ذكاء', false, () => Navigator.push(context, MaterialPageRoute(builder: (_) => const AIChatScreen()))),
+        _navItem(Icons.person_outline, 'حسابي', false, () => Navigator.push(context, MaterialPageRoute(builder: (_) => const SettingsScreen()))),
+      ],
+    );
+  }
+
+  Widget _navItem(IconData icon, String label, bool isSelected, VoidCallback onTap) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(icon, color: isSelected ? AppColors.primary : const Color(0xFF9E9E9E), size: 26),
+          const SizedBox(height: 4),
+          Text(label, style: TextStyle(color: isSelected ? AppColors.primary : const Color(0xFF9E9E9E), fontSize: 10, fontWeight: isSelected ? FontWeight.bold : FontWeight.w500)),
+        ]
       ),
     );
   }
