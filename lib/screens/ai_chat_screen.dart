@@ -46,7 +46,7 @@ class _AIChatScreenState extends State<AIChatScreen> {
       try {
         // 🌟 استخدام الموديل المطلوب من جوجل
         final model = GenerativeModel(
-          model: 'gemini-3.8-flash',
+          model: 'gemini-3.5-flash-lite',
           apiKey: _apiKey,
           generationConfig: GenerationConfig(maxOutputTokens: 2000),
           systemInstruction: Content.system('أنت "مساعد نور المعرفة". أجب على سؤال المستخدم بإيجاز شديد ومباشر. لا تكتب مقدمات ولا خواتيم طويلة. اجعل الرد في نقاط أو فقرة قصيرة جداً.'),
@@ -134,6 +134,28 @@ class _AIChatScreenState extends State<AIChatScreen> {
       }
       await _saveCurrentConversation();
     } catch (e) {
+      // 🌟 إعادة المحاولة تلقائياً إذا كان الخطأ 503 (ضغط عالٍ)
+      if (e.toString().contains('503') || e.toString().contains('high demand')) {
+        if (mounted) {
+          setState(() {
+            _isWaiting = true;
+            _messages.add(AIMessage(text: '⏳ الخادم مشغول، جاري إعادة المحاولة تلقائياً...', isUser: false));
+          });
+          _scrollToBottom();
+        }
+        
+        await Future.delayed(const Duration(seconds: 3));
+        
+        if (mounted) {
+          setState(() {
+            _messages.removeLast();
+            _isWaiting = false;
+          });
+          _handleSubmit(); // إعادة المحاولة
+        }
+        return;
+      }
+      
       if (mounted) {
         setState(() {
           _isWaiting = false;
