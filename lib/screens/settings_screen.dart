@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../services/notification_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../theme/app_colors.dart';
 
@@ -55,7 +56,16 @@ class _SettingsScreenState extends State<SettingsScreen> {
       body: ListView(
         padding: const EdgeInsets.all(24),
         children: [
-          ListTile(leading: const Icon(Icons.person, color: AppColors.primary), title: const Text('تغيير الاسم'), subtitle: Text('الاسم الحالي: $_userName'), onTap: _changeName, trailing: const Icon(Icons.arrow_forward_ios, size: 16)),
+          ListTile(
+                  title: const Text('تجربة الإشعارات'),
+                  leading: const Icon(Icons.notifications_active),
+                  onTap: () async {
+                    await NotificationService.instance.init();
+                    await NotificationService.instance.showWelcomeNotification();
+                    if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('تم إرسال إشعار تجريبي')));
+                  },
+                ),
+                ListTile(leading: const Icon(Icons.person, color: AppColors.primary), title: const Text('تغيير الاسم'), subtitle: Text('الاسم الحالي: $_userName'), onTap: _changeName, trailing: const Icon(Icons.arrow_forward_ios, size: 16)),
           const Divider(),
           ListTile(leading: const Icon(Icons.delete_outline, color: AppColors.danger), title: const Text('حذف الآيات المحفوظة'), onTap: _clearBookmarks),
           const Divider(),

@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../theme/app_colors.dart';
-import '../widgets/bouncy_tap.dart';
-import '../widgets/quranic_background.dart';
 import 'home_screen.dart';
 
 class WelcomeScreen extends StatefulWidget {
@@ -11,34 +9,61 @@ class WelcomeScreen extends StatefulWidget {
 }
 
 class _WelcomeScreenState extends State<WelcomeScreen> {
-  final _nameController = TextEditingController();
+  final _nameCtrl = TextEditingController();
 
-  Future<void> _saveName() async {
-    if (_nameController.text.trim().isEmpty) return;
+  Future<void> _startApp() async {
+    if (_nameCtrl.text.trim().isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('يرجى إدخال اسمك أولاً')));
+      return;
+    }
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setString('user_name', _nameController.text.trim());
-    if (mounted) Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const HomeScreen()));
+    await prefs.setString('user_name', _nameCtrl.text.trim());
+    await prefs.setBool('seen_welcome', true); // 🌟 حفظ حالة الدخول
+
+    if (mounted) {
+      Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const HomeScreen()));
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.bgDeep,
-      body: QuranicBackground(
-        child: Center(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.all(32),
-            child: Column(
-              children: [
-                Container(width: 100, height: 100, decoration: BoxDecoration(color: AppColors.primary, borderRadius: BorderRadius.circular(30)), child: const Icon(Icons.menu_book, color: Colors.white, size: 50)),
-                const SizedBox(height: 32),
-                const Text('نور المعرفة', style: TextStyle(fontSize: 32, fontWeight: FontWeight.bold, color: AppColors.text)),
-                const SizedBox(height: 40),
-                TextField(controller: _nameController, textAlign: TextAlign.center, decoration: InputDecoration(hintText: 'أدخل اسمك للبدء', filled: true, fillColor: Colors.white, border: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide.none))),
-                const SizedBox(height: 24),
-                BouncyTap(onTap: _saveName, child: Container(width: double.infinity, padding: const EdgeInsets.symmetric(vertical: 16), decoration: BoxDecoration(color: AppColors.primary, borderRadius: BorderRadius.circular(16)), child: const Text('متابعة', textAlign: TextAlign.center, style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)))),
-              ],
-            ),
+      body: Center(
+        child: Padding(
+          padding: const EdgeInsets.all(24.0),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Icon(Icons.mosque, size: 100, color: AppColors.primary),
+              const SizedBox(height: 32),
+              const Text('أهلاً بك في نور المعرفة', style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: AppColors.primary)),
+              const SizedBox(height: 16),
+              const Text('رفيقك الذكي في رحلة المعرفة الإسلامية', style: TextStyle(fontSize: 16, color: AppColors.textMuted), textAlign: TextAlign.center),
+              const SizedBox(height: 48),
+              TextField(
+                controller: _nameCtrl,
+                textAlign: TextAlign.center,
+                style: const TextStyle(fontSize: 18, color: AppColors.text),
+                decoration: InputDecoration(
+                  hintText: 'أدخل اسمك الكريم...',
+                  hintStyle: const TextStyle(color: AppColors.textMuted),
+                  filled: true,
+                  fillColor: Colors.white,
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide.none),
+                ),
+              ),
+              const SizedBox(height: 32),
+              ElevatedButton(
+                onPressed: _startApp,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.primary,
+                  padding: const EdgeInsets.symmetric(horizontal: 64, vertical: 16),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                ),
+                child: const Text('ابدأ الرحلة', style: TextStyle(fontSize: 18, color: Colors.white, fontWeight: FontWeight.bold)),
+              ),
+            ],
           ),
         ),
       ),
