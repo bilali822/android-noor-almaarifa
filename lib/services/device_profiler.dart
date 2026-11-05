@@ -2,7 +2,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter/foundation.dart';
 
 class DeviceProfiler {
-  static String performanceLevel = 'High';
+  static String performanceLevel = 'High'; // High, Medium, Low
 
   static Future<void> detectPerformance() async {
     if (kIsWeb) {
@@ -13,6 +13,7 @@ class DeviceProfiler {
     performanceLevel = prefs.getString('performance_level') ?? 'High';
   }
 
-  static bool get isLowEnd => performanceLevel == 'Low';
   static bool get isHighEnd => performanceLevel == 'High';
+  static bool get isMediumEnd => performanceLevel == 'Medium';
+  static bool get isLowEnd => performanceLevel == 'Low';
 }

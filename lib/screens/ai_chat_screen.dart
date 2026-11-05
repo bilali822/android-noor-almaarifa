@@ -2,6 +2,8 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_generative_ai/google_generative_ai.dart';
+import 'package:screenshot/screenshot.dart';
+import 'package:share_plus/share_plus.dart';
 import '../models/chat_history.dart';
 import '../services/chat_history_service.dart';
 import 'chat_history_screen.dart';
@@ -27,9 +29,18 @@ class _AIChatScreenState extends State<AIChatScreen> {
   final _inputCtrl = TextEditingController();
   final _scrollCtrl = ScrollController();
   bool _isWaiting = false;
+  bool _cancelRequested = false;
+
+  final ScreenshotController _screenshotController = ScreenshotController();
 
   final String _apiKey = String.fromEnvironment('GEMINI_API_KEY');
   ChatSession? _chatSession;
+
+  final List<String> _models = [
+    'gemini-3.8-flash',
+    'gemini-3.5-flash-lite',
+    'gemini-flash-latest',
+  ];
 
   String _currentConvId = DateTime.now().millisecondsSinceEpoch.toString();
   String _convTitle = 'محادثة جديدة';
@@ -44,12 +55,18 @@ class _AIChatScreenState extends State<AIChatScreen> {
   void _initSession() {
     if (_apiKey.isNotEmpty) {
       try {
-        // 🌟 استخدام الموديل المطلوب من جوجل
         final model = GenerativeModel(
-          model: 'gemini-3.5-flash-lite',
+          model: _models.first,
           apiKey: _apiKey,
           generationConfig: GenerationConfig(maxOutputTokens: 2000),
-          systemInstruction: Content.system('أنت "مساعد نور المعرفة". أجب على سؤال المستخدم بإيجاز شديد ومباشر. لا تكتب مقدمات ولا خواتيم طويلة. اجعل الرد في نقاط أو فقرة قصيرة جداً.'),
+          systemInstruction: Content.system(
+            'أنت "مساعد نور المعرفة"، مساعد ذكي إسلامي. '
+            'قواعدك: 1. أجب عن الأسئلة الإسلامية بدقة. '
+            '2. لا تفتِ في المسائل الخلافية المعقدة. '
+            '3. ابدأ إجاباتك بالبسملة إذا كان السؤال دينياً. '
+            '4. استخدم النقاط (Bullet points) والخطوط العريضة (**نص**) لتنسيق إجابتك. '
+            '5. في نهاية إجابتك، ضع 3 أسئلة مقترحة تبدأ بـ ||| وتفصل بينها بـ |. مثال: |||ما هي فوائد الصبر؟|كيف أصبر على البلاء؟|أحاديث عن الصبر'
+          ),
         );
         _chatSession = model.startChat();
       } catch (e) {
@@ -74,7 +91,7 @@ class _AIChatScreenState extends State<AIChatScreen> {
     await ChatHistoryService.save(conv);
   }
 
-  Future<void> _loadConversation(SavedConversation conv) async {
+  void _loadConversation(SavedConversation conv) async {
     setState(() {
       _currentConvId = conv.id; _convTitle = conv.title; _messages.clear();
       for (var m in conv.messages) { _messages.add(AIMessage(text: m.text, isUser: m.isUser)); }
@@ -95,7 +112,7 @@ class _AIChatScreenState extends State<AIChatScreen> {
     if (_apiKey.isEmpty) {
       setState(() {
         _messages.add(AIMessage(text: text, isUser: true));
-        _messages.add(AIMessage(text: '❌ خطأ: مفتاح API (GEMINI_API_KEY) غير موجود في إعدادات التطبيق.', isUser: false));
+        _messages.add(AIMessage(text: '❌ مفتاح API غير موجود.', isUser: false));
       });
       _inputCtrl.clear();
       _scrollToBottom();
@@ -106,7 +123,7 @@ class _AIChatScreenState extends State<AIChatScreen> {
     if (_chatSession == null) {
       setState(() {
         _messages.add(AIMessage(text: text, isUser: true));
-        _messages.add(AIMessage(text: '❌ خطأ: تعذر تهيئة الجلسة مع الذكاء الاصطناعي.', isUser: false));
+        _messages.add(AIMessage(text: '❌ تعذر الاتصال بالذكاء الاصطناعي.', isUser: false));
       });
       _inputCtrl.clear();
       _scrollToBottom();
@@ -114,55 +131,98 @@ class _AIChatScreenState extends State<AIChatScreen> {
     }
 
     _inputCtrl.clear();
-    setState(() { _messages.add(AIMessage(text: text, isUser: true)); _isWaiting = true; });
+    setState(() { _messages.add(AIMessage(text: text, isUser: true)); _isWaiting = true; _cancelRequested = false; });
     _scrollToBottom();
 
     try {
-      // 🌟 زيادة وقت الانتظار إلى 60 ثانية
       final responseStream = _chatSession!.sendMessageStream(Content.text(text)).timeout(const Duration(seconds: 60));
       bool isFirstChunk = true;
       String fullText = '';
+      List<String> suggestions = [];
 
       await for (final response in responseStream) {
+        if (_cancelRequested) break; // إيقاف التوليد
+
         fullText += response.text ?? '';
-        String cleanText = fullText.replaceAll('**', '').replaceAll('*', '•');
+        
+        // استخراج الاقتراحات (إذا وجدت)
+        if (fullText.contains('|||')) {
+          final parts = fullText.split('|||');
+          fullText = parts[0];
+          if (parts.length > 1) {
+            suggestions = parts[1].split('|').where((s) => s.trim().isNotEmpty).toList();
+          }
+        }
+
         setState(() {
-          if (isFirstChunk) { _isWaiting = false; _messages.add(AIMessage(text: cleanText, isUser: false)); isFirstChunk = false; }
-          else { _messages[_messages.length - 1] = AIMessage(text: cleanText, isUser: false); }
+          if (isFirstChunk) { _isWaiting = false; _messages.add(AIMessage(text: fullText, isUser: false)); isFirstChunk = false; }
+          else { _messages[_messages.length - 1] = AIMessage(text: fullText, isUser: false); }
         });
         _scrollToBottom();
       }
+
+      if (suggestions.isNotEmpty && !_cancelRequested) {
+        setState(() {
+          _messages.add(AIMessage(text: '|||${suggestions.join('|')}', isUser: false));
+        });
+      }
+
       await _saveCurrentConversation();
     } catch (e) {
-      // 🌟 إعادة المحاولة تلقائياً إذا كان الخطأ 503 (ضغط عالٍ)
-      if (e.toString().contains('503') || e.toString().contains('high demand')) {
+      // معالجة أخطاء 503 و 404
+      if (e.toString().contains('503') || e.toString().contains('404') || e.toString().contains('high demand') || e.toString().contains('not found')) {
         if (mounted) {
-          setState(() {
-            _isWaiting = true;
-            _messages.add(AIMessage(text: '⏳ الخادم مشغول، جاري إعادة المحاولة تلقائياً...', isUser: false));
-          });
+          setState(() { _isWaiting = true; _messages.add(AIMessage(text: '⏳ الخادم مشغول، جاري المحاولة بموديل آخر...', isUser: false)); });
           _scrollToBottom();
         }
-        
-        await Future.delayed(const Duration(seconds: 3));
-        
+        await Future.delayed(const Duration(seconds: 2));
         if (mounted) {
-          setState(() {
-            _messages.removeLast();
-            _isWaiting = false;
-          });
-          _handleSubmit(); // إعادة المحاولة
+          setState(() { _messages.removeLast(); _isWaiting = false; });
+          if (_models.length > 1) { _models.removeAt(0); _initSession(); }
+          _handleSubmit();
         }
         return;
       }
-      
       if (mounted) {
-        setState(() {
-          _isWaiting = false;
-          _messages.add(AIMessage(text: '❌ عذراً، حدث خطأ في الاتصال:\n$e', isUser: false));
-        });
+        setState(() { _isWaiting = false; _messages.add(AIMessage(text: '❌ عذراً، حدث خطأ:\n$e', isUser: false)); });
         _scrollToBottom();
       }
+    }
+  }
+
+  // 🌟 مشاركة إجابة الذكاء الاصطناعي كصورة فخمة
+  Future<void> _shareAIMessage(String text) async {
+    try {
+      final image = await _screenshotController.captureFromWidget(
+        Material(
+          color: Colors.transparent,
+          child: Container(
+            padding: const EdgeInsets.all(32),
+            width: 400,
+            decoration: BoxDecoration(
+              color: bgColor,
+              borderRadius: BorderRadius.circular(24),
+              border: Border.all(color: goldAccent, width: 2),
+              boxShadow: [BoxShadow(color: goldAccent.withOpacity(0.2), blurRadius: 20)],
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Icon(Icons.auto_awesome, color: goldAccent, size: 40),
+                const SizedBox(height: 16),
+                Text(text, textDirection: TextDirection.rtl, textAlign: TextAlign.center, style: const TextStyle(color: Colors.white, fontSize: 18, height: 1.8)),
+                const SizedBox(height: 24),
+                const Text('مساعد نور المعرفة', style: TextStyle(color: goldAccent, fontSize: 14, fontWeight: FontWeight.bold)),
+              ],
+            ),
+          ),
+        ),
+        delay: const Duration(milliseconds: 10),
+      );
+      final xFile = XFile.fromData(image, mimeType: 'image/png', name: 'ai_answer.png');
+      await Share.shareXFiles([xFile], text: 'إجابة من مساعد نور المعرفة');
+    } catch (e) {
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('تعذر مشاركة الصورة.')));
     }
   }
 
@@ -234,6 +294,20 @@ class _AIChatScreenState extends State<AIChatScreen> {
   }
 
   Widget _buildMessageBubble(AIMessage m) {
+    // 🌟 التحقق إذا كانت الرسالة تحتوي على اقتراحات (تبدأ بـ |||)
+    if (!m.isUser && m.text.startsWith('|||')) {
+      final suggestions = m.text.replaceFirst('|||', '').split('|');
+      return Wrap(
+        spacing: 8, runSpacing: 8,
+        children: suggestions.map((s) => ActionChip(
+          label: Text(s, style: const TextStyle(color: goldAccent, fontSize: 12)),
+          backgroundColor: aiBubbleColor,
+          side: const BorderSide(color: goldAccent),
+          onPressed: () { _inputCtrl.text = s; _handleSubmit(); },
+        )).toList(),
+      );
+    }
+
     return Align(
       alignment: m.isUser ? Alignment.centerRight : Alignment.centerLeft,
       child: Container(
@@ -246,9 +320,57 @@ class _AIChatScreenState extends State<AIChatScreen> {
           borderRadius: BorderRadius.only(topLeft: const Radius.circular(20), topRight: const Radius.circular(20), bottomLeft: Radius.circular(m.isUser ? 20 : 4), bottomRight: Radius.circular(m.isUser ? 4 : 20)),
           border: m.isUser ? null : Border.all(color: primaryGreen.withOpacity(0.3)),
         ),
-        child: SelectableText(m.text, textDirection: TextDirection.rtl, style: const TextStyle(color: Colors.white, fontSize: 15, height: 1.7)),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // 🌟 دعم الخطوط العريضة
+            SelectableText.rich(
+              TextSpan(
+                style: const TextStyle(color: Colors.white, fontSize: 15, height: 1.7),
+                children: _parseMarkdown(m.text),
+              ),
+              textDirection: TextDirection.rtl,
+            ),
+            if (!m.isUser) ...[
+              const SizedBox(height: 8),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  InkWell(
+                    onTap: () => _shareAIMessage(m.text),
+                    child: const Padding(padding: EdgeInsets.all(4.0), child: Icon(Icons.share, size: 16, color: Colors.white38)),
+                  ),
+                  const SizedBox(width: 12),
+                  InkWell(
+                    onTap: () { Clipboard.setData(ClipboardData(text: m.text)); ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('تم النسخ'))); },
+                    child: const Padding(padding: EdgeInsets.all(4.0), child: Icon(Icons.copy, size: 16, color: Colors.white38)),
+                  ),
+                ],
+              )
+            ]
+          ],
+        ),
       ),
     );
+  }
+
+  // دالة بسيطة لتحويل **نص** إلى عريض
+  List<InlineSpan> _parseMarkdown(String text) {
+    final List<InlineSpan> spans = [];
+    final RegExp regExp = RegExp(r'\*\*(.*?)\*\*');
+    int lastMatchEnd = 0;
+    
+    for (final match in regExp.allMatches(text)) {
+      if (match.start > lastMatchEnd) {
+        spans.add(TextSpan(text: text.substring(lastMatchEnd, match.start)));
+      }
+      spans.add(TextSpan(text: match.group(1), style: const TextStyle(fontWeight: FontWeight.bold, color: goldAccent)));
+      lastMatchEnd = match.end;
+    }
+    if (lastMatchEnd < text.length) {
+      spans.add(TextSpan(text: text.substring(lastMatchEnd)));
+    }
+    return spans;
   }
 
   Widget _buildInputBar() {
@@ -266,8 +388,13 @@ class _AIChatScreenState extends State<AIChatScreen> {
               ),
             ),
             Container(
-              decoration: const BoxDecoration(color: primaryGreen, shape: BoxShape.circle),
-              child: IconButton(icon: const Icon(Icons.send, color: Colors.white, size: 20), onPressed: _isWaiting ? null : _handleSubmit),
+              decoration: BoxDecoration(color: _isWaiting ? Colors.redAccent : primaryGreen, shape: BoxShape.circle),
+              child: IconButton(
+                icon: Icon(_isWaiting ? Icons.stop : Icons.send, color: Colors.white, size: 20), 
+                onPressed: _isWaiting 
+                  ? () { setState(() => _cancelRequested = true); }
+                  : _handleSubmit,
+              ),
             ),
           ],
         ),

@@ -23,6 +23,7 @@ class MushafScreen extends StatefulWidget {
 class _MushafScreenState extends State<MushafScreen> {
   late PageController _pageController;
   int _currentPage = 1;
+  final Map<int, List<Map<String, Object?>>> _pageCache = {};
   int? _highlightedVerse;
   int? _lastReadPage;
 
@@ -294,12 +295,29 @@ class _MushafPageViewState extends State<_MushafPageView> {
 
   @override
   Widget build(BuildContext context) {
+    // 🌟 استخدام الكاش لتسريع السحب بين الصفحات
+    if (_pageCache.containsKey(widget.pageNumber)) {
+      return _buildPageContent(_pageCache[widget.pageNumber]!);
+    }
+
     return FutureBuilder(
       future: DatabaseHelper.instance.getVersesByPage(widget.pageNumber),
       builder: (context, snapshot) {
         if (!snapshot.hasData) return const Center(child: CircularProgressIndicator(color: AppColors.primary));
         final verses = snapshot.data!;
         if (verses.isEmpty) return const Center(child: Text('جاري تحميل الصفحة...'));
+        
+        // حفظ في الكاش
+        if (_pageCache.length > 5) _pageCache.clear();
+        _pageCache[widget.pageNumber] = verses;
+
+        return _buildPageContent(verses);
+      },
+    );
+  }
+
+  Widget _buildPageContent(List<Map<String, Object?>> verses) {
+    {
 
         for (var r in _recognizers) { r.dispose(); }
         _recognizers.clear();

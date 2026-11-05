@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'screens/splash_screen.dart';
 import 'screens/home_screen.dart';
+import 'services/notification_service.dart';
 import 'screens/welcome_screen.dart';
 import 'theme/app_colors.dart';
 
@@ -20,6 +22,10 @@ void main() async {
   final bool seenWelcome = prefs.getBool('seen_welcome') ?? false;
 
   runApp(NoorApp(seenWelcome: seenWelcome));
+  
+  // 🌟 تهيئة الإشعارات وجدولتها
+  await NotificationService.instance.init();
+  await NotificationService.instance.scheduleDailyNotifications();
 }
 
 class NoorApp extends StatelessWidget {
@@ -51,7 +57,7 @@ class NoorApp extends StatelessWidget {
         fontFamily: 'Cairo',
         useMaterial3: true,
       ),
-      home: seenWelcome ? const HomeScreen() : const WelcomeScreen(),
+      home: const SplashScreen(),
     );
   }
 }
